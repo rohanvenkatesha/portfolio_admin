@@ -27,14 +27,14 @@ export function DetailChrome({ backHref = "/", backLabel = "Back to portfolio" }
         <nav className="glass mx-auto flex max-w-5xl items-center justify-between gap-4 rounded-full px-5 py-3">
           <Link
             href={backHref}
-            className="group inline-flex items-center gap-2 text-sm font-medium text-zinc-400 transition-colors hover:text-orange-300"
+            className="group inline-flex items-center gap-2 text-sm font-medium text-zinc-400 transition-colors hover:text-brand-300"
           >
             <ArrowLeft className="h-4 w-4 transition-transform duration-300 group-hover:-translate-x-0.5" />
             {backLabel}
           </Link>
 
           <Link href="/" className="flex items-center gap-2.5" aria-label={`${profile.name} — home`}>
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-orange-400 to-orange-500 font-mono text-[11px] font-bold text-black">
+            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-brand-400 to-brand-500 font-mono text-[11px] font-bold text-black">
               {profile.initials}
             </span>
           </Link>

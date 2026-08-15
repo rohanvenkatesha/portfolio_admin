@@ -29,7 +29,7 @@ export function AdminChrome({ email }: { email: string }) {
     <header className="sticky top-0 z-50 border-b border-white/8 bg-panel/95 backdrop-blur-md">
       <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-4 px-4 py-3.5 sm:px-6">
         <div className="flex items-center gap-3">
-          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-orange-500 font-mono text-[11px] font-bold text-white">
+          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-500 font-mono text-[11px] font-bold text-[var(--brand-ink)]">
             {profile.initials}
           </span>
           <div className="min-w-0">
@@ -51,7 +51,7 @@ export function AdminChrome({ email }: { email: string }) {
           <button
             onClick={signOut}
             disabled={signingOut}
-            className="inline-flex items-center gap-1.5 rounded-full border border-white/12 px-3.5 py-2 text-[12px] font-medium text-zinc-300 transition-colors hover:border-orange-500 hover:text-orange-300 disabled:opacity-60"
+            className="inline-flex items-center gap-1.5 rounded-full border border-white/12 px-3.5 py-2 text-[12px] font-medium text-zinc-300 transition-colors hover:border-brand-500 hover:text-brand-300 disabled:opacity-60"
           >
             {signingOut ? (
               <Loader2 className="h-3.5 w-3.5 animate-spin" />

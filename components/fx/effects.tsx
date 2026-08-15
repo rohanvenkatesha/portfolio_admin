@@ -24,7 +24,7 @@ export function ScrollProgress() {
     <motion.div
       aria-hidden
       style={{ scaleX }}
-      className="fixed inset-x-0 top-0 z-[80] h-[2px] origin-left bg-gradient-to-r from-orange-400 via-orange-500 to-orange-400"
+      className="fixed inset-x-0 top-0 z-[80] h-[2px] origin-left bg-gradient-to-r from-brand-400 via-brand-500 to-brand-400"
     />
   );
 }
@@ -64,9 +64,9 @@ export function GrainOverlay() {
 export function Aurora({ className }: { className?: string }) {
   return (
     <div aria-hidden className={cn("pointer-events-none absolute inset-0 overflow-hidden", className)}>
-      <div className="absolute -left-[10%] top-[-15%] h-[46rem] w-[46rem] rounded-full bg-orange-500/12 blur-[120px] animate-drift" />
-      <div className="absolute right-[-12%] top-[18%] h-[40rem] w-[40rem] rounded-full bg-orange-600/12 blur-[130px] animate-drift [animation-delay:-7s]" />
-      <div className="absolute bottom-[-18%] left-[28%] h-[34rem] w-[34rem] rounded-full bg-orange-500/8 blur-[120px] animate-drift [animation-delay:-14s]" />
+      <div className="absolute -left-[10%] top-[-15%] h-[46rem] w-[46rem] rounded-full bg-brand-500/12 blur-[120px] animate-drift" />
+      <div className="absolute right-[-12%] top-[18%] h-[40rem] w-[40rem] rounded-full bg-brand-600/12 blur-[130px] animate-drift [animation-delay:-7s]" />
+      <div className="absolute bottom-[-18%] left-[28%] h-[34rem] w-[34rem] rounded-full bg-brand-500/8 blur-[120px] animate-drift [animation-delay:-14s]" />
     </div>
   );
 }
@@ -187,10 +187,10 @@ export function Marquee({
       >
         {doubled.map((item, i) => (
           <span key={`${item}-${i}`} className="flex items-center gap-10">
-            <span className="eyebrow text-zinc-500 transition-colors hover:text-orange-300">
+            <span className="eyebrow text-zinc-500 transition-colors hover:text-brand-300">
               {item}
             </span>
-            <span className="h-1 w-1 rounded-full bg-orange-400/50" />
+            <span className="h-1 w-1 rounded-full bg-brand-400/50" />
           </span>
         ))}
       </div>
@@ -275,7 +275,7 @@ export function Typewriter({
   return (
     <span className={className}>
       {text}
-      <span className="ml-0.5 inline-block h-[0.9em] w-[3px] translate-y-[2px] bg-orange-400 animate-blink" />
+      <span className="ml-0.5 inline-block h-[0.9em] w-[3px] translate-y-[2px] bg-brand-400 animate-blink" />
     </span>
   );
 }

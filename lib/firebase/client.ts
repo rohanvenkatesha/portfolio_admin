@@ -25,7 +25,8 @@ const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
   authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
   projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  // storageBucket omitted: images are repo files under public/media, so
+  // Firebase Storage (which needs a paid plan) is never used.
   messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
@@ -69,19 +70,6 @@ export function getFirebaseAuth(): Auth {
   }
 
   return cachedAuth;
-}
-
-/**
- * Storage handle for browser uploads.
- *
- * Files go browser → Storage directly rather than through a Server Action:
- * Next caps Server Action request bodies well below a typical photo, and
- * routing megabytes through the server adds nothing. storage.rules is what
- * enforces admin-only writes.
- */
-export async function getFirebaseStorage() {
-  const { getStorage } = await import("firebase/storage");
-  return getStorage(getFirebaseApp());
 }
 
 export function getGoogleProvider() {

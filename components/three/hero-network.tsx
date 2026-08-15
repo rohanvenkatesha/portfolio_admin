@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
+import { readThemeColor } from "@/lib/theme-color";
 
 const NODE_COUNT = 110;
 const LINK_DISTANCE = 2.5;
@@ -23,6 +24,11 @@ export function HeroNetwork({ className }: { className?: string }) {
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
+
+    // Canvases take numeric hex, so read the live accent from CSS.
+    const BRAND = readThemeColor("--color-brand-500", 0xff5a1f);
+    const BRAND_SOFT = readThemeColor("--color-brand-300", 0xff9a5c);
+    const BRAND_PALE = readThemeColor("--color-brand-200", 0xffd0a8);
 
     const prefersReducedMotion = window.matchMedia(
       "(prefers-reduced-motion: reduce)"
@@ -60,9 +66,9 @@ export function HeroNetwork({ className }: { className?: string }) {
     const sizes = new Float32Array(NODE_COUNT);
 
     const palette = [
-      new THREE.Color(0xff5a1f), // cyan
-      new THREE.Color(0xff9a5c), // violet
-      new THREE.Color(0xffd0a8), // amber
+      new THREE.Color(BRAND), // cyan
+      new THREE.Color(BRAND_SOFT), // violet
+      new THREE.Color(BRAND_PALE), // amber
       new THREE.Color(0xf4f4f5), // near-white
     ];
 

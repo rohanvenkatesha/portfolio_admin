@@ -11,11 +11,11 @@ import { Magnetic } from "@/components/fx/effects";
 
 const badgeAccents = {
   neutral: "border-white/10 bg-white/5 text-zinc-300",
-  cyan: "border-orange-400/25 bg-orange-400/10 text-orange-200",
-  violet: "border-orange-400/25 bg-orange-400/10 text-orange-200",
-  amber: "border-orange-400/25 bg-orange-400/10 text-orange-200",
-  lime: "border-orange-400/25 bg-orange-400/10 text-orange-200",
-  rose: "border-orange-400/25 bg-orange-400/10 text-orange-200",
+  cyan: "border-brand-400/25 bg-brand-400/10 text-brand-200",
+  violet: "border-brand-400/25 bg-brand-400/10 text-brand-200",
+  amber: "border-brand-400/25 bg-brand-400/10 text-brand-200",
+  lime: "border-brand-400/25 bg-brand-400/10 text-brand-200",
+  rose: "border-brand-400/25 bg-brand-400/10 text-brand-200",
   emerald: "border-emerald-400/25 bg-emerald-400/10 text-emerald-200",
 } as const;
 
@@ -41,10 +41,28 @@ export function Badge({
   );
 }
 
-/** Tech-stack chip that lights up on hover. */
-export function TechBadge({ children }: { children: React.ReactNode }) {
+/**
+ * Tech-stack chip that lights up on hover.
+ *
+ * `tone="ember"` for chips sitting on the warm backdrop, where the orange
+ * hover state and the zinc text both disappear into the ground.
+ */
+export function TechBadge({
+  children,
+  tone = "default",
+}: {
+  children: React.ReactNode;
+  tone?: "default" | "ember";
+}) {
   return (
-    <span className="inline-flex items-center rounded-md border border-white/10 bg-white/[0.04] px-2 py-1 font-mono text-[10.5px] tracking-wide text-zinc-400 transition-all duration-200 hover:border-orange-400/40 hover:bg-orange-400/10 hover:text-orange-200">
+    <span
+      className={cn(
+        "inline-flex items-center rounded-md border px-2 py-1 font-mono text-[10.5px] tracking-wide transition-all duration-200",
+        tone === "ember"
+          ? "border-white/25 bg-black/20 text-white/80 hover:border-white/50 hover:text-white"
+          : "border-white/10 bg-white/[0.04] text-zinc-400 hover:border-brand-400/40 hover:bg-brand-400/10 hover:text-brand-200"
+      )}
+    >
       {children}
     </span>
   );
@@ -58,9 +76,9 @@ type ButtonVariant = "primary" | "ghost" | "outline";
 
 const variants: Record<ButtonVariant, string> = {
   primary:
-    "bg-orange-500 text-white hover:bg-orange-400",
+    "bg-brand-500 text-[var(--brand-ink)] hover:bg-brand-400",
   outline:
-    "border border-white/15 bg-white/[0.03] text-white hover:border-orange-400/50 hover:bg-orange-400/10 hover:text-orange-100",
+    "border border-white/15 bg-white/[0.03] text-white hover:border-brand-400/50 hover:bg-brand-400/10 hover:text-brand-100",
   ghost: "text-zinc-300 hover:bg-white/5 hover:text-white",
 };
 
@@ -76,7 +94,7 @@ type ButtonBaseProps = {
 /* -------------------------------------------------------------------------- */
 
 const pillVariants = {
-  solid: "bg-orange-500 text-white hover:bg-orange-400",
+  solid: "bg-brand-500 text-[var(--brand-ink)] hover:bg-brand-400",
   outline: "border border-white/15 bg-white/[0.04] text-white hover:border-white/35 hover:bg-white/[0.08]",
   light: "bg-white text-black hover:bg-zinc-200",
 } as const;
@@ -102,7 +120,7 @@ function PillBadge({ variant }: { variant: PillVariant }) {
       aria-hidden
       className={cn(
         "flex h-7 w-7 shrink-0 items-center justify-center rounded-full transition-transform duration-300 group-hover/pill:rotate-45",
-        variant === "solid" ? "bg-white/95 text-orange-600" : "bg-orange-500 text-white"
+        variant === "solid" ? "bg-white/95 text-brand-600" : "bg-brand-500 text-[var(--brand-ink)]"
       )}
     >
       <ArrowUpRight className="h-3.5 w-3.5" strokeWidth={2.5} />

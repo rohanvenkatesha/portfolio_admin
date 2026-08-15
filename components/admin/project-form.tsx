@@ -4,13 +4,15 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { AlertCircle, CheckCircle2, Loader2, Save } from "lucide-react";
 import { saveProject, type ActionResult } from "@/lib/actions/projects";
+import { ImagePicker } from "@/components/admin/image-picker";
+import type { MediaFile } from "@/lib/content/media";
 import { projectFilters, type Project } from "@/content/site";
 import { cn } from "@/lib/utils";
 
 const ACCENTS: Project["accent"][] = ["cyan", "violet", "amber", "lime", "rose"];
 
 const inputClass =
-  "w-full rounded-xl border border-white/10 bg-panel-2 px-4 py-2.5 text-sm text-white outline-none transition-colors placeholder:text-zinc-600 focus:border-orange-500/60 focus:ring-2 focus:ring-orange-500/20";
+  "w-full rounded-xl border border-white/10 bg-panel-2 px-4 py-2.5 text-sm text-white outline-none transition-colors placeholder:text-zinc-600 focus:border-brand-500/60 focus:ring-2 focus:ring-brand-500/20";
 
 function Label({ children, hint }: { children: React.ReactNode; hint?: string }) {
   return (
@@ -21,7 +23,7 @@ function Label({ children, hint }: { children: React.ReactNode; hint?: string })
   );
 }
 
-export function ProjectForm({ project }: { project: Project }) {
+export function ProjectForm({ project, covers }: { project: Project; covers: MediaFile[] }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [result, setResult] = useState<ActionResult | null>(null);
@@ -43,6 +45,15 @@ export function ProjectForm({ project }: { project: Project }) {
       <input suppressHydrationWarning type="hidden" name="id" value={project.id} />
 
       <div className="space-y-5 rounded-2xl border border-white/8 bg-panel p-6">
+        <ImagePicker
+          name="coverUrl"
+          folder="projects"
+          files={covers}
+          initialSrc={project.coverUrl ?? ""}
+          label="Cover image"
+          hint="Shown on the card and at the top of its page"
+        />
+
         <div className="grid gap-5 sm:grid-cols-2">
           <label className="block">
             <Label>Title</Label>
@@ -166,7 +177,7 @@ export function ProjectForm({ project }: { project: Project }) {
             type="checkbox"
             name="featured"
             defaultChecked={Boolean(project.featured)}
-            className="h-4 w-4 accent-orange-500"
+            className="h-4 w-4 accent-brand-500"
           />
           <span className="text-[13px] text-zinc-300">
             Featured
@@ -181,7 +192,7 @@ export function ProjectForm({ project }: { project: Project }) {
         <button
           type="submit"
           disabled={pending}
-          className="inline-flex items-center gap-2 rounded-full bg-orange-500 px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-orange-400 disabled:opacity-60"
+          className="inline-flex items-center gap-2 rounded-full bg-brand-500 px-6 py-3 text-sm font-semibold text-[var(--brand-ink)] transition-colors hover:bg-brand-400 disabled:opacity-60"
         >
           {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
           {pending ? "Saving…" : "Save changes"}

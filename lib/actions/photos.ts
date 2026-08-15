@@ -8,6 +8,7 @@ import {
   PHOTOS_TAG,
   getPhotosFresh,
 } from "@/lib/content/photos";
+import { isValidMediaPath } from "@/lib/content/media";
 import { photos as staticPhotos, type Photo } from "@/content/site";
 
 export type ActionResult = { ok: true; message: string } | { ok: false; error: string };
@@ -53,11 +54,11 @@ export async function seedPhotos(): Promise<ActionResult> {
 }
 
 /**
- * Record an uploaded image.
+ * Add a frame to the gallery.
  *
- * The file itself went browser → Storage directly; this only stores the
- * resulting URL and metadata. The URL is checked against the expected Firebase
- * hosts so a compromised client can't point the gallery at an arbitrary site.
+ * The image itself is a file committed under public/media; this stores its
+ * path and metadata. The path is validated so a crafted request can't point
+ * the gallery outside the repo.
  */
 export async function addPhoto(formData: FormData): Promise<ActionResult> {
   const admin = await requireAdmin();
@@ -66,15 +67,8 @@ export async function addPhoto(formData: FormData): Promise<ActionResult> {
   const src = String(formData.get("src") ?? "").trim();
   const title = String(formData.get("title") ?? "").trim() || "Untitled";
 
-  let host: string;
-  try {
-    host = new URL(src).hostname;
-  } catch {
-    return { ok: false, error: "That image URL is not valid." };
-  }
-
-  if (!["firebasestorage.googleapis.com", "storage.googleapis.com"].includes(host)) {
-    return { ok: false, error: "Images must be served from Firebase Storage." };
+  if (!isValidMediaPath(src)) {
+    return { ok: false, error: "Choose an image from public/media first." };
   }
 
   try {

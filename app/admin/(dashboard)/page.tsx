@@ -6,12 +6,15 @@ import { getPhotosFresh } from "@/lib/content/photos";
 import { getTripsFresh } from "@/lib/content/trips";
 import { getFilmsFresh } from "@/lib/content/films";
 import { SectionManager } from "@/components/admin/section-manager";
+import { ThemeEditor } from "@/components/admin/theme-editor";
+import { getThemeFresh } from "@/lib/content/theme";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export default async function AdminDashboard() {
-  const [sections, projects, photos, trips, films] = await Promise.all([
+  const [theme, sections, projects, photos, trips, films] = await Promise.all([
+    getThemeFresh(),
     getSectionsFresh(),
     getProjectsFresh(),
     getPhotosFresh(),
@@ -50,10 +53,10 @@ export default async function AdminDashboard() {
             <Link
               key={label}
               href={href}
-              className="group rounded-2xl border border-white/8 bg-panel p-5 transition-colors hover:border-orange-500/40"
+              className="group rounded-2xl border border-white/8 bg-panel p-5 transition-colors hover:border-brand-500/40"
             >
               {body}
-              <span className="mt-3 inline-flex items-center gap-1 text-[11px] font-medium text-orange-400 opacity-0 transition-opacity group-hover:opacity-100">
+              <span className="mt-3 inline-flex items-center gap-1 text-[11px] font-medium text-brand-400 opacity-0 transition-opacity group-hover:opacity-100">
                 Manage <ArrowUpRight className="h-3 w-3" />
               </span>
             </Link>
@@ -66,12 +69,14 @@ export default async function AdminDashboard() {
         })}
       </div>
 
+      <ThemeEditor initial={theme} />
+
       <SectionManager sections={sections} />
 
       <Link
         href="/"
         target="_blank"
-        className="inline-flex items-center gap-1.5 text-sm font-medium text-orange-400 transition-colors hover:text-orange-300"
+        className="inline-flex items-center gap-1.5 text-sm font-medium text-brand-400 transition-colors hover:text-brand-300"
       >
         Open the live site
         <ArrowUpRight className="h-3.5 w-3.5" />

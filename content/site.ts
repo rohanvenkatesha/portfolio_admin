@@ -252,6 +252,8 @@ export type Project = {
   /** Derived strictly from your own project descriptions. */
   highlights: string[];
   accent: "cyan" | "violet" | "amber" | "lime" | "rose";
+  /** Cover image in Firebase Storage. Falls back to the accent gradient plate. */
+  coverUrl?: string;
   featured?: boolean;
   repo?: string;
   demo?: string;

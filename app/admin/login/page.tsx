@@ -24,7 +24,7 @@ export default async function LoginPage() {
   return (
     <div className="relative flex min-h-svh items-center justify-center overflow-hidden bg-void px-4">
       <div className="absolute inset-0 bg-grid opacity-60" />
-      <div className="absolute left-1/2 top-1/3 h-[28rem] w-[28rem] -translate-x-1/2 rounded-full bg-orange-600/10 blur-[120px]" />
+      <div className="absolute left-1/2 top-1/3 h-[28rem] w-[28rem] -translate-x-1/2 rounded-full bg-brand-600/10 blur-[120px]" />
       <LoginForm />
     </div>
   );

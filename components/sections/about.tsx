@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { Code2, Palette, Plus, Quote, Sparkles } from "lucide-react";
 import { Reveal, RevealGroup, RevealItem, SectionHeading } from "@/components/fx/reveal";
+import { EmberBackdrop } from "@/components/fx/ember-backdrop";
 import { philosophy, profile, skillGroups } from "@/content/site";
 import { cn } from "@/lib/utils";
 
@@ -33,7 +34,7 @@ export function About() {
             <>
               How I think
               <br />
-              <span className="text-orange-500">about the work</span>
+              <span className="text-brand-500">about the work</span>
             </>
           }
           description="Two disciplines that look unrelated from outside and feel identical from inside: notice what matters, cut everything else, get it in front of people."
@@ -41,20 +42,27 @@ export function About() {
 
         {/* ---------------- Narrative + principles ---------------- */}
         <div className="mt-12 grid gap-4 lg:grid-cols-[0.95fr_1.05fr]">
+          {/* The personal statement carries the ember treatment — it's the one
+              piece of first-person writing on the page, so it earns the weight.
+              Palette inverts to white-alpha; the orange accent would vanish. */}
           <Reveal direction="right">
-            <div className="flex h-full flex-col rounded-2xl border border-white/8 bg-panel-2 p-8">
-              <Quote className="h-7 w-7 text-orange-500/70" />
-              <p className="mt-6 whitespace-pre-line text-[15px] leading-relaxed text-zinc-300">
-                {profile.bio}
-              </p>
+            <div className="relative h-full overflow-hidden rounded-2xl border border-white/8">
+              <EmberBackdrop drift={false} />
 
-              <div className="mt-auto flex items-center gap-3 border-t border-white/8 pt-6">
-                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-orange-500 font-mono text-xs font-bold text-white">
-                  {profile.initials}
-                </span>
-                <div>
-                  <p className="text-sm font-medium text-white">{profile.name}</p>
-                  <p className="text-[11px] text-zinc-500">{profile.location}</p>
+              <div className="relative flex h-full flex-col p-8">
+                <Quote className="h-7 w-7 text-white/50" />
+                <p className="mt-6 whitespace-pre-line text-[15px] leading-relaxed text-white/85">
+                  {profile.bio}
+                </p>
+
+                <div className="mt-auto flex items-center gap-3 border-t border-white/20 pt-6">
+                  <span className="flex h-10 w-10 items-center justify-center rounded-full bg-white font-mono text-xs font-bold text-brand-600">
+                    {profile.initials}
+                  </span>
+                  <div>
+                    <p className="text-sm font-medium text-white">{profile.name}</p>
+                    <p className="text-[11px] text-white/60">{profile.location}</p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -64,15 +72,15 @@ export function About() {
           <RevealGroup className="grid gap-4 sm:grid-cols-2" stagger={0.08}>
             {philosophy.map((item, index) => (
               <RevealItem key={item.title}>
-                <article className="group relative h-full overflow-hidden rounded-2xl border border-white/8 bg-panel-2 p-6 transition-colors duration-500 hover:border-orange-500/40">
+                <article className="group relative h-full overflow-hidden rounded-2xl border border-white/8 bg-panel-2 p-6 transition-colors duration-500 hover:border-brand-500/40">
                   {/* Warm wash rises on hover */}
                   <span
                     aria-hidden
-                    className="absolute inset-0 origin-bottom scale-y-0 bg-gradient-to-t from-orange-500/10 to-transparent transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-y-100"
+                    className="absolute inset-0 origin-bottom scale-y-0 bg-gradient-to-t from-brand-500/10 to-transparent transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-y-100"
                   />
 
                   <div className="relative">
-                    <span className="font-mono text-2xl font-bold text-orange-500 transition-transform duration-500 group-hover:-translate-y-0.5">
+                    <span className="font-mono text-2xl font-bold text-brand-500 transition-transform duration-500 group-hover:-translate-y-0.5">
                       {String(index + 1).padStart(2, "0")}
                     </span>
                     <h3 className="mt-4 text-base font-semibold text-white">{item.title}</h3>
@@ -106,7 +114,7 @@ export function About() {
                     {active ? (
                       <motion.span
                         layoutId="domain-pill"
-                        className="absolute inset-0 rounded-full bg-orange-500"
+                        className="absolute inset-0 rounded-full bg-brand-500"
                         transition={{ type: "spring", stiffness: 380, damping: 32 }}
                       />
                     ) : null}
@@ -142,7 +150,7 @@ export function About() {
                     <span
                       aria-hidden
                       className={cn(
-                        "absolute inset-0 origin-left bg-gradient-to-r from-orange-500/12 to-transparent transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]",
+                        "absolute inset-0 origin-left bg-gradient-to-r from-brand-500/12 to-transparent transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]",
                         open ? "scale-x-100" : "scale-x-0"
                       )}
                     />
@@ -151,7 +159,7 @@ export function About() {
                       <span
                         className={cn(
                           "font-mono text-[11px] transition-colors duration-300",
-                          open ? "text-orange-500" : "text-zinc-600"
+                          open ? "text-brand-500" : "text-zinc-600"
                         )}
                       >
                         {String(index + 1).padStart(2, "0")}
@@ -160,7 +168,7 @@ export function About() {
                       <h4
                         className={cn(
                           "flex-1 text-lg font-semibold transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] sm:text-xl",
-                          open ? "translate-x-2 text-orange-400" : "text-white"
+                          open ? "translate-x-2 text-brand-400" : "text-white"
                         )}
                       >
                         {group.label}
@@ -173,7 +181,7 @@ export function About() {
                       <Plus
                         className={cn(
                           "h-4 w-4 shrink-0 text-zinc-500 transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]",
-                          open && "rotate-45 text-orange-500"
+                          open && "rotate-45 text-brand-500"
                         )}
                       />
                     </div>
@@ -211,7 +219,7 @@ export function About() {
                                       delay: 0.06 * i,
                                       ease: [0.16, 1, 0.3, 1],
                                     }}
-                                    className="h-full rounded-full bg-gradient-to-r from-orange-600 to-orange-400"
+                                    className="h-full rounded-full bg-gradient-to-r from-brand-600 to-brand-400"
                                   />
                                 </div>
                               </motion.div>

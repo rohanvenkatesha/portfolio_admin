@@ -73,7 +73,7 @@ export default async function ProjectPage({ params }: PageProps<"/work/[slug]">)
                 <ArrowLeft className="h-3 w-3" />
                 Previous
               </span>
-              <span className="mt-2 block font-semibold text-white transition-colors group-hover:text-orange-200">
+              <span className="mt-2 block font-semibold text-white transition-colors group-hover:text-brand-200">
                 {previous.title}
               </span>
             </Link>
@@ -86,7 +86,7 @@ export default async function ProjectPage({ params }: PageProps<"/work/[slug]">)
                 Next
                 <ArrowRight className="h-3 w-3" />
               </span>
-              <span className="mt-2 block font-semibold text-white transition-colors group-hover:text-orange-200">
+              <span className="mt-2 block font-semibold text-white transition-colors group-hover:text-brand-200">
                 {next.title}
               </span>
             </Link>

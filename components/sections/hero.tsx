@@ -41,14 +41,17 @@ const MARQUEE_ITEMS = [
   "Docker",
 ];
 
+const EASE = [0.16, 1, 0.3, 1] as const;
+
 export function Hero() {
   return (
     <section id="hero" className="relative scroll-mt-24 px-3 pt-24 sm:px-5 lg:px-6">
       <div className="mx-auto w-full max-w-[100rem]">
         {/* ---------------- Hero panel ---------------- */}
-        {/* Height is deliberately restrained: without a portrait filling it, a
-            taller panel leaves a dead zone between the copy and the masthead. */}
-        <div className="relative flex min-h-[clamp(26rem,66svh,40rem)] flex-col overflow-hidden rounded-[1.75rem] border border-white/8 bg-panel sm:rounded-[2.25rem]">
+        {/* The floor is deliberately below what the stacked content needs, so
+            the content sets the height. A taller floor forces leftover space
+            somewhere, and there's no portrait here to absorb it. */}
+        <div className="relative flex min-h-[clamp(20rem,52svh,30rem)] flex-col overflow-hidden rounded-[1.75rem] border border-white/8 bg-panel sm:rounded-[2.25rem]">
           {/* Layered backdrop — portrait when supplied, particle field otherwise */}
           <div className="absolute inset-0 bg-grid opacity-70" />
 
@@ -66,52 +69,73 @@ export function Hero() {
           )}
 
           <div className="absolute inset-0 z-[2] bg-gradient-to-t from-panel via-panel/45 to-panel/10" />
-          <div className="absolute -left-40 top-1/3 z-[2] h-[34rem] w-[34rem] rounded-full bg-orange-600/12 blur-[130px]" />
+          <div className="absolute -left-40 top-1/3 z-[2] h-[34rem] w-[34rem] rounded-full bg-brand-600/12 blur-[130px]" />
 
-          {/* Top row */}
-          <div className="relative z-10 flex flex-1 flex-col gap-10 p-6 sm:p-9 lg:flex-row lg:items-start lg:justify-between lg:p-12">
-            {/* Left: status + headline */}
-            <div className="max-w-2xl">
+          {/**
+           * One vertical stack in two tiers:
+           *   masthead  — name, then what I do
+           *   support   — bio and calls to action
+           *
+           * Deliberately NOT justify-between: that distributes leftover height
+           * into the gap between the tiers, which reads as a hole under the
+           * role line. Flowing from the top with a fixed gap sends any spare
+           * height harmlessly to the bottom of the panel instead.
+           */}
+          <div className="relative z-10 flex flex-1 flex-col gap-10 p-6 sm:p-9 lg:gap-12 lg:p-12">
+            {/* ---------- Masthead ---------- */}
+            <div>
               <motion.div
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+                transition={{ duration: 0.7, ease: EASE }}
               >
                 <StatusPulse label="Available for work" />
               </motion.div>
 
+              {/* Sized in vw with nowrap so the name spans the panel at every
+                  breakpoint, the way a masthead should. */}
               <motion.h1
-                initial={{ opacity: 0, y: 22 }}
+                initial={{ opacity: 0, y: 26 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
-                className="mt-6 text-balance text-3xl font-bold leading-[1.05] tracking-tight text-white sm:text-4xl lg:text-5xl"
+                transition={{ duration: 0.9, delay: 0.08, ease: EASE }}
+                className="display-name mt-6 whitespace-nowrap text-white [font-size:clamp(1.6rem,8.4vw,9rem)]"
               >
-                Python AI Engineer
-                <br />
-                based in <span className="text-orange-500">Michigan</span>
+                {profile.name}
               </motion.h1>
+
+              <motion.p
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: 0.18, ease: EASE }}
+                className="mt-5 text-xl font-semibold tracking-tight text-zinc-200 sm:text-2xl lg:text-3xl"
+              >
+                Python AI Engineer, based in{" "}
+                <span className="text-brand-500">Michigan</span>
+              </motion.p>
 
               <motion.div
                 initial={{ opacity: 0, y: 18 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
-                className="mt-5 flex min-h-[2rem] items-center gap-3 text-lg font-medium text-zinc-400 sm:text-xl"
+                transition={{ duration: 0.8, delay: 0.26, ease: EASE }}
+                className="mt-4 flex min-h-[1.75rem] items-center gap-3 text-base font-medium text-zinc-500 sm:text-lg"
               >
-                <span className="h-px w-8 shrink-0 bg-orange-500" />
+                <span className="h-px w-8 shrink-0 bg-brand-500" />
                 <Typewriter words={profile.roles} />
               </motion.div>
             </div>
 
-            {/* Right: bio + CTAs */}
+            {/* ---------- Support ---------- */}
             <motion.div
               initial={{ opacity: 0, y: 22 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.28, ease: [0.16, 1, 0.3, 1] }}
-              className="max-w-sm lg:pt-2"
+              transition={{ duration: 0.8, delay: 0.34, ease: EASE }}
+              className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between"
             >
-              <p className="text-sm leading-relaxed text-zinc-400">{profile.bioShort}</p>
+              <p className="max-w-md text-sm leading-relaxed text-zinc-400">
+                {profile.bioShort}
+              </p>
 
-              <div className="mt-6 flex flex-wrap items-center gap-3">
+              <div className="flex flex-wrap items-center gap-3">
                 <PillLink href="#work">See my work</PillLink>
 
                 <Dialog>
@@ -132,7 +156,7 @@ export function Hero() {
                     <div className="mt-7 space-y-5">
                       <a
                         href={`mailto:${profile.email}`}
-                        className="group flex items-center justify-between gap-4 rounded-xl border border-white/8 bg-panel-2 px-5 py-4 transition-all hover:border-orange-500/50"
+                        className="group flex items-center justify-between gap-4 rounded-xl border border-white/8 bg-panel-2 px-5 py-4 transition-all hover:border-brand-500/50"
                       >
                         <span className="min-w-0">
                           <span className="eyebrow block text-zinc-500">Email</span>
@@ -140,11 +164,11 @@ export function Hero() {
                             {profile.email}
                           </span>
                         </span>
-                        <ArrowUpRight className="h-5 w-5 shrink-0 text-zinc-500 transition-all group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-orange-400" />
+                        <ArrowUpRight className="h-5 w-5 shrink-0 text-zinc-500 transition-all group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-brand-400" />
                       </a>
 
                       <div className="flex items-center gap-2.5 text-sm text-zinc-400">
-                        <MapPin className="h-4 w-4 text-orange-500" />
+                        <MapPin className="h-4 w-4 text-brand-500" />
                         {profile.location}
                       </div>
 
@@ -158,20 +182,6 @@ export function Hero() {
               </div>
             </motion.div>
           </div>
-
-          {/* Oversized name, anchored to the bottom of the panel */}
-          <motion.div
-            initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1.1, delay: 0.35, ease: [0.16, 1, 0.3, 1] }}
-            className="relative z-10 select-none px-6 pb-7 sm:px-9 sm:pb-9 lg:px-12 lg:pb-11"
-          >
-            {/* Sized in vw with nowrap so the masthead always spans the panel
-                width at every breakpoint, with a little inset either side. */}
-            <span className="display-name block whitespace-nowrap text-white [font-size:clamp(1.6rem,8.4vw,9rem)]">
-              {profile.name}
-            </span>
-          </motion.div>
         </div>
 
         {/* ---------------- Tech strip ---------------- */}
@@ -186,7 +196,7 @@ export function Hero() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 1.1, duration: 0.8 }}
-          className="mx-auto mt-8 flex w-fit flex-col items-center gap-2 text-zinc-600 transition-colors hover:text-orange-400"
+          className="mx-auto mt-8 flex w-fit flex-col items-center gap-2 text-zinc-600 transition-colors hover:text-brand-400"
         >
           <span className="eyebrow text-[10px]">Scroll</span>
           <motion.span

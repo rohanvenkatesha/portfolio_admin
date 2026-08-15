@@ -111,14 +111,14 @@ export function CustomCursor() {
             marginTop: -ringSize / 2,
             scale: pressed ? 0.82 : 1,
             borderColor:
-              variant === "default" ? "rgba(255,255,255,0.28)" : "rgba(249,115,22,0.85)",
+              variant === "default" ? "rgba(255,255,255,0.28)" : "color-mix(in oklab, var(--color-brand-500) 85%, transparent)",
             backgroundColor:
-              variant === "default" ? "rgba(255,255,255,0)" : "rgba(249,115,22,0.10)",
+              variant === "default" ? "rgba(255,255,255,0)" : "color-mix(in oklab, var(--color-brand-500) 10%, transparent)",
           }}
           transition={{ type: "spring", stiffness: 380, damping: 28 }}
         >
           {label ? (
-            <span className="eyebrow text-[9px] font-semibold text-orange-200">{label}</span>
+            <span className="eyebrow text-[9px] font-semibold text-brand-200">{label}</span>
           ) : null}
         </motion.div>
       </motion.div>
@@ -130,7 +130,7 @@ export function CustomCursor() {
         animate={{ opacity: hidden || variant !== "default" ? 0 : 1 }}
         transition={{ duration: 0.15 }}
       >
-        <div className="-ml-[3px] -mt-[3px] h-1.5 w-1.5 rounded-full bg-orange-300 shadow-[0_0_12px_2px_rgba(249,115,22,0.8)]" />
+        <div className="-ml-[3px] -mt-[3px] h-1.5 w-1.5 rounded-full bg-brand-300 shadow-[0_0_12px_2px_color-mix(in_oklab,var(--color-brand-500)_80%,transparent)]" />
       </motion.div>
     </div>
   );

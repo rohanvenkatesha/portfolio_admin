@@ -120,14 +120,22 @@ export function SectionHeading({
   title,
   description,
   align = "left",
+  tone = "default",
   className,
 }: {
   eyebrow: string;
   title: ReactNode;
   description?: string;
   align?: "left" | "center";
+  /**
+   * "ember" for headings sitting on the warm backdrop, where the orange
+   * accent and the zinc ramp both disappear into the ground.
+   */
+  tone?: "default" | "ember";
   className?: string;
 }) {
+  const onEmber = tone === "ember";
+
   return (
     <div
       className={cn(
@@ -138,8 +146,15 @@ export function SectionHeading({
     >
       <Reveal direction="up">
         <div className="flex items-center gap-2.5">
-          <span className="h-1.5 w-1.5 rounded-full bg-orange-500" />
-          <span className="eyebrow text-orange-500">{eyebrow}</span>
+          <span
+            className={cn(
+              "h-1.5 w-1.5 rounded-full",
+              onEmber ? "bg-white" : "bg-brand-500"
+            )}
+          />
+          <span className={cn("eyebrow", onEmber ? "text-white/80" : "text-brand-500")}>
+            {eyebrow}
+          </span>
         </div>
       </Reveal>
 
@@ -153,7 +168,8 @@ export function SectionHeading({
         <Reveal direction="up" delay={0.16}>
           <p
             className={cn(
-              "max-w-2xl text-pretty text-sm leading-relaxed text-zinc-400 sm:text-base",
+              "max-w-2xl text-pretty text-sm leading-relaxed sm:text-base",
+              onEmber ? "text-white/70" : "text-zinc-400",
               align === "center" && "mx-auto"
             )}
           >

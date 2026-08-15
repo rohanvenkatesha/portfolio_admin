@@ -222,18 +222,18 @@ function PaletteBody({
                   onMouseEnter={() => setCursor(index)}
                   className={cn(
                     "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left transition-colors",
-                    activeRow ? "bg-orange-400/10 text-white" : "text-zinc-400 hover:bg-white/5"
+                    activeRow ? "bg-brand-400/10 text-white" : "text-zinc-400 hover:bg-white/5"
                   )}
                 >
                   <Icon
-                    className={cn("h-4 w-4 shrink-0", activeRow ? "text-orange-300" : "text-zinc-600")}
+                    className={cn("h-4 w-4 shrink-0", activeRow ? "text-brand-300" : "text-zinc-600")}
                   />
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-sm font-medium">{command.label}</span>
                     <span className="block truncate text-[11px] text-zinc-600">{command.hint}</span>
                   </span>
                   {activeRow ? (
-                    <CornerDownLeft className="h-3.5 w-3.5 shrink-0 text-orange-300" />
+                    <CornerDownLeft className="h-3.5 w-3.5 shrink-0 text-brand-300" />
                   ) : null}
                 </button>
               </div>

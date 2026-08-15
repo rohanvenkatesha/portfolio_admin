@@ -56,7 +56,7 @@ export function DownloadGuideButton({ trip }: { trip: Trip }) {
   return (
     <button
       onClick={() => downloadItinerary(trip)}
-      className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.06] px-4 py-2.5 text-xs font-semibold text-white backdrop-blur-sm transition-all hover:border-orange-400/50 hover:bg-orange-400/10 hover:text-orange-200"
+      className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.06] px-4 py-2.5 text-xs font-semibold text-white backdrop-blur-sm transition-all hover:border-brand-400/50 hover:bg-brand-400/10 hover:text-brand-200"
     >
       <Download className="h-3.5 w-3.5" />
       Download guide
@@ -96,7 +96,7 @@ export function TripDetail({
 
           <button
             onClick={() => downloadItinerary(trip)}
-            className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.04] px-4 py-2.5 text-xs font-semibold text-white transition-all hover:border-orange-400/50 hover:bg-orange-400/10 hover:text-orange-200"
+            className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.04] px-4 py-2.5 text-xs font-semibold text-white transition-all hover:border-brand-400/50 hover:bg-brand-400/10 hover:text-brand-200"
           >
             <Download className="h-3.5 w-3.5" />
             Download guide
@@ -122,7 +122,7 @@ export function TripDetail({
               {active ? (
                 <motion.span
                   layoutId={`travel-tab-${trip.id}`}
-                  className="absolute inset-x-0 -bottom-px h-0.5 rounded-full bg-gradient-to-r from-orange-400 to-orange-400"
+                  className="absolute inset-x-0 -bottom-px h-0.5 rounded-full bg-gradient-to-r from-brand-400 to-brand-400"
                   transition={{ type: "spring", stiffness: 380, damping: 32 }}
                 />
               ) : null}
@@ -151,7 +151,7 @@ export function TripDetail({
                       className={cn(
                         "overflow-hidden rounded-xl border transition-colors",
                         open
-                          ? "border-orange-400/30 bg-orange-400/[0.04]"
+                          ? "border-brand-400/30 bg-brand-400/[0.04]"
                           : "border-white/10 bg-white/[0.02]"
                       )}
                     >
@@ -161,7 +161,7 @@ export function TripDetail({
                         className="flex w-full items-center justify-between gap-4 p-4 text-left"
                       >
                         <span className="flex min-w-0 items-center gap-4">
-                          <span className="shrink-0 font-mono text-[11px] text-orange-300">
+                          <span className="shrink-0 font-mono text-[11px] text-brand-300">
                             {day.day}
                           </span>
                           <span className="truncate text-sm font-medium text-white">
@@ -202,7 +202,7 @@ export function TripDetail({
                 {trip.gear.map((item) => (
                   <span
                     key={item}
-                    className="inline-flex items-center gap-2 rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 text-sm text-zinc-300 transition-colors hover:border-orange-400/40 hover:text-orange-200"
+                    className="inline-flex items-center gap-2 rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 text-sm text-zinc-300 transition-colors hover:border-brand-400/40 hover:text-brand-200"
                   >
                     <Backpack className="h-3.5 w-3.5 text-zinc-600" />
                     {item}
@@ -218,7 +218,7 @@ export function TripDetail({
                     key={tip}
                     className="flex gap-3 rounded-xl border border-white/8 bg-white/[0.02] p-4 text-sm leading-relaxed text-zinc-300"
                   >
-                    <Lightbulb className="mt-0.5 h-4 w-4 shrink-0 text-orange-400" />
+                    <Lightbulb className="mt-0.5 h-4 w-4 shrink-0 text-brand-400" />
                     {tip}
                   </li>
                 ))}
@@ -227,7 +227,7 @@ export function TripDetail({
           </motion.div>
         </AnimatePresence>
 
-        <blockquote className="mt-7 border-l-2 border-orange-400/40 pl-5 text-sm italic leading-relaxed text-zinc-400">
+        <blockquote className="mt-7 border-l-2 border-brand-400/40 pl-5 text-sm italic leading-relaxed text-zinc-400">
           {trip.reflection}
         </blockquote>
       </div>

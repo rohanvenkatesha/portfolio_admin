@@ -19,7 +19,7 @@ const Globe = dynamic(() => import("@/components/three/globe").then((m) => m.Glo
   ssr: false,
   loading: () => (
     <div className="flex aspect-square w-full items-center justify-center">
-      <div className="h-40 w-40 animate-pulse rounded-full border border-orange-500/20" />
+      <div className="h-40 w-40 animate-pulse rounded-full border border-brand-500/20" />
     </div>
   ),
 });
@@ -82,7 +82,7 @@ export function Travel({
             <>
               Places I went
               <br />
-              <span className="text-orange-500">on my own</span>
+              <span className="text-brand-500">on my own</span>
             </>
           }
           description={`${totalCount ?? trips.length} journeys on the map. Hover a destination to find it on the globe — open it for the full day-by-day guide.`}
@@ -111,7 +111,7 @@ export function Travel({
                 transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
                 className="pointer-events-none absolute bottom-6 right-6 text-right"
               >
-                <p className="font-mono text-[11px] text-orange-400">{selected.destination}</p>
+                <p className="font-mono text-[11px] text-brand-400">{selected.destination}</p>
                 <p className="font-mono text-[10px] text-zinc-600">
                   {selected.lat.toFixed(2)}°, {selected.lng.toFixed(2)}°
                 </p>
@@ -144,14 +144,14 @@ export function Travel({
                     {/* Orange wash wipes in from the left */}
                     <span
                       aria-hidden
-                      className="absolute inset-0 origin-left scale-x-0 bg-gradient-to-r from-orange-500/12 to-transparent transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-x-100"
+                      className="absolute inset-0 origin-left scale-x-0 bg-gradient-to-r from-brand-500/12 to-transparent transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-x-100"
                     />
 
                     <div className="relative flex items-center gap-5">
                       <span
                         className={cn(
                           "font-mono text-[11px] transition-colors duration-300",
-                          active ? "text-orange-500" : "text-zinc-600"
+                          active ? "text-brand-500" : "text-zinc-600"
                         )}
                       >
                         {String(index + 1).padStart(2, "0")}
@@ -160,7 +160,7 @@ export function Travel({
                       {/* Content nudges right on hover */}
                       <div className="min-w-0 flex-1 transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:translate-x-2">
                         <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-                          <h3 className="text-xl font-semibold text-white transition-colors duration-300 group-hover:text-orange-400 sm:text-2xl">
+                          <h3 className="text-xl font-semibold text-white transition-colors duration-300 group-hover:text-brand-400 sm:text-2xl">
                             {trip.destination}
                           </h3>
                           <span className="font-mono text-[11px] text-zinc-600">{trip.year}</span>
@@ -185,7 +185,7 @@ export function Travel({
                       </div>
 
                       {/* Arrow slides in and rotates */}
-                      <span className="flex h-10 w-10 shrink-0 translate-x-3 items-center justify-center rounded-full border border-white/12 opacity-0 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:translate-x-0 group-hover:border-orange-500 group-hover:bg-orange-500 group-hover:opacity-100">
+                      <span className="flex h-10 w-10 shrink-0 translate-x-3 items-center justify-center rounded-full border border-white/12 opacity-0 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:translate-x-0 group-hover:border-brand-500 group-hover:bg-brand-500 group-hover:opacity-100">
                         <ArrowUpRight className="h-4 w-4 text-white transition-transform duration-300 group-hover:rotate-45" />
                       </span>
                     </div>
@@ -198,12 +198,12 @@ export function Travel({
             {totalCount && totalCount > trips.length ? (
               <Link
                 href="/travel"
-                className="group flex items-center justify-between gap-4 px-4 py-6 transition-colors hover:text-orange-400"
+                className="group flex items-center justify-between gap-4 px-4 py-6 transition-colors hover:text-brand-400"
               >
-                <span className="text-sm font-semibold text-white transition-colors group-hover:text-orange-400">
+                <span className="text-sm font-semibold text-white transition-colors group-hover:text-brand-400">
                   View all {totalCount} journeys
                 </span>
-                <span className="flex h-9 w-9 items-center justify-center rounded-full border border-white/12 transition-all duration-500 group-hover:border-orange-500 group-hover:bg-orange-500">
+                <span className="flex h-9 w-9 items-center justify-center rounded-full border border-white/12 transition-all duration-500 group-hover:border-brand-500 group-hover:bg-brand-500">
                   <ArrowUpRight className="h-4 w-4 text-white transition-transform duration-300 group-hover:rotate-45" />
                 </span>
               </Link>
@@ -219,7 +219,7 @@ export function Travel({
             <div className="absolute inset-0 bg-gradient-to-t from-black/85 to-transparent" />
             <div className="absolute inset-x-0 bottom-0 p-4">
               <p className="text-base font-semibold text-white">{hovered.destination}</p>
-              <p className="mt-0.5 font-mono text-[10px] text-orange-300">
+              <p className="mt-0.5 font-mono text-[10px] text-brand-300">
                 {hovered.days} days · {hovered.distanceKm.toLocaleString()} km
               </p>
             </div>

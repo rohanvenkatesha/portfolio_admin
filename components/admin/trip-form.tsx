@@ -8,7 +8,7 @@ import type { Trip } from "@/content/site";
 import { cn } from "@/lib/utils";
 
 const inputClass =
-  "w-full rounded-xl border border-white/10 bg-panel-2 px-3.5 py-2.5 text-sm text-white outline-none transition-colors placeholder:text-zinc-600 focus:border-orange-500/60 focus:ring-2 focus:ring-orange-500/20";
+  "w-full rounded-xl border border-white/10 bg-panel-2 px-3.5 py-2.5 text-sm text-white outline-none transition-colors placeholder:text-zinc-600 focus:border-brand-500/60 focus:ring-2 focus:ring-brand-500/20";
 
 function Field({
   label,
@@ -193,7 +193,7 @@ export function TripForm({ trip }: { trip: Trip }) {
         <button
           type="submit"
           disabled={pending}
-          className="inline-flex items-center gap-2 rounded-full bg-orange-500 px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-orange-400 disabled:opacity-60"
+          className="inline-flex items-center gap-2 rounded-full bg-brand-500 px-6 py-3 text-sm font-semibold text-[var(--brand-ink)] transition-colors hover:bg-brand-400 disabled:opacity-60"
         >
           {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
           {pending ? "Saving…" : "Save changes"}

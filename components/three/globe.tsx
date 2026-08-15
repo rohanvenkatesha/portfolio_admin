@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
+import { readThemeColor } from "@/lib/theme-color";
 import { feature } from "topojson-client";
 import type { FeatureCollection, MultiPolygon, Polygon, Position } from "geojson";
 import type { Topology } from "topojson-specification";
@@ -120,6 +121,11 @@ export function Globe({
     const container = containerRef.current;
     if (!container) return;
 
+    // Canvases take numeric hex, so read the live accent from CSS.
+    const BRAND = readThemeColor("--color-brand-500", 0xff5a1f);
+    const BRAND_SOFT = readThemeColor("--color-brand-300", 0xff9a5c);
+    const BRAND_PALE = readThemeColor("--color-brand-200", 0xffd0a8);
+
     const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
     let renderer: THREE.WebGLRenderer;
@@ -174,7 +180,7 @@ export function Globe({
       new THREE.BufferAttribute(COASTLINE_POSITIONS, 3)
     );
     const coastMaterial = new THREE.LineBasicMaterial({
-      color: 0xff8a4c,
+      color: BRAND_SOFT,
       transparent: true,
       opacity: 0.85,
     });
@@ -183,7 +189,7 @@ export function Globe({
     // Atmosphere: a slightly larger sphere rendered from the inside
     const atmosphereGeometry = new THREE.SphereGeometry(RADIUS * 1.16, 48, 32);
     const atmosphereMaterial = new THREE.MeshBasicMaterial({
-      color: 0xff5a1f,
+      color: BRAND,
       transparent: true,
       opacity: 0.055,
       side: THREE.BackSide,
@@ -210,13 +216,13 @@ export function Globe({
       const base = latLngToVec3(marker.lat, marker.lng, RADIUS);
       const tip = latLngToVec3(marker.lat, marker.lng, RADIUS * 1.22);
 
-      const material = new THREE.MeshBasicMaterial({ color: 0xff5a1f });
+      const material = new THREE.MeshBasicMaterial({ color: BRAND });
       const dot = new THREE.Mesh(pinGeometry, material);
       dot.position.copy(tip);
       dot.userData.markerId = marker.id;
 
       const ringMaterial = new THREE.MeshBasicMaterial({
-        color: 0xff5a1f,
+        color: BRAND,
         transparent: true,
         opacity: 0.5,
         side: THREE.DoubleSide,
@@ -227,7 +233,7 @@ export function Globe({
       ring.lookAt(0, 0, 0);
 
       const beamMaterial = new THREE.LineBasicMaterial({
-        color: 0xff5a1f,
+        color: BRAND,
         transparent: true,
         opacity: 0.45,
       });
@@ -300,8 +306,8 @@ export function Globe({
     canvas.addEventListener("pointercancel", onPointerUp);
 
     /* ---------------- Frame loop ---------------- */
-    const selectedColor = new THREE.Color(0xffd0a8);
-    const idleColor = new THREE.Color(0xff5a1f);
+    const selectedColor = new THREE.Color(BRAND_PALE);
+    const idleColor = new THREE.Color(BRAND);
     let elapsed = 0;
 
     const render = (animate: boolean) => {

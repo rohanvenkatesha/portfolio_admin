@@ -31,10 +31,10 @@ export function PhotoList({ photos, seeded }: { photos: Photo[]; seeded: boolean
   return (
     <div className="space-y-4">
       {!seeded ? (
-        <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-orange-500/25 bg-orange-500/[0.06] p-5">
+        <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-brand-500/25 bg-brand-500/[0.06] p-5">
           <div className="min-w-0">
             <p className="flex items-center gap-2 text-sm font-semibold text-white">
-              <Database className="h-4 w-4 text-orange-400" />
+              <Database className="h-4 w-4 text-brand-400" />
               Gallery not in Firestore yet
             </p>
             <p className="mt-1.5 text-[13px] leading-relaxed text-zinc-400">
@@ -45,7 +45,7 @@ export function PhotoList({ photos, seeded }: { photos: Photo[]; seeded: boolean
           <button
             onClick={() => run(seedPhotos)}
             disabled={pending}
-            className="inline-flex shrink-0 items-center gap-2 rounded-full bg-orange-500 px-5 py-2.5 text-[13px] font-semibold text-white transition-colors hover:bg-orange-400 disabled:opacity-60"
+            className="inline-flex shrink-0 items-center gap-2 rounded-full bg-brand-500 px-5 py-2.5 text-[13px] font-semibold text-[var(--brand-ink)] transition-colors hover:bg-brand-400 disabled:opacity-60"
           >
             {pending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
             Seed gallery

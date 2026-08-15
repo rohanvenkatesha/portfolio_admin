@@ -175,7 +175,7 @@ export function LoginForm() {
 
   return (
     <div className="relative w-full max-w-sm rounded-2xl border border-white/10 bg-panel p-8">
-      <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-orange-500 font-mono text-sm font-bold text-white">
+      <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-500 font-mono text-sm font-bold text-[var(--brand-ink)]">
         {profile.initials}
       </span>
 
@@ -187,7 +187,7 @@ export function LoginForm() {
       <button
         onClick={signIn}
         disabled={busy || resolving || missingConfig}
-        className="mt-7 inline-flex w-full items-center justify-center gap-2.5 rounded-full bg-orange-500 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-orange-400 disabled:cursor-not-allowed disabled:opacity-60"
+        className="mt-7 inline-flex w-full items-center justify-center gap-2.5 rounded-full bg-brand-500 px-5 py-3 text-sm font-semibold text-[var(--brand-ink)] transition-colors hover:bg-brand-400 disabled:cursor-not-allowed disabled:opacity-60"
       >
         {busy || resolving ? (
           <>

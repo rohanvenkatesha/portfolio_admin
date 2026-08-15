@@ -123,7 +123,7 @@ export function SectionManager({ sections }: { sections: SectionConfig[] }) {
                 className={cn(
                   "inline-flex min-w-[5.5rem] items-center justify-center gap-1.5 rounded-full border px-3 py-1.5 text-[11px] font-medium transition-colors disabled:opacity-60",
                   section.enabled
-                    ? "border-orange-500/40 bg-orange-500/10 text-orange-300"
+                    ? "border-brand-500/40 bg-brand-500/10 text-brand-300"
                     : "border-white/10 bg-white/5 text-zinc-500"
                 )}
               >

@@ -9,7 +9,6 @@ import { Visuals } from "@/components/sections/visuals";
 import { Travel } from "@/components/sections/travel";
 import { About } from "@/components/sections/about";
 import { CallToAction } from "@/components/sections/cta";
-import { Contact } from "@/components/sections/contact";
 import type { SectionId } from "@/content/sections";
 import { getActiveSections, getNavSections } from "@/lib/content/sections";
 import { getProjects } from "@/lib/content/projects";
@@ -48,7 +47,8 @@ const SECTION_RENDERERS: Record<SectionId, (data: PageData) => ReactNode> = {
   travel: ({ trips, totals }) => <Travel trips={trips} totalCount={totals.trips} />,
   about: () => <About />,
   cta: () => <CallToAction />,
-  contact: () => <Contact />,
+  // Contact is rendered by the footer, which they now share a panel with.
+  contact: () => null,
 };
 
 export default async function Page() {
@@ -85,7 +85,11 @@ export default async function Page() {
         ))}
       </main>
 
-      <Footer projects={projects} navSections={navSections} />
+      <Footer
+        projects={projects}
+        navSections={navSections}
+        withContact={sections.some((s) => s.id === "contact")}
+      />
     </>
   );
 }

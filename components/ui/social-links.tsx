@@ -15,10 +15,10 @@ const iconMap = {
 
 const hoverAccent: Record<string, string> = {
   github: "hover:border-white/40 hover:text-white hover:shadow-[0_0_28px_-6px_rgba(255,255,255,0.5)]",
-  linkedin: "hover:border-orange-400/50 hover:text-orange-300 hover:shadow-[0_0_28px_-6px_rgba(56,189,248,0.6)]",
+  linkedin: "hover:border-brand-400/50 hover:text-brand-300 hover:shadow-[0_0_28px_-6px_rgba(56,189,248,0.6)]",
   youtube: "hover:border-red-500/50 hover:text-red-400 hover:shadow-[0_0_28px_-6px_rgba(239,68,68,0.6)]",
-  instagram: "hover:border-orange-400/50 hover:text-orange-300 hover:shadow-[0_0_28px_-6px_rgba(232,121,249,0.6)]",
-  mail: "hover:border-orange-400/50 hover:text-orange-300 hover:shadow-[0_0_28px_-6px_rgba(34,211,238,0.6)]",
+  instagram: "hover:border-brand-400/50 hover:text-brand-300 hover:shadow-[0_0_28px_-6px_rgba(232,121,249,0.6)]",
+  mail: "hover:border-brand-400/50 hover:text-brand-300 hover:shadow-[0_0_28px_-6px_rgba(34,211,238,0.6)]",
 };
 
 /** Glowing icon pills for every social profile. */

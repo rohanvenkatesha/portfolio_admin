@@ -69,7 +69,7 @@ export function DarkroomArchive({ photos, films }: { photos: Photo[]; films: Fil
       {films.length > 0 ? (
         <section className="mt-3 rounded-[1.75rem] border border-white/8 bg-panel px-6 py-12 sm:px-10 lg:px-14">
           <div className="mb-6 flex items-center gap-3">
-            <Clapperboard className="h-4 w-4 text-orange-500" />
+            <Clapperboard className="h-4 w-4 text-brand-500" />
             <h2 className="eyebrow text-zinc-400">Films &amp; Reels</h2>
             <div className="h-px flex-1 bg-white/8" />
             <span className="font-mono text-[11px] text-zinc-600">{films.length}</span>
@@ -98,7 +98,7 @@ export function DarkroomArchive({ photos, films }: { photos: Photo[]; films: Fil
                 </div>
                 <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
 
-                <span className="absolute left-1/2 top-1/2 flex h-14 w-14 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-white/25 bg-white/10 backdrop-blur-md transition-all duration-500 group-hover:scale-110 group-hover:border-orange-400/70 group-hover:bg-orange-500/30">
+                <span className="absolute left-1/2 top-1/2 flex h-14 w-14 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-white/25 bg-white/10 backdrop-blur-md transition-all duration-500 group-hover:scale-110 group-hover:border-brand-400/70 group-hover:bg-brand-500/30">
                   <Play className="ml-0.5 h-5 w-5 fill-white text-white" />
                 </span>
 
@@ -107,7 +107,7 @@ export function DarkroomArchive({ photos, films }: { photos: Photo[]; films: Fil
                 </span>
 
                 <div className="absolute inset-x-0 bottom-0 p-5 text-left">
-                  <span className="eyebrow text-[10px] text-orange-400">{film.year}</span>
+                  <span className="eyebrow text-[10px] text-brand-400">{film.year}</span>
                   <h3 className="mt-1 text-lg font-semibold text-white">{film.title}</h3>
                   <p className="text-[12px] text-zinc-400">{film.role}</p>
                 </div>
@@ -120,7 +120,7 @@ export function DarkroomArchive({ photos, films }: { photos: Photo[]; films: Fil
       {/* ---------------- Photography ---------------- */}
       <section className="mt-3 rounded-[1.75rem] border border-white/8 bg-panel px-6 py-12 sm:px-10 lg:px-14">
         <div className="mb-6 flex items-center gap-3">
-          <Camera className="h-4 w-4 text-orange-500" />
+          <Camera className="h-4 w-4 text-brand-500" />
           <h2 className="eyebrow text-zinc-400">Photography</h2>
           <div className="h-px flex-1 bg-white/8" />
           <span className="font-mono text-[11px] text-zinc-600">
@@ -164,7 +164,7 @@ export function DarkroomArchive({ photos, films }: { photos: Photo[]; films: Fil
               <div className="mt-8 flex justify-center">
                 <button
                   onClick={() => setShown((n) => n + PAGE_SIZE)}
-                  className="rounded-full border border-white/12 bg-panel-2 px-6 py-3 text-sm font-semibold text-zinc-200 transition-colors hover:border-orange-500/50 hover:text-orange-300"
+                  className="rounded-full border border-white/12 bg-panel-2 px-6 py-3 text-sm font-semibold text-zinc-200 transition-colors hover:border-brand-500/50 hover:text-brand-300"
                 >
                   Load {Math.min(remaining, PAGE_SIZE)} more
                   <span className="ml-2 font-mono text-[11px] text-zinc-600">
@@ -199,7 +199,7 @@ export function DarkroomArchive({ photos, films }: { photos: Photo[]; films: Fil
                 )}
               </div>
               <div className="p-8">
-                <span className="eyebrow text-orange-400">
+                <span className="eyebrow text-brand-400">
                   {activeFilm.year} · {activeFilm.runtime}
                 </span>
                 <DialogTitle className="mt-3">{activeFilm.title}</DialogTitle>
@@ -222,14 +222,14 @@ export function DarkroomArchive({ photos, films }: { photos: Photo[]; films: Fil
                 <button
                   onClick={showPrev}
                   aria-label="Previous photo"
-                  className="absolute left-3 top-1/2 -translate-y-1/2 rounded-full border border-white/15 bg-black/50 p-2.5 text-white backdrop-blur-md transition-all hover:border-orange-400/60"
+                  className="absolute left-3 top-1/2 -translate-y-1/2 rounded-full border border-white/15 bg-black/50 p-2.5 text-white backdrop-blur-md transition-all hover:border-brand-400/60"
                 >
                   <ChevronLeft className="h-5 w-5" />
                 </button>
                 <button
                   onClick={showNext}
                   aria-label="Next photo"
-                  className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full border border-white/15 bg-black/50 p-2.5 text-white backdrop-blur-md transition-all hover:border-orange-400/60"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full border border-white/15 bg-black/50 p-2.5 text-white backdrop-blur-md transition-all hover:border-brand-400/60"
                 >
                   <ChevronRight className="h-5 w-5" />
                 </button>

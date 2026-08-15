@@ -31,10 +31,10 @@ export function ProjectList({ projects, seeded }: { projects: Project[]; seeded:
     <div className="space-y-4">
       {/* Seed */}
       {!seeded ? (
-        <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-orange-500/25 bg-orange-500/[0.06] p-5">
+        <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-brand-500/25 bg-brand-500/[0.06] p-5">
           <div className="min-w-0">
             <p className="flex items-center gap-2 text-sm font-semibold text-white">
-              <Database className="h-4 w-4 text-orange-400" />
+              <Database className="h-4 w-4 text-brand-400" />
               Firestore is empty
             </p>
             <p className="mt-1.5 text-[13px] leading-relaxed text-zinc-400">
@@ -46,7 +46,7 @@ export function ProjectList({ projects, seeded }: { projects: Project[]; seeded:
           <button
             onClick={() => run(seedProjects)}
             disabled={pending}
-            className="inline-flex shrink-0 items-center gap-2 rounded-full bg-orange-500 px-5 py-2.5 text-[13px] font-semibold text-white transition-colors hover:bg-orange-400 disabled:opacity-60"
+            className="inline-flex shrink-0 items-center gap-2 rounded-full bg-brand-500 px-5 py-2.5 text-[13px] font-semibold text-[var(--brand-ink)] transition-colors hover:bg-brand-400 disabled:opacity-60"
           >
             {pending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
             Seed Firestore
@@ -106,7 +106,7 @@ export function ProjectList({ projects, seeded }: { projects: Project[]; seeded:
               className={cn(
                 "rounded-full border p-2 transition-colors disabled:opacity-40",
                 project.featured
-                  ? "border-orange-500/50 bg-orange-500/15 text-orange-300"
+                  ? "border-brand-500/50 bg-brand-500/15 text-brand-300"
                   : "border-white/10 text-zinc-600 hover:text-zinc-300"
               )}
             >
@@ -120,7 +120,7 @@ export function ProjectList({ projects, seeded }: { projects: Project[]; seeded:
             <Link
               href={`/admin/projects/${project.id}`}
               className={cn(
-                "rounded-full border border-white/10 p-2 text-zinc-400 transition-colors hover:border-orange-500/50 hover:text-orange-300",
+                "rounded-full border border-white/10 p-2 text-zinc-400 transition-colors hover:border-brand-500/50 hover:text-brand-300",
                 !seeded && "pointer-events-none opacity-40"
               )}
               aria-disabled={!seeded}

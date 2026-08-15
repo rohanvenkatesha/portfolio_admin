@@ -15,9 +15,29 @@
   --color-panel-2: #222225;
   --color-panel-3: #2b2b2f;
 
-  /* Accent */
-  --color-accent: #ff5a1f;
-  --color-accent-soft: #ff7a45;
+  /**
+   * Accent scale, derived from a single runtime variable.
+   *
+   * The indirection is load-bearing: when a theme colour resolves to a literal
+   * hex, Tailwind bakes opacity variants (bg-brand-500/10) into fixed rgba at
+   * build time and no runtime override can reach them. Pointing at a var()
+   * forces it to emit color-mix() instead, so overriding --brand recolours
+   * solid AND translucent usages alike.
+   *
+   * The shades themselves are computed in :root below — see the note there on
+   * why they are not simply mixed toward white.
+   */
+  --color-brand-200: var(--brand-200);
+  --color-brand-300: var(--brand-300);
+  --color-brand-400: var(--brand-400);
+  --color-brand-500: var(--brand, var(--brand-base));
+  --color-brand-600: var(--brand-600);
+  --color-brand-700: var(--brand-700);
+  --color-brand-800: var(--brand-800);
+  --color-brand-900: var(--brand-900);
+
+  --color-accent: var(--brand, var(--brand-base));
+  --color-accent-soft: var(--brand-400);
 
   /* Type */
   --font-sans: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
@@ -117,6 +137,49 @@
 /* ------------------------------------------------------------------
    Base
    ------------------------------------------------------------------ */
+/* ------------------------------------------------------------------
+   Accent ramp
+   ------------------------------------------------------------------ */
+:root {
+  --brand-base: #ff5a1f;
+
+  /**
+   * Fallback ramp, mixed toward white and black.
+   *
+   * Mixing toward white desaturates: brand-400 comes out a pale, washed
+   * version of the accent rather than a brighter one, which is why the logo
+   * and CTA looked flat. Kept only for browsers without relative colour
+   * syntax — the oklch block below is the one that normally applies.
+   */
+  --brand-200: color-mix(in oklab, var(--brand, var(--brand-base)) 30%, white);
+  --brand-300: color-mix(in oklab, var(--brand, var(--brand-base)) 55%, white);
+  --brand-400: color-mix(in oklab, var(--brand, var(--brand-base)) 78%, white);
+  --brand-600: color-mix(in oklab, var(--brand, var(--brand-base)) 88%, black);
+  --brand-700: color-mix(in oklab, var(--brand, var(--brand-base)) 72%, black);
+  --brand-800: color-mix(in oklab, var(--brand, var(--brand-base)) 55%, black);
+  --brand-900: color-mix(in oklab, var(--brand, var(--brand-base)) 40%, black);
+}
+
+/**
+ * The real ramp: move lightness, keep chroma and hue.
+ *
+ * `oklch(from …)` lets each step adjust L while carrying c and h through
+ * untouched, so lighter shades stay as saturated as the accent instead of
+ * fading toward grey. Offsets are relative, so a dark accent still yields a
+ * usable ramp rather than being pinned to fixed lightness values.
+ */
+@supports (color: oklch(from red l c h)) {
+  :root {
+    --brand-200: oklch(from var(--brand, var(--brand-base)) calc(l + 0.24) c h);
+    --brand-300: oklch(from var(--brand, var(--brand-base)) calc(l + 0.15) c h);
+    --brand-400: oklch(from var(--brand, var(--brand-base)) calc(l + 0.07) c h);
+    --brand-600: oklch(from var(--brand, var(--brand-base)) calc(l - 0.07) c h);
+    --brand-700: oklch(from var(--brand, var(--brand-base)) calc(l - 0.15) c h);
+    --brand-800: oklch(from var(--brand, var(--brand-base)) calc(l - 0.23) c h);
+    --brand-900: oklch(from var(--brand, var(--brand-base)) calc(l - 0.30) c h);
+  }
+}
+
 @layer base {
   /* Clip on both html and body: decorative elements are intentionally wider
      than the viewport, and without this the mobile layout viewport expands to

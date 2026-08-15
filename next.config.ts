@@ -1,25 +1,12 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  images: {
-    /**
-     * Firebase Storage download URLs. Next refuses to optimise remote images
-     * from hosts that aren't explicitly allowed, which stops this app being
-     * used as an open image proxy for arbitrary URLs.
-     */
-    remotePatterns: [
-      {
-        protocol: "https",
-        hostname: "firebasestorage.googleapis.com",
-        pathname: "/v0/b/**",
-      },
-      {
-        protocol: "https",
-        hostname: "storage.googleapis.com",
-        pathname: "/**",
-      },
-    ],
-  },
+  /**
+   * No remotePatterns: every image is a repo file under public/media, which
+   * next/image optimises at build time. Adding a remote host here would also
+   * let this app be used as an image proxy for it, so the list stays empty
+   * until something actually needs to be there.
+   */
 };
 
 export default nextConfig;

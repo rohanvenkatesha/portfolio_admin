@@ -19,7 +19,7 @@ export default async function EditTripPage({ params }: PageProps<"/admin/trips/[
       <div className="flex flex-wrap items-center justify-between gap-3">
         <Link
           href="/admin/trips"
-          className="inline-flex items-center gap-1.5 text-[13px] text-zinc-500 transition-colors hover:text-orange-400"
+          className="inline-flex items-center gap-1.5 text-[13px] text-zinc-500 transition-colors hover:text-brand-400"
         >
           <ArrowLeft className="h-3.5 w-3.5" />
           All trips
@@ -28,7 +28,7 @@ export default async function EditTripPage({ params }: PageProps<"/admin/trips/[
         <Link
           href={`/travel/${trip.slug}`}
           target="_blank"
-          className="inline-flex items-center gap-1.5 text-[13px] text-zinc-500 transition-colors hover:text-orange-400"
+          className="inline-flex items-center gap-1.5 text-[13px] text-zinc-500 transition-colors hover:text-brand-400"
         >
           View live page
           <ExternalLink className="h-3.5 w-3.5" />

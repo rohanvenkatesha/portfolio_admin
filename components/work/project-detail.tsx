@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { ArrowUpRight, Boxes, ExternalLink } from "lucide-react";
 import { Badge, TechBadge } from "@/components/ui/primitives";
 import { GithubIcon } from "@/components/ui/brand-icons";
@@ -40,9 +41,25 @@ export function ProjectDetail({
 
   return (
     <div className={className}>
-      {/* Gradient header */}
+      {/* Cover, when one has been uploaded */}
+      {project.coverUrl ? (
+        <div className="relative aspect-[21/9] w-full overflow-hidden border-b border-white/10">
+          <Image
+            src={project.coverUrl}
+            alt=""
+            fill
+            priority={headingLevel === "h1"}
+            sizes="(max-width: 1024px) 100vw, 900px"
+            className="object-cover"
+          />
+          {/* Scrim so the header below reads as one piece with the image */}
+          <div className="absolute inset-0 bg-gradient-to-t from-[#0d0d12] via-transparent to-transparent" />
+        </div>
+      ) : null}
+
+      {/* Header */}
       <div className="relative overflow-hidden border-b border-white/10 bg-gradient-to-br from-white/[0.07] to-transparent p-8 sm:p-10">
-        <div className="pointer-events-none absolute -right-10 -top-16 h-56 w-56 rounded-full bg-orange-500/20 blur-[80px]" />
+        <div className="pointer-events-none absolute -right-10 -top-16 h-56 w-56 rounded-full bg-brand-500/20 blur-[80px]" />
 
         <div className="relative flex flex-wrap items-center gap-2.5">
           {project.status ? (
@@ -73,7 +90,7 @@ export function ProjectDetail({
               href={project.repo}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 rounded-full bg-orange-500 px-4 py-2 text-xs font-semibold text-white transition-all hover:bg-orange-400"
+              className="inline-flex items-center gap-2 rounded-full bg-brand-500 px-4 py-2 text-xs font-semibold text-[var(--brand-ink)] transition-all hover:bg-brand-400"
             >
               <GithubIcon className="h-3.5 w-3.5" />
               View source
@@ -84,7 +101,7 @@ export function ProjectDetail({
               href={project.demo}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 rounded-full border border-white/15 px-4 py-2 text-xs font-semibold text-white transition-all hover:border-orange-400/50 hover:text-orange-200"
+              className="inline-flex items-center gap-2 rounded-full border border-white/15 px-4 py-2 text-xs font-semibold text-white transition-all hover:border-brand-400/50 hover:text-brand-200"
             >
               <ExternalLink className="h-3.5 w-3.5" />
               Live demo
@@ -111,7 +128,7 @@ export function ProjectDetail({
         {project.architecture ? (
           <section>
             <h3 className="flex items-center gap-2 text-sm font-semibold text-white">
-              <Boxes className="h-4 w-4 text-orange-400" />
+              <Boxes className="h-4 w-4 text-brand-400" />
               Architecture
             </h3>
             <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-zinc-400">
@@ -122,7 +139,7 @@ export function ProjectDetail({
 
         <section>
           <h3 className="flex items-center gap-2 text-sm font-semibold text-white">
-            <ArrowUpRight className="h-4 w-4 text-orange-400" />
+            <ArrowUpRight className="h-4 w-4 text-brand-400" />
             What it does
           </h3>
           <ul className="mt-3 grid gap-2.5 sm:grid-cols-2">
@@ -131,7 +148,7 @@ export function ProjectDetail({
                 key={highlight}
                 className="flex gap-2.5 rounded-lg border border-white/8 bg-white/[0.02] p-3 text-sm text-zinc-300"
               >
-                <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-orange-400" />
+                <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-brand-400" />
                 <span className="leading-relaxed">{highlight}</span>
               </li>
             ))}

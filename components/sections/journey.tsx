@@ -2,9 +2,10 @@
 
 import { useMemo, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
-import { Award, Briefcase, ChevronDown, GraduationCap, Milestone } from "lucide-react";
+import { Award, Briefcase, GraduationCap, Milestone, Plus } from "lucide-react";
 import { Reveal, SectionHeading } from "@/components/fx/reveal";
-import { PillLink, TechBadge } from "@/components/ui/primitives";
+import { EmberBackdrop } from "@/components/fx/ember-backdrop";
+import { TechBadge } from "@/components/ui/primitives";
 import { timeline, type TimelineEntry, type TimelineTrack } from "@/content/site";
 import { cn } from "@/lib/utils";
 
@@ -23,184 +24,284 @@ const kindMeta = {
   milestone: { icon: Milestone, label: "Milestone" },
 } as const;
 
-/** Pull the first four-digit year out of a period string for sorting. */
+/** Pull the first four-digit year out of a period string. */
 function startYear(period: string) {
   const match = period.match(/\d{4}/);
-  return match ? Number(match[0]) : 0;
+  return match ? match[0] : "";
 }
 
 export function Journey() {
   const [view, setView] = useState<View>("tech");
+  const [openId, setOpenId] = useState<string | null>(null);
 
   const entries = useMemo(() => {
-    if (view === "blended") {
-      return [...timeline].sort((a, b) => startYear(b.period) - startYear(a.period));
-    }
-    return timeline.filter((entry) => entry.track === view);
+    const list =
+      view === "blended"
+        ? [...timeline].sort((a, b) => Number(startYear(b.period)) - Number(startYear(a.period)))
+        : timeline.filter((entry) => entry.track === view);
+    return list;
   }, [view]);
 
   return (
     <section id="journey" className="relative scroll-mt-24 px-3 py-3 sm:px-5 lg:px-6">
       <div className="relative mx-auto w-full max-w-[100rem] overflow-hidden rounded-[1.75rem] border border-white/8 bg-panel px-6 py-14 sm:px-10 sm:py-16 lg:px-14">
-        <div className="grid gap-12 lg:grid-cols-[0.85fr_1.15fr] lg:gap-16">
-          {/* ---------------- Left: heading, switcher, CTA ---------------- */}
-          <div className="lg:sticky lg:top-28 lg:self-start">
-            <SectionHeading
-              eyebrow="The Journey"
-              title={
-                <>
-                  Two tracks,
-                  <br />
-                  <span className="text-orange-500">one person</span>
-                </>
-              }
-              description="The engineering career and the creative life didn't happen in sequence — they happened at the same time, and kept feeding each other."
-            />
+        {/* ---------------- Heading + switcher, full width ---------------- */}
+        <div className="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
+          <SectionHeading
+            eyebrow="The Journey"
+            title={
+              <>
+                Two tracks,
+                <br />
+                <span className="text-brand-500">one person</span>
+              </>
+            }
+            description="The engineering career and the creative life didn't happen in sequence — they happened at the same time, and kept feeding each other."
+          />
 
-            {/* Track switcher */}
-            <Reveal direction="up" delay={0.12} className="mt-8">
-              <div
-                role="tablist"
-                aria-label="Timeline track"
-                className="inline-flex flex-wrap gap-1 rounded-full border border-white/8 bg-panel-2 p-1.5"
-              >
-                {VIEWS.map((option) => {
-                  const active = view === option.id;
-                  return (
-                    <button
-                      key={option.id}
-                      role="tab"
-                      aria-selected={active}
-                      onClick={() => setView(option.id)}
-                      title={option.hint}
-                      className={cn(
-                        "relative rounded-full px-4 py-2 text-[13px] font-medium transition-colors",
-                        active ? "text-white" : "text-zinc-500 hover:text-zinc-200"
-                      )}
-                    >
-                      {active ? (
-                        <motion.span
-                          layoutId="track-pill"
-                          className="absolute inset-0 rounded-full bg-orange-500"
-                          transition={{ type: "spring", stiffness: 380, damping: 32 }}
-                        />
-                      ) : null}
-                      <span className="relative z-10">{option.label}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            </Reveal>
-
-            <Reveal direction="up" delay={0.2} className="mt-8">
-              <PillLink href="#work">See the work</PillLink>
-            </Reveal>
-          </div>
-
-          {/* ---------------- Right: rows ---------------- */}
-          <AnimatePresence mode="wait">
-            <motion.ol
-              key={view}
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-              className="border-t border-white/8"
+          <Reveal direction="up" delay={0.12}>
+            <div
+              role="tablist"
+              aria-label="Timeline track"
+              className="inline-flex flex-wrap gap-1 rounded-full border border-white/8 bg-panel-2 p-1.5"
             >
-              {entries.map((entry, index) => (
-                <TimelineRow key={entry.id} entry={entry} index={index} />
-              ))}
-            </motion.ol>
-          </AnimatePresence>
+              {VIEWS.map((option) => {
+                const active = view === option.id;
+                return (
+                  <button
+                    key={option.id}
+                    role="tab"
+                    aria-selected={active}
+                    onClick={() => {
+                      setView(option.id);
+                      setOpenId(null);
+                    }}
+                    title={option.hint}
+                    className={cn(
+                      "relative rounded-full px-4 py-2 text-[13px] font-medium transition-colors",
+                      active ? "text-white" : "text-zinc-500 hover:text-zinc-200"
+                    )}
+                  >
+                    {active ? (
+                      <motion.span
+                        layoutId="track-pill"
+                        className="absolute inset-0 rounded-full bg-brand-500"
+                        transition={{ type: "spring", stiffness: 380, damping: 32 }}
+                      />
+                    ) : null}
+                    <span className="relative z-10">{option.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </Reveal>
         </div>
+
+        {/* ---------------- Full-width entry cards ---------------- */}
+        <AnimatePresence mode="wait">
+          <motion.ol
+            key={view}
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+            className="mt-12 space-y-3"
+          >
+            {entries.map((entry, index) => (
+              <JourneyCard
+                key={entry.id}
+                entry={entry}
+                index={index}
+                open={openId === entry.id}
+                onToggle={() => setOpenId((id) => (id === entry.id ? null : entry.id))}
+              />
+            ))}
+          </motion.ol>
+        </AnimatePresence>
       </div>
     </section>
   );
 }
 
-function TimelineRow({ entry, index }: { entry: TimelineEntry; index: number }) {
-  const [open, setOpen] = useState(false);
+/**
+ * One entry as a full-width card.
+ *
+ * The year is set oversized as a ghost numeral on the left — it gives the
+ * section a spine to scan down without needing a drawn rail, and it warms to
+ * the accent as the card opens.
+ */
+function JourneyCard({
+  entry,
+  index,
+  open,
+  onToggle,
+}: {
+  entry: TimelineEntry;
+  index: number;
+  open: boolean;
+  onToggle: () => void;
+}) {
   const meta = kindMeta[entry.kind];
   const Icon = meta.icon;
 
   return (
     <motion.li
-      initial={{ opacity: 0, y: 18 }}
+      initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, amount: 0.3 }}
+      viewport={{ once: true, amount: 0.2 }}
       transition={{ duration: 0.5, delay: Math.min(index * 0.06, 0.3), ease: [0.16, 1, 0.3, 1] }}
-      className="border-b border-white/8"
     >
       <button
-        onClick={() => setOpen((prev) => !prev)}
+        onClick={onToggle}
         aria-expanded={open}
-        className="group w-full py-6 text-left transition-colors"
+        className={cn(
+          "group relative block w-full overflow-hidden rounded-2xl border text-left transition-colors duration-500",
+          open ? "border-white/15" : "border-white/8 bg-panel-2/60 hover:border-white/20"
+        )}
       >
-        {/* year | title+org | summary — the row rhythm of the reference */}
-        <div className="grid gap-x-6 gap-y-2 sm:grid-cols-[7.5rem_minmax(0,1fr)_auto] sm:items-start">
-          <span className="font-mono text-[11px] leading-6 text-orange-500">{entry.period}</span>
-
-          <div className="min-w-0">
-            <div className="flex items-center gap-2">
-              <Icon className="h-3.5 w-3.5 shrink-0 text-zinc-600" />
-              <h3 className="text-base font-semibold text-white transition-colors group-hover:text-orange-400 sm:text-lg">
-                {entry.title}
-              </h3>
-            </div>
-            <p className="mt-1 text-[13px] text-zinc-500">
-              {entry.org}
-              {entry.location ? <span className="text-zinc-600"> · {entry.location}</span> : null}
-            </p>
-            <p className="mt-2.5 max-w-xl text-[13px] leading-relaxed text-zinc-400">
-              {entry.summary}
-            </p>
-          </div>
-
-          <ChevronDown
-            className={cn(
-              "hidden h-4 w-4 shrink-0 text-zinc-600 transition-transform duration-300 group-hover:text-white sm:mt-1 sm:block",
-              open && "rotate-180"
-            )}
-          />
-        </div>
-
-        {/* Expandable detail */}
-        <AnimatePresence initial={false}>
+        {/**
+         * Open cards take the full ember treatment. Transient emphasis rather
+         * than a permanent warm block — only the entry you're reading is lit,
+         * so the accent keeps its meaning.
+         */}
+        <AnimatePresence>
           {open ? (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: "auto", opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
-              className="overflow-hidden"
+            <motion.span
+              key="ember"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+              className="absolute inset-0"
             >
-              <div className="pt-5 sm:pl-[8.5rem]">
-                <ul className="space-y-2.5">
-                  {entry.highlights.map((highlight) => (
-                    <li key={highlight} className="flex gap-3 text-[13px] text-zinc-300">
-                      <span className="mt-[7px] h-1 w-1 shrink-0 rounded-full bg-orange-500" />
-                      <span className="leading-relaxed">{highlight}</span>
-                    </li>
-                  ))}
-                </ul>
-
-                {entry.stack?.length ? (
-                  <div className="mt-5 flex flex-wrap gap-1.5">
-                    {entry.stack.map((tech) => (
-                      <TechBadge key={tech}>{tech}</TechBadge>
-                    ))}
-                  </div>
-                ) : null}
-              </div>
-            </motion.div>
+              <EmberBackdrop drift={false} />
+            </motion.span>
           ) : null}
         </AnimatePresence>
 
-        {!open ? (
-          <span className="mt-3 inline-block text-[11px] font-medium text-zinc-600 transition-colors group-hover:text-orange-500 sm:ml-[8.5rem]">
-            Read more →
+        {/* Hover wash, closed state only — it would muddy the ember ground */}
+        <span
+          aria-hidden
+          className={cn(
+            "absolute inset-0 origin-left bg-gradient-to-r from-brand-500/12 via-brand-500/5 to-transparent transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]",
+            open ? "scale-x-0" : "scale-x-0 group-hover:scale-x-100"
+          )}
+        />
+
+        <div className="relative flex items-start gap-5 p-6 sm:gap-8 sm:p-8">
+          {/* Ghost year — white on the ember ground, since orange would vanish */}
+          <span
+            className={cn(
+              "shrink-0 font-mono font-bold leading-none tracking-tighter transition-colors duration-500",
+              "text-4xl sm:text-5xl lg:text-6xl",
+              open ? "text-white/90" : "text-white/10 group-hover:text-white/25"
+            )}
+          >
+            {startYear(entry.period)}
           </span>
-        ) : null}
+
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
+              <span
+                className={cn(
+                  "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-medium transition-colors duration-500",
+                  open ? "border-white/30 text-white/90" : "border-white/12 text-zinc-400"
+                )}
+              >
+                <Icon className="h-3 w-3" />
+                {meta.label}
+              </span>
+              <span
+                className={cn(
+                  "font-mono text-[11px] transition-colors duration-500",
+                  open ? "text-white/60" : "text-zinc-600"
+                )}
+              >
+                {entry.period}
+              </span>
+            </div>
+
+            <h3
+              className={cn(
+                "mt-3 text-xl font-semibold text-white transition-colors duration-300 sm:text-2xl",
+                !open && "group-hover:text-brand-400"
+              )}
+            >
+              {entry.title}
+            </h3>
+
+            <p
+              className={cn(
+                "mt-1 text-[13px] transition-colors duration-500",
+                open ? "text-white/70" : "text-zinc-500"
+              )}
+            >
+              {entry.org}
+              {entry.location ? (
+                <span className={open ? "text-white/50" : "text-zinc-600"}> · {entry.location}</span>
+              ) : null}
+            </p>
+
+            <p
+              className={cn(
+                "mt-3 max-w-3xl text-sm leading-relaxed transition-colors duration-500",
+                open ? "text-white/85" : "text-zinc-400"
+              )}
+            >
+              {entry.summary}
+            </p>
+
+            {/* Detail */}
+            <AnimatePresence initial={false}>
+              {open ? (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+                  className="overflow-hidden"
+                >
+                  <ul className="mt-6 space-y-2.5 border-t border-white/20 pt-6">
+                    {entry.highlights.map((highlight, i) => (
+                      <motion.li
+                        key={highlight}
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.05 * i, duration: 0.35 }}
+                        className="flex gap-3 text-[13px] leading-relaxed text-white/85"
+                      >
+                        <span className="mt-[7px] h-1 w-1 shrink-0 rounded-full bg-white/70" />
+                        {highlight}
+                      </motion.li>
+                    ))}
+                  </ul>
+
+                  {entry.stack?.length ? (
+                    <div className="mt-5 flex flex-wrap gap-1.5">
+                      {entry.stack.map((tech) => (
+                        <TechBadge key={tech} tone="ember">
+                          {tech}
+                        </TechBadge>
+                      ))}
+                    </div>
+                  ) : null}
+                </motion.div>
+              ) : null}
+            </AnimatePresence>
+          </div>
+
+          {/* Expand affordance — white on ember, so it stays visible */}
+          <span
+            className={cn(
+              "flex h-9 w-9 shrink-0 items-center justify-center rounded-full border transition-all duration-500",
+              open
+                ? "rotate-45 border-white bg-white text-brand-600"
+                : "border-white/12 text-zinc-500 group-hover:border-white/30 group-hover:text-white"
+            )}
+          >
+            <Plus className="h-4 w-4" />
+          </span>
+        </div>
       </button>
     </motion.li>
   );

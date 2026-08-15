@@ -8,9 +8,21 @@ import {
   PROJECTS_TAG,
   getProjectsFresh,
 } from "@/lib/content/projects";
+import { isValidMediaPath } from "@/lib/content/media";
 import { projects as staticProjects, type Project } from "@/content/site";
 
 export type ActionResult = { ok: true; message: string } | { ok: false; error: string };
+
+/**
+ * Covers are repo images under public/media, not remote URLs — so the check is
+ * a path shape rather than a hostname. Without it, a crafted request could
+ * point site imagery anywhere.
+ */
+function safeCoverPath(raw: string): string | null | false {
+  const value = raw.trim();
+  if (!value) return null; // cleared
+  return isValidMediaPath(value) ? value : false;
+}
 
 /**
  * Every action re-checks authorisation on the server.
@@ -100,6 +112,11 @@ export async function saveProject(formData: FormData): Promise<ActionResult> {
       .map((line) => line.trim())
       .filter(Boolean);
 
+  const cover = safeCoverPath(String(formData.get("coverUrl") ?? ""));
+  if (cover === false) {
+    return { ok: false, error: "That image path is not under public/media." };
+  }
+
   try {
     const current = await getProjectsFresh();
 
@@ -121,6 +138,7 @@ export async function saveProject(formData: FormData): Promise<ActionResult> {
       stack: toList(formData.get("stack")),
       highlights: toList(formData.get("highlights")),
       featured: formData.get("featured") === "on",
+      coverUrl: cover ?? undefined,
       repo: String(formData.get("repo") ?? "").trim() || undefined,
       demo: String(formData.get("demo") ?? "").trim() || undefined,
       year: String(formData.get("year") ?? "").trim() || undefined,

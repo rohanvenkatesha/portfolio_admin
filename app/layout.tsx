@@ -2,6 +2,8 @@ import type { Metadata, Viewport } from "next";
 import { JetBrains_Mono, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import { profile } from "@/content/site";
+import { getTheme } from "@/lib/content/theme";
+import { themeToCss } from "@/content/theme";
 
 const jakarta = Plus_Jakarta_Sans({
   variable: "--font-jakarta",
@@ -64,13 +66,29 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  const theme = await getTheme();
+
   return (
     <html
       lang="en"
       className={`${jakarta.variable} ${jetbrainsMono.variable} h-full antialiased`}
       suppressHydrationWarning
     >
+      <head>
+        {/**
+         * Theme variables, server-rendered into the document.
+         *
+         * Inline rather than a stylesheet so the colours are present on first
+         * paint — a fetched theme would flash the defaults first. Every value
+         * is validated as a 6-digit hex before storage, so nothing arbitrary
+         * can reach this tag.
+         */}
+        <style
+          id="theme-vars"
+          dangerouslySetInnerHTML={{ __html: themeToCss(theme) }}
+        />
+      </head>
       <body className="flex min-h-full flex-col bg-void text-zinc-200">{children}</body>
     </html>
   );

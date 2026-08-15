@@ -35,6 +35,7 @@ function normalise(raw: unknown): Project | null {
     stack: Array.isArray(p.stack) ? p.stack.map(String) : [],
     highlights: Array.isArray(p.highlights) ? p.highlights.map(String) : [],
     accent: (p.accent ?? "cyan") as Project["accent"],
+    ...(p.coverUrl ? { coverUrl: String(p.coverUrl) } : {}),
     ...(p.featured === true ? { featured: true } : {}),
     ...(p.repo ? { repo: String(p.repo) } : {}),
     ...(p.demo ? { demo: String(p.demo) } : {}),

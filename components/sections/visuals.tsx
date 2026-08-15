@@ -77,7 +77,7 @@ export function Visuals({
             <>
               The other half,
               <br />
-              <span className="text-orange-500">shot on location</span>
+              <span className="text-brand-500">shot on location</span>
             </>
           }
           description="Films and frames from the practice that runs alongside the engineering. Shot, cut and graded end to end — usually alone, usually somewhere with bad wifi."
@@ -86,13 +86,13 @@ export function Visuals({
         {/* ---------------- Films ---------------- */}
         <div className="mt-12">
           <div className="mb-5 flex items-center gap-3">
-            <Clapperboard className="h-4 w-4 text-orange-500" />
+            <Clapperboard className="h-4 w-4 text-brand-500" />
             <h3 className="eyebrow text-zinc-400">Films &amp; Reels</h3>
             <div className="h-px flex-1 bg-white/8" />
             {totalFilms && totalFilms > films.length ? (
               <Link
                 href="/darkroom"
-                className="inline-flex items-center gap-1 font-mono text-[11px] text-zinc-500 transition-colors hover:text-orange-400"
+                className="inline-flex items-center gap-1 font-mono text-[11px] text-zinc-500 transition-colors hover:text-brand-400"
               >
                 all {totalFilms}
                 <ArrowUpRight className="h-3 w-3" />
@@ -125,7 +125,7 @@ export function Visuals({
                   <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent transition-colors duration-500 group-hover:from-black/80" />
 
                   {/* Play control grows and warms on hover */}
-                  <span className="absolute left-1/2 top-1/2 flex h-14 w-14 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-white/25 bg-white/10 backdrop-blur-md transition-all duration-500 group-hover:scale-110 group-hover:border-orange-400/70 group-hover:bg-orange-500/30">
+                  <span className="absolute left-1/2 top-1/2 flex h-14 w-14 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-white/25 bg-white/10 backdrop-blur-md transition-all duration-500 group-hover:scale-110 group-hover:border-brand-400/70 group-hover:bg-brand-500/30">
                     <Play className="ml-0.5 h-5 w-5 fill-white text-white" />
                   </span>
 
@@ -134,7 +134,7 @@ export function Visuals({
                   </span>
 
                   <div className="absolute inset-x-0 bottom-0 p-5 text-left">
-                    <span className="eyebrow text-[10px] text-orange-400">{film.year}</span>
+                    <span className="eyebrow text-[10px] text-brand-400">{film.year}</span>
                     <h4 className="mt-1 text-lg font-semibold text-white">{film.title}</h4>
                     {/* Role slides open on hover */}
                     <p className="max-h-0 overflow-hidden text-[12px] text-zinc-300 opacity-0 transition-all duration-500 group-hover:max-h-12 group-hover:opacity-100">
@@ -150,7 +150,7 @@ export function Visuals({
         {/* ---------------- Photography: expanding accordion ---------------- */}
         <div className="mt-14">
           <div className="mb-5 flex items-center gap-3">
-            <Camera className="h-4 w-4 text-orange-500" />
+            <Camera className="h-4 w-4 text-brand-500" />
             <h3 className="eyebrow text-zinc-400">Photography</h3>
             <div className="h-px flex-1 bg-white/8" />
             <span className="hidden font-mono text-[11px] text-zinc-600 sm:block">
@@ -159,7 +159,7 @@ export function Visuals({
             {totalPhotos && totalPhotos > photos.length ? (
               <Link
                 href="/darkroom"
-                className="inline-flex items-center gap-1 font-mono text-[11px] text-zinc-500 transition-colors hover:text-orange-400"
+                className="inline-flex items-center gap-1 font-mono text-[11px] text-zinc-500 transition-colors hover:text-brand-400"
               >
                 all {totalPhotos}
                 <ArrowUpRight className="h-3 w-3" />
@@ -209,7 +209,7 @@ export function Visuals({
                         isOpen ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
                       )}
                     >
-                      <span className="eyebrow text-[10px] text-orange-400">{photo.location}</span>
+                      <span className="eyebrow text-[10px] text-brand-400">{photo.location}</span>
                       <h4 className="mt-1.5 text-2xl font-semibold text-white">{photo.title}</h4>
                       <ExifRow photo={photo} compact className="mt-3" />
                     </div>
@@ -217,7 +217,7 @@ export function Visuals({
                     {/* Accent rail wipes in on the expanded frame */}
                     <span
                       className={cn(
-                        "absolute inset-x-0 bottom-0 h-0.5 origin-left bg-orange-500 transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]",
+                        "absolute inset-x-0 bottom-0 h-0.5 origin-left bg-brand-500 transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]",
                         isOpen ? "scale-x-100" : "scale-x-0"
                       )}
                     />
@@ -277,7 +277,7 @@ export function Visuals({
               </div>
 
               <div className="p-8">
-                <span className="eyebrow text-orange-400">
+                <span className="eyebrow text-brand-400">
                   {activeFilm.year} · {activeFilm.runtime}
                 </span>
                 <DialogTitle className="mt-3">{activeFilm.title}</DialogTitle>
@@ -300,14 +300,14 @@ export function Visuals({
                 <button
                   onClick={showPrev}
                   aria-label="Previous photo"
-                  className="absolute left-3 top-1/2 -translate-y-1/2 rounded-full border border-white/15 bg-black/50 p-2.5 text-white backdrop-blur-md transition-all hover:border-orange-400/60 hover:bg-black/70"
+                  className="absolute left-3 top-1/2 -translate-y-1/2 rounded-full border border-white/15 bg-black/50 p-2.5 text-white backdrop-blur-md transition-all hover:border-brand-400/60 hover:bg-black/70"
                 >
                   <ChevronLeft className="h-5 w-5" />
                 </button>
                 <button
                   onClick={showNext}
                   aria-label="Next photo"
-                  className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full border border-white/15 bg-black/50 p-2.5 text-white backdrop-blur-md transition-all hover:border-orange-400/60 hover:bg-black/70"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full border border-white/15 bg-black/50 p-2.5 text-white backdrop-blur-md transition-all hover:border-brand-400/60 hover:bg-black/70"
                 >
                   <ChevronRight className="h-5 w-5" />
                 </button>

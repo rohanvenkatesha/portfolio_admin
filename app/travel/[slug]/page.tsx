@@ -127,7 +127,7 @@ export default async function TripPage({ params }: PageProps<"/travel/[slug]">) 
                 <ArrowLeft className="h-3 w-3" />
                 Previous
               </span>
-              <span className="mt-2 block font-semibold text-white transition-colors group-hover:text-orange-200">
+              <span className="mt-2 block font-semibold text-white transition-colors group-hover:text-brand-200">
                 {previous.destination}
               </span>
             </Link>
@@ -140,7 +140,7 @@ export default async function TripPage({ params }: PageProps<"/travel/[slug]">) 
                 Next
                 <ArrowRight className="h-3 w-3" />
               </span>
-              <span className="mt-2 block font-semibold text-white transition-colors group-hover:text-orange-200">
+              <span className="mt-2 block font-semibold text-white transition-colors group-hover:text-brand-200">
                 {next.destination}
               </span>
             </Link>

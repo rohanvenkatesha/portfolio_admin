@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { AnimatePresence, motion } from "motion/react";
 import { ArrowUpRight, ChevronDown, Layers } from "lucide-react";
@@ -19,11 +20,11 @@ const INITIAL_COUNT = 6;
  * holds; the variation is in weight so a grid of cards has rhythm.
  */
 const COVERS: Record<Project["accent"], string> = {
-  cyan: "from-orange-500/55 via-orange-900/30 to-zinc-950",
-  violet: "from-orange-600/40 via-zinc-800 to-zinc-950",
-  amber: "from-orange-400/50 via-orange-800/25 to-zinc-950",
-  lime: "from-orange-300/35 via-zinc-800 to-zinc-950",
-  rose: "from-orange-700/55 via-zinc-800 to-zinc-950",
+  cyan: "from-brand-500/55 via-brand-900/30 to-zinc-950",
+  violet: "from-brand-600/40 via-zinc-800 to-zinc-950",
+  amber: "from-brand-400/50 via-brand-800/25 to-zinc-950",
+  lime: "from-brand-300/35 via-zinc-800 to-zinc-950",
+  rose: "from-brand-700/55 via-zinc-800 to-zinc-950",
 };
 
 const GRAIN =
@@ -57,7 +58,7 @@ export function Work({ projects = fallbackProjects }: { projects?: Project[] }) 
               <>
                 Things I&apos;ve
                 <br />
-                <span className="text-orange-500">actually built</span>
+                <span className="text-brand-500">actually built</span>
               </>
             }
             description={`${projects.length} public projects — retrieval systems, computer vision, full-stack apps and compiler front-ends. Every one links to its source.`}
@@ -82,7 +83,7 @@ export function Work({ projects = fallbackProjects }: { projects?: Project[] }) 
                     className={cn(
                       "rounded-full border px-4 py-2 text-[13px] font-medium transition-all duration-300",
                       isActive
-                        ? "border-orange-500 bg-orange-500 text-white"
+                        ? "border-brand-500 bg-brand-500 text-[var(--brand-ink)]"
                         : "border-white/10 bg-panel-2 text-zinc-400 hover:border-white/25 hover:text-white"
                     )}
                   >
@@ -128,7 +129,7 @@ export function Work({ projects = fallbackProjects }: { projects?: Project[] }) 
           <div className="mt-10 flex justify-center">
             <button
               onClick={() => setExpanded(true)}
-              className="group inline-flex items-center gap-2 rounded-full border border-white/12 bg-panel-2 px-5 py-3 text-sm font-semibold text-zinc-200 transition-all hover:border-orange-500/50 hover:text-orange-300"
+              className="group inline-flex items-center gap-2 rounded-full border border-white/12 bg-panel-2 px-5 py-3 text-sm font-semibold text-zinc-200 transition-all hover:border-brand-500/50 hover:text-brand-300"
             >
               Show {hidden} more {hidden === 1 ? "project" : "projects"}
               <ChevronDown className="h-4 w-4 transition-transform duration-300 group-hover:translate-y-0.5" />
@@ -154,7 +155,7 @@ export function Work({ projects = fallbackProjects }: { projects?: Project[] }) 
               <div className="border-t border-white/10 px-8 py-5 sm:px-10">
                 <Link
                   href={`/work/${active.slug}`}
-                  className="inline-flex items-center gap-1.5 text-sm font-medium text-orange-400 transition-colors hover:text-orange-300"
+                  className="inline-flex items-center gap-1.5 text-sm font-medium text-brand-400 transition-colors hover:text-brand-300"
                 >
                   Open as a full page
                   <ArrowUpRight className="h-3.5 w-3.5" />
@@ -177,19 +178,29 @@ export function Work({ projects = fallbackProjects }: { projects?: Project[] }) 
 function ProjectCard({ project, onOpen }: { project: Project; onOpen: () => void }) {
   return (
     <article className="group relative aspect-[4/3] overflow-hidden rounded-2xl border border-white/8 bg-panel-2">
-      {/* Cover plate */}
-      <div
-        className={cn(
-          "absolute inset-0 bg-gradient-to-br transition-transform duration-700 ease-out group-hover:scale-105",
-          COVERS[project.accent]
-        )}
-      >
-        <div
-          aria-hidden
-          className="absolute inset-0 opacity-[0.12] mix-blend-overlay"
-          style={{ backgroundImage: GRAIN }}
+      {/* Cover — uploaded image when there is one, gradient plate otherwise */}
+      {project.coverUrl ? (
+        <Image
+          src={project.coverUrl}
+          alt=""
+          fill
+          sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 33vw"
+          className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
         />
-      </div>
+      ) : (
+        <div
+          className={cn(
+            "absolute inset-0 bg-gradient-to-br transition-transform duration-700 ease-out group-hover:scale-105",
+            COVERS[project.accent]
+          )}
+        >
+          <div
+            aria-hidden
+            className="absolute inset-0 opacity-[0.12] mix-blend-overlay"
+            style={{ backgroundImage: GRAIN }}
+          />
+        </div>
+      )}
 
       {/* Legibility scrim */}
       <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/35 to-transparent" />
@@ -203,7 +214,7 @@ function ProjectCard({ project, onOpen }: { project: Project; onOpen: () => void
 
       {/* Caption */}
       <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 p-5">
-        <span className="eyebrow text-[10px] text-orange-400">{project.category}</span>
+        <span className="eyebrow text-[10px] text-brand-400">{project.category}</span>
         <h3 className="mt-1.5 text-lg font-semibold leading-snug text-white">{project.title}</h3>
 
         {/* Blurb slides in on hover */}
@@ -229,7 +240,7 @@ function ProjectCard({ project, onOpen }: { project: Project; onOpen: () => void
           onClick={onOpen}
           aria-label={`${project.title} — quick look`}
           title="Quick look"
-          className="rounded-full border border-white/20 bg-black/60 p-2.5 text-white backdrop-blur-md transition-colors hover:border-orange-400 hover:text-orange-300"
+          className="rounded-full border border-white/20 bg-black/60 p-2.5 text-white backdrop-blur-md transition-colors hover:border-brand-400 hover:text-brand-300"
         >
           <Layers className="h-3.5 w-3.5" />
         </button>

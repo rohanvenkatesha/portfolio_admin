@@ -57,12 +57,15 @@ export function Nav({
         transition={{ duration: 0.7, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
         className="fixed inset-x-0 top-0 z-[60] px-4 pt-4"
       >
+        {/* Width matches the section panels below, so the bar sits on the same
+            grid rather than floating narrower than everything else. */}
         <nav
           className={cn(
-            "mx-auto flex max-w-7xl items-center justify-between gap-4 rounded-full px-5 py-3 transition-all duration-500",
+            "mx-auto flex max-w-[100rem] items-center justify-between gap-4 rounded-full px-5 py-3 transition-all duration-500",
             scrolled
               ? "glass shadow-[0_8px_40px_-12px_rgba(0,0,0,0.8)]"
-              : "border border-transparent bg-transparent"
+              : // Faint presence at the top of the page, rather than nothing
+                "border border-white/8 bg-panel/40 backdrop-blur-sm"
           )}
         >
           {/* Wordmark */}
@@ -71,9 +74,9 @@ export function Nav({
             className="group flex items-center gap-2.5"
             aria-label={`${profile.name} — home`}
           >
-            <span className="relative flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-orange-400 to-orange-500 font-mono text-[11px] font-bold text-black">
+            <span className="relative flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-brand-400 to-brand-500 font-mono text-[11px] font-bold text-[var(--brand-ink)]">
               {profile.initials}
-              <span className="absolute inset-0 rounded-lg bg-gradient-to-br from-orange-400 to-orange-500 opacity-0 blur-md transition-opacity duration-300 group-hover:opacity-80" />
+              <span className="absolute inset-0 rounded-lg bg-gradient-to-br from-brand-400 to-brand-500 opacity-0 blur-md transition-opacity duration-300 group-hover:opacity-80" />
             </span>
             <span className="hidden whitespace-nowrap text-sm font-semibold tracking-tight text-white sm:block">
               {profile.name}
@@ -88,13 +91,15 @@ export function Nav({
                   href={`#${section.id}`}
                   className={cn(
                     "relative block rounded-full px-3.5 py-2 text-[13px] font-medium transition-colors",
-                    active === section.id ? "text-white" : "text-zinc-500 hover:text-zinc-200"
+                    active === section.id ? "text-white" : "text-zinc-400 hover:text-white"
                   )}
                 >
+                  {/* Accent-tinted, matching every other active state in the
+                      design — the section switcher, filters and dots. */}
                   {active === section.id ? (
                     <motion.span
                       layoutId="nav-active"
-                      className="absolute inset-0 rounded-full bg-white/[0.08] ring-1 ring-white/10"
+                      className="absolute inset-0 rounded-full bg-brand-500/18 ring-1 ring-brand-500/40"
                       transition={{ type: "spring", stiffness: 380, damping: 32 }}
                     />
                   ) : null}
@@ -109,7 +114,7 @@ export function Nav({
             <button
               onClick={onOpenPalette}
               aria-label="Open command palette"
-              className="glass inline-flex items-center gap-2 rounded-full px-3 py-2 text-[11px] text-zinc-400 transition-all hover:border-orange-400/40 hover:text-orange-200"
+              className="glass inline-flex items-center gap-2 rounded-full px-3 py-2 text-[11px] text-zinc-400 transition-all hover:border-brand-400/40 hover:text-brand-200"
             >
               <Command className="h-3.5 w-3.5" />
               <span className="hidden font-mono sm:block">K</span>
@@ -117,7 +122,7 @@ export function Nav({
 
             <a
               href="#contact"
-              className="hidden rounded-full bg-orange-500 px-4 py-2 text-[13px] font-semibold text-white transition-all hover:bg-orange-400 sm:block"
+              className="hidden rounded-full bg-brand-500 px-4 py-2 text-[13px] font-semibold text-[var(--brand-ink)] transition-all hover:bg-brand-400 sm:block"
             >
               Hire me
             </a>
@@ -164,7 +169,7 @@ export function Nav({
                     onClick={() => setMenuOpen(false)}
                     className={cn(
                       "block px-6 py-3 text-2xl font-semibold transition-colors",
-                      active === section.id ? "text-orange-300" : "text-zinc-400 hover:text-white"
+                      active === section.id ? "text-brand-300" : "text-zinc-400 hover:text-white"
                     )}
                   >
                     {section.label}
@@ -192,7 +197,7 @@ export function Nav({
               className={cn(
                 "h-2 w-2 rounded-full transition-all duration-300",
                 active === section.id
-                  ? "scale-125 bg-orange-400 shadow-[0_0_12px_2px_rgba(249,115,22,0.7)]"
+                  ? "scale-125 bg-brand-400 shadow-[0_0_12px_2px_color-mix(in_oklab,var(--color-brand-500)_70%,transparent)]"
                   : "bg-white/20 group-hover:bg-white/50"
               )}
             />

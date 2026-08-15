@@ -35,14 +35,14 @@ export default async function TravelIndexPage() {
         <div className="mx-auto w-full max-w-[100rem]">
           <header className="rounded-[1.75rem] border border-white/8 bg-panel px-6 py-14 sm:px-10 lg:px-14">
             <div className="flex items-center gap-2.5">
-              <span className="h-1.5 w-1.5 rounded-full bg-orange-500" />
-              <span className="eyebrow text-orange-500">Archive</span>
+              <span className="h-1.5 w-1.5 rounded-full bg-brand-500" />
+              <span className="eyebrow text-brand-500">Archive</span>
             </div>
 
             <h1 className="mt-4 max-w-3xl text-balance text-3xl font-bold leading-[1.06] tracking-tight text-white sm:text-4xl lg:text-5xl">
               Every journey,
               <br />
-              <span className="text-orange-500">start to finish</span>
+              <span className="text-brand-500">start to finish</span>
             </h1>
 
             <p className="mt-4 max-w-2xl text-sm leading-relaxed text-zinc-400 sm:text-base">
@@ -73,7 +73,7 @@ export default async function TravelIndexPage() {
                   <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
 
                   <div className="relative">
-                    <span className="eyebrow text-[10px] text-orange-400">{trip.year}</span>
+                    <span className="eyebrow text-[10px] text-brand-400">{trip.year}</span>
                     <h2 className="mt-1.5 text-2xl font-semibold text-white">{trip.destination}</h2>
                     <p className="mt-1 text-[12px] text-zinc-400">{trip.region}</p>
 

@@ -68,8 +68,34 @@ export function adminAuth() {
   return getAuth(adminApp());
 }
 
+let cachedDb: ReturnType<typeof getFirestore> | undefined;
+
+/**
+ * Firestore, configured to treat `undefined` as "omit this field".
+ *
+ * Without this it throws on any undefined value, which collides badly with our
+ * content model: every collection has optional fields (coverUrl, demo, year,
+ * src…) and clearing one in the admin naturally produces `undefined`. The
+ * alternative is stripping undefined by hand at every write site — four
+ * collections' worth of places to forget.
+ *
+ * A full `set()` still removes a cleared field, because the replacement
+ * document simply doesn't contain the key.
+ */
 export function adminDb() {
-  return getFirestore(adminApp());
+  if (cachedDb) return cachedDb;
+
+  const db = getFirestore(adminApp());
+  try {
+    db.settings({ ignoreUndefinedProperties: true });
+  } catch {
+    // settings() throws if the instance has already been used — which happens
+    // when a dev-server hot reload resets this module but not the SDK's own
+    // per-app cache. The setting is already applied in that case.
+  }
+
+  cachedDb = db;
+  return cachedDb;
 }
 
 /* -------------------------------------------------------------------------- */

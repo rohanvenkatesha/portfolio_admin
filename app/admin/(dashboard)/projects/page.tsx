@@ -14,7 +14,7 @@ export default async function AdminProjectsPage() {
     <div className="space-y-6">
       <Link
         href="/admin"
-        className="inline-flex items-center gap-1.5 text-[13px] text-zinc-500 transition-colors hover:text-orange-400"
+        className="inline-flex items-center gap-1.5 text-[13px] text-zinc-500 transition-colors hover:text-brand-400"
       >
         <ArrowLeft className="h-3.5 w-3.5" />
         Overview
