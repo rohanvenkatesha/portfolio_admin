@@ -4,14 +4,21 @@ import { ArrowLeft, ExternalLink } from "lucide-react";
 import { getTripsFresh } from "@/lib/content/trips";
 import { listMedia } from "@/lib/content/media";
 import { TripForm } from "@/components/admin/trip-form";
+import { PostList } from "@/components/admin/post-list";
+import { getPostsFresh } from "@/lib/content/posts";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export default async function EditTripPage({ params }: PageProps<"/admin/trips/[id]">) {
   const { id } = await params;
-  const [trips, covers] = await Promise.all([getTripsFresh(), listMedia("trips")]);
+  const [trips, covers, allPosts] = await Promise.all([
+    getTripsFresh(),
+    listMedia("trips"),
+    getPostsFresh(),
+  ]);
   const trip = trips.find((t) => t.id === id);
+  const posts = allPosts.filter((p) => p.tripId === id);
 
   if (!trip) notFound();
 
@@ -42,6 +49,8 @@ export default async function EditTripPage({ params }: PageProps<"/admin/trips/[
         </h1>
         <p className="mt-2 font-mono text-[12px] text-zinc-600">{trip.id}</p>
       </div>
+
+      <PostList tripId={trip.id} posts={posts} />
 
       <TripForm trip={trip} covers={covers} />
     </div>
