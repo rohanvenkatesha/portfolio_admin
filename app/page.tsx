@@ -25,6 +25,8 @@ type PageData = {
   projects: Project[];
   photos: Photo[];
   trips: Trip[];
+  /** Unsliced, for the globe — it plots every trip, not just the listed ones. */
+  allTrips: Trip[];
   films: Film[];
   /** Full collection sizes, so sections can offer "view all". */
   totals: { photos: number; trips: number; films: number };
@@ -46,7 +48,9 @@ const SECTION_RENDERERS: Record<SectionId, (data: PageData) => ReactNode> = {
   visuals: ({ photos, films, totals }) => (
     <Visuals photos={photos} films={films} totalPhotos={totals.photos} totalFilms={totals.films} />
   ),
-  travel: ({ trips, totals }) => <Travel trips={trips} totalCount={totals.trips} />,
+  travel: ({ trips, allTrips, totals }) => (
+    <Travel trips={trips} allTrips={allTrips} totalCount={totals.trips} />
+  ),
   about: () => <About />,
   cta: () => <CallToAction />,
   // Contact is rendered by the footer, which they now share a panel with.
@@ -72,6 +76,7 @@ export default async function Page() {
     projects,
     photos: photos.slice(0, HOME_LIMITS.photos),
     trips: trips.slice(0, HOME_LIMITS.trips),
+    allTrips: trips,
     films: films.slice(0, HOME_LIMITS.films),
     totals: { photos: photos.length, trips: trips.length, films: films.length },
   };

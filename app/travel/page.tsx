@@ -35,7 +35,7 @@ export default async function TravelIndexPage() {
     <>
       <DetailChrome backHref="/#travel" backLabel="Back to portfolio" />
 
-      <main className="relative flex-1 px-3 pt-28 sm:px-5 lg:px-6">
+      <main className="relative flex-1 px-3 pb-3 pt-28 sm:px-5 lg:px-6">
         <div className="mx-auto w-full max-w-[100rem]">
           <header className="rounded-[1.75rem] border border-white/8 bg-panel px-6 py-14 sm:px-10 lg:px-14">
             <div className="flex items-center gap-2.5">
