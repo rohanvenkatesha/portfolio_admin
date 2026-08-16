@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { ArrowUpRight, Play, Quote } from "lucide-react";
+import { Play, Quote } from "lucide-react";
 import { Reveal } from "@/components/fx/reveal";
 import { EmberBackdrop } from "@/components/fx/ember-backdrop";
 import { youtubeEmbedUrl, youtubeThumbnail, type PostBlock } from "@/content/posts";
@@ -35,6 +35,13 @@ import { cn } from "@/lib/utils";
  * lands at roughly 72 characters at this size.
  */
 const MEASURE = "max-w-[34rem]";
+
+/**
+ * Media runs wider than the text but well short of the panel. Full-width
+ * imagery turned the post into a slideshow; this keeps a photo a beat in the
+ * writing. The gallery section is where images get to be big.
+ */
+const MEDIA = "max-w-[44rem]";
 
 const EASE = "ease-[cubic-bezier(0.16,1,0.3,1)]";
 
@@ -85,14 +92,23 @@ function Block({ block }: { block: PostBlock }) {
       );
 
     case "image":
+      /**
+       * Sized to sit with the writing rather than interrupt it.
+       *
+       * At full column width an image swamped the paragraph either side of it
+       * and the post became a slideshow with captions. It's capped a little
+       * wider than the measure — enough to feel like a break in the text, not
+       * enough to become the subject. The full-size versions live in the
+       * gallery section.
+       */
       return (
-        <figure className="group">
-          <div className="relative aspect-[3/2] w-full overflow-hidden rounded-2xl border border-white/10 bg-panel-2">
+        <figure className={cn("group", MEDIA)}>
+          <div className="relative aspect-[16/10] w-full overflow-hidden rounded-2xl border border-white/10 bg-panel-2">
             <Image
               src={block.src}
               alt={block.caption ?? ""}
               fill
-              sizes="(max-width: 896px) 100vw, 896px"
+              sizes="(max-width: 704px) 100vw, 704px"
               className={cn("object-cover transition-transform duration-700", EASE, "group-hover:scale-[1.03]")}
             />
           </div>
@@ -101,7 +117,7 @@ function Block({ block }: { block: PostBlock }) {
       );
 
     case "gallery":
-      return <Gallery images={block.images} />;
+      return <Strip images={block.images} />;
 
     case "quote":
       /**
@@ -148,85 +164,54 @@ function Caption({ children }: { children: React.ReactNode }) {
 }
 
 /**
- * A gallery of two or more images.
+ * An inline gallery, as a horizontal strip.
  *
- * One image spans the row, everything else pairs up — a lone half-width image
- * at the end of an odd gallery reads as a mistake, so the first one absorbs it.
+ * Deliberately not a grid. In the body a gallery is a passing note — "these
+ * three, here" — and a grid of full-width tiles stops the reading dead. The
+ * strip stays one row tall however many images it holds, scrolls sideways, and
+ * fades at both edges so it's obvious there's more. The gallery section further
+ * down is where these get to be large.
  */
-function Gallery({ images }: { images: { src: string; caption?: string }[] }) {
-  const [open, setOpen] = useState<number | null>(null);
-  const odd = images.length % 2 === 1;
-
+function Strip({ images }: { images: { src: string; caption?: string }[] }) {
   return (
-    <>
-      <div className="grid gap-3 sm:grid-cols-2">
+    <div className={MEDIA}>
+      <div className="mask-fade-x no-scrollbar -mx-1 flex snap-x snap-mandatory gap-3 overflow-x-auto px-1 pb-1">
         {images.map((image, index) => (
-          <figure key={image.src + index} className={cn(odd && index === 0 && "sm:col-span-2")}>
-            <button
-              type="button"
-              onClick={() => setOpen(index)}
-              className="group relative block aspect-[3/2] w-full overflow-hidden rounded-2xl border border-white/10 bg-panel-2 transition-colors hover:border-brand-500/40"
-            >
-              <Image
-                src={image.src}
-                alt={image.caption ?? ""}
-                fill
-                sizes="(max-width: 640px) 100vw, 440px"
-                className={cn("object-cover transition-transform duration-700", EASE, "group-hover:scale-[1.05]")}
-              />
+          <figure
+            key={image.src + index}
+            className="group relative aspect-[4/3] w-[15rem] shrink-0 snap-start overflow-hidden rounded-xl border border-white/10 bg-panel-2 sm:w-[17rem]"
+          >
+            <Image
+              src={image.src}
+              alt={image.caption ?? ""}
+              fill
+              sizes="272px"
+              className={cn("object-cover transition-transform duration-700", EASE, "group-hover:scale-[1.06]")}
+            />
 
-              {/* Warm wash rises on hover, the same gesture as the philosophy
-                  cards and the skill rows. */}
-              <span
-                aria-hidden
-                className={cn(
-                  "absolute inset-0 origin-bottom scale-y-0 bg-gradient-to-t from-brand-500/25 to-transparent transition-transform duration-500",
-                  EASE,
-                  "group-hover:scale-y-100"
-                )}
-              />
+            <span
+              aria-hidden
+              className={cn(
+                "absolute inset-0 origin-bottom scale-y-0 bg-gradient-to-t from-brand-500/30 to-transparent transition-transform duration-500",
+                EASE,
+                "group-hover:scale-y-100"
+              )}
+            />
 
-              {/* Arrow slides in and rotates, matching the travel rows */}
-              <span
-                aria-hidden
-                className={cn(
-                  "absolute right-3 top-3 flex h-9 w-9 translate-x-2 items-center justify-center rounded-full border border-white/25 bg-void/50 opacity-0 backdrop-blur-md transition-all duration-500",
-                  EASE,
-                  "group-hover:translate-x-0 group-hover:border-brand-500 group-hover:bg-brand-500 group-hover:opacity-100"
-                )}
-              >
-                <ArrowUpRight className="h-4 w-4 text-white transition-transform duration-300 group-hover:rotate-45" />
-              </span>
-            </button>
-            {image.caption ? <Caption>{image.caption}</Caption> : null}
+            {image.caption ? (
+              <figcaption className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-void/90 to-transparent px-3 pb-2.5 pt-6 text-[11px] leading-snug text-white/85">
+                {image.caption}
+              </figcaption>
+            ) : null}
           </figure>
         ))}
       </div>
 
-      {/* Lightbox */}
-      {open !== null ? (
-        <div
-          role="dialog"
-          aria-modal
-          aria-label="Image viewer"
-          onClick={() => setOpen(null)}
-          className="fixed inset-0 z-[80] grid place-items-center bg-void/95 p-4 backdrop-blur-md"
-        >
-          <div className="relative max-h-full w-full max-w-5xl">
-            <Image
-              src={images[open].src}
-              alt={images[open].caption ?? ""}
-              width={1600}
-              height={1067}
-              className="h-auto max-h-[85vh] w-full rounded-2xl object-contain"
-            />
-            {images[open].caption ? (
-              <p className="mt-3 text-center text-[12px] text-zinc-400">{images[open].caption}</p>
-            ) : null}
-          </div>
-        </div>
-      ) : null}
-    </>
+      <p className="mt-3 flex items-center gap-2.5 text-[11px] text-zinc-600">
+        <span aria-hidden className="h-px w-5 shrink-0 bg-brand-500/60" />
+        {images.length} frames — scroll sideways, or see them full size in the gallery below.
+      </p>
+    </div>
   );
 }
 
@@ -247,7 +232,7 @@ function Video({ url, caption }: { url: string; caption?: string }) {
   if (!embed) return null;
 
   return (
-    <figure>
+    <figure className={MEDIA}>
       <div className="relative aspect-video w-full overflow-hidden rounded-2xl border border-white/10 bg-panel-2">
         {playing ? (
           <iframe

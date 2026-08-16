@@ -7,12 +7,14 @@ import { ArrowLeft, ArrowRight, ArrowUpRight, CalendarDays, MapPin } from "lucid
 import { DetailChrome } from "@/components/layout/detail-chrome";
 import { Footer } from "@/components/layout/footer";
 import { PostBlocks } from "@/components/travel/post-blocks";
+import { PostGallery } from "@/components/travel/post-gallery";
 import { RiderLinks } from "@/components/travel/rider-links";
 import { EmberBackdrop } from "@/components/fx/ember-backdrop";
 import { Reveal, RevealGroup, RevealItem, SectionHeading } from "@/components/fx/reveal";
 import { getProfile } from "@/lib/content/profile";
 import { getTrips } from "@/lib/content/trips";
 import { getPost, getPosts } from "@/lib/content/posts";
+import { collectImages } from "@/content/posts";
 import { cn } from "@/lib/utils";
 
 /** Leaflet touches window on import, so the map is client-only. */
@@ -99,6 +101,9 @@ export default async function TripPostPage({ params }: PageProps<"/travel/[slug]
   const previous = index > 0 ? siblings[index - 1] : null;
   const next = index >= 0 && index < siblings.length - 1 ? siblings[index + 1] : null;
 
+  // Every image in the body, in reading order, for the gallery section.
+  const images = collectImages(post.blocks);
+
   const related = post.relatedTripIds
     .map((id) => trips.find((t) => t.id === id))
     .filter((t): t is (typeof trips)[number] => Boolean(t) && t!.id !== trip.id);
@@ -181,84 +186,6 @@ export default async function TripPostPage({ params }: PageProps<"/travel/[slug]
           </div>
         </section>
 
-        {/* ================= Route — the travel section's exact layout ========== */}
-        {post.route.length ? (
-          <section className={SECTION}>
-            <div className={PANEL}>
-              <SectionHeading
-                eyebrow="The Route"
-                title={
-                  <>
-                    {post.route.length} {post.route.length === 1 ? "stop" : "stops"},
-                    <br />
-                    <span className="text-brand-500">start to finish</span>
-                  </>
-                }
-                description="Drag the map to look around, or hover a stop to place it. Click the map to enable scroll zoom."
-              />
-
-              <div className="mt-12 grid gap-10 lg:grid-cols-[0.85fr_1.15fr] lg:gap-14">
-                <Reveal direction="right" className="lg:sticky lg:top-28 lg:self-start">
-                  <div className="relative overflow-hidden rounded-2xl border border-white/8 bg-panel-2 p-4">
-                    <RouteMap waypoints={post.route} className="h-[26rem]" />
-                    <div className="pointer-events-none absolute left-6 top-6">
-                      <p className="eyebrow text-zinc-500">Drag to rotate</p>
-                    </div>
-                  </div>
-                </Reveal>
-
-                <div className="border-t border-white/8">
-                  {post.route.map((stop, i) => (
-                    <div key={`${stop.name}-${i}`} className="border-b border-white/8">
-                      <div className="group relative block overflow-hidden px-4 py-7">
-                        <span
-                          aria-hidden
-                          className={cn(
-                            "absolute inset-0 origin-left scale-x-0 bg-gradient-to-r from-brand-500/12 to-transparent transition-transform duration-500",
-                            EASE,
-                            "group-hover:scale-x-100"
-                          )}
-                        />
-
-                        <div className="relative flex items-center gap-5">
-                          <span className="font-mono text-[11px] text-zinc-600 transition-colors duration-300 group-hover:text-brand-500">
-                            {String(i + 1).padStart(2, "0")}
-                          </span>
-
-                          <div
-                            className={cn(
-                              "min-w-0 flex-1 transition-transform duration-500",
-                              EASE,
-                              "group-hover:translate-x-2"
-                            )}
-                          >
-                            <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-                              <h3 className="text-xl font-semibold text-white transition-colors duration-300 group-hover:text-brand-400 sm:text-2xl">
-                                {stop.name}
-                              </h3>
-                            </div>
-
-                            {stop.note ? (
-                              <p className="mt-1 text-[13px] text-zinc-500">{stop.note}</p>
-                            ) : null}
-
-                            <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1.5 font-mono text-[11px] text-zinc-500">
-                              <span className="inline-flex items-center gap-1.5">
-                                <MapPin className="h-3 w-3" />
-                                {stop.lat.toFixed(2)}°, {stop.lng.toFixed(2)}°
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </section>
-        ) : null}
-
         {/* ================= Numbers — the ember panel from Capabilities ======== */}
         {post.stats.length ? (
           <section className={SECTION}>
@@ -319,6 +246,115 @@ export default async function TripPostPage({ params }: PageProps<"/travel/[slug]
             </div>
           </div>
         </section>
+
+        {/* ================= Gallery — every frame, bento-tiled ================= */}
+        {images.length ? (
+          <section className={SECTION}>
+            <div className={PANEL}>
+              <SectionHeading
+                eyebrow="The Gallery"
+                title={
+                  <>
+                    {images.length} frames,
+                    <br />
+                    <span className="text-brand-500">full size</span>
+                  </>
+                }
+                description="Every photo from this leg. Click one to open the viewer — arrow keys move between them."
+              />
+
+              <div className="mt-12">
+                <PostGallery images={images} />
+              </div>
+            </div>
+          </section>
+        ) : null}
+
+        {/* ================= Route ==============================================
+            Placed after the writing, not before it. Leading with a map asks you
+            to study the geography before you know why it matters.
+            ===================================================================== */}
+        {post.route.length ? (
+          <section className={SECTION}>
+            <div className={PANEL}>
+              <SectionHeading
+                eyebrow="The Route"
+                title={
+                  <>
+                    {post.route.length} {post.route.length === 1 ? "stop" : "stops"},
+                    <br />
+                    <span className="text-brand-500">start to finish</span>
+                  </>
+                }
+                description="Drag to look around, or click the map to enable scroll zoom. Tap any pin for its note."
+              />
+
+              {/* Map full width, stops in a grid beneath.
+
+                  One full-width row per stop was fine for three and unusable
+                  for fifteen — the section became a scroll of near-identical
+                  rows. Compact cards in a responsive grid stay legible at any
+                  count, and the map above is doing the spatial work anyway. */}
+              <Reveal direction="up" className="mt-12">
+                <div className="relative overflow-hidden rounded-2xl border border-white/8 bg-panel-2 p-3 sm:p-4">
+                  <RouteMap
+                    waypoints={post.route}
+                    className="h-[20rem] sm:h-[26rem] lg:h-[32rem]"
+                  />
+                  <div className="pointer-events-none absolute left-6 top-6 sm:left-7 sm:top-7">
+                    <p className="eyebrow text-zinc-500">Drag to explore</p>
+                  </div>
+                </div>
+              </Reveal>
+
+              <RevealGroup
+                className="mt-4 grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3"
+                stagger={0.04}
+              >
+                {post.route.map((stop, i) => (
+                  <RevealItem key={`${stop.name}-${i}`}>
+                    <div className="group relative h-full overflow-hidden rounded-xl border border-white/8 bg-panel-2 transition-colors duration-300 hover:border-brand-500/40">
+                      <span
+                        aria-hidden
+                        className={cn(
+                          "absolute inset-0 origin-left scale-x-0 bg-gradient-to-r from-brand-500/12 to-transparent transition-transform duration-500",
+                          EASE,
+                          "group-hover:scale-x-100"
+                        )}
+                      />
+
+                      <div className="relative flex gap-3 p-4">
+                        <span className="ember-fill-hot mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full font-mono text-[10px] font-bold text-white">
+                          {i + 1}
+                        </span>
+
+                        <div
+                          className={cn(
+                            "min-w-0 flex-1 transition-transform duration-500",
+                            EASE,
+                            "group-hover:translate-x-1"
+                          )}
+                        >
+                          <p className="truncate text-[13.5px] font-semibold text-white transition-colors duration-300 group-hover:text-brand-400">
+                            {stop.name}
+                          </p>
+                          {stop.note ? (
+                            <p className="mt-1 line-clamp-2 text-[12px] leading-relaxed text-zinc-500">
+                              {stop.note}
+                            </p>
+                          ) : null}
+                          <p className="mt-2 font-mono text-[10px] text-zinc-600">
+                            {stop.lat.toFixed(3)}°, {stop.lng.toFixed(3)}°
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </RevealItem>
+                ))}
+              </RevealGroup>
+            </div>
+          </section>
+        ) : null}
 
         {/* ================= Riders ============================================= */}
         {post.riders.length ? (

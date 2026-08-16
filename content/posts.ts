@@ -220,6 +220,22 @@ export function normalisePost(raw: unknown): TripPost {
   };
 }
 
+/**
+ * Every image in a post, in reading order, for the gallery section.
+ *
+ * Lives here rather than beside the block renderer because that module is
+ * `"use client"`, and a Server Component can't call a function exported from
+ * one — it fails at request time, not at build, so neither tsc nor eslint
+ * catches it.
+ */
+export function collectImages(blocks: PostBlock[]): { src: string; caption?: string }[] {
+  return blocks.flatMap((block) => {
+    if (block.type === "image") return [{ src: block.src, caption: block.caption }];
+    if (block.type === "gallery") return block.images;
+    return [];
+  });
+}
+
 /** Manual order first, then newest — so pinning a post doesn't fight the date. */
 export function sortPosts(posts: TripPost[]): TripPost[] {
   return [...posts].sort((a, b) => a.order - b.order || b.date.localeCompare(a.date));
