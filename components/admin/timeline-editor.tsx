@@ -297,7 +297,10 @@ export function TimelineEditor({ initial }: { initial: TimelineEntry[] }) {
       })}
 
       {/* Actions */}
-      <div className="sticky bottom-4 flex flex-wrap items-center gap-4 rounded-2xl border border-white/12 bg-panel/95 p-6 backdrop-blur-md">
+      {/* Pinned only from lg. On a phone or tablet a 140px bar 16px off the
+          bottom sits exactly where the on-screen keyboard puts the field you
+          are typing into. */}
+      <div className="flex flex-wrap items-center gap-4 rounded-2xl border border-white/12 bg-panel/95 p-5 backdrop-blur-md sm:p-6 lg:sticky lg:bottom-4">
         <button
           type="submit"
           disabled={pending}

@@ -159,7 +159,9 @@ export function ListsEditor({ initial }: { initial: Lists }) {
       >
         {capabilities.map((item, index) => (
           <div key={index} className="rounded-xl border border-white/8 bg-panel-2 p-4">
-            <div className="flex items-start gap-3">
+            {/* On a phone the title dropped to 63px between the number field
+                and the three buttons, so it takes its own line below them. */}
+            <div className="flex flex-wrap items-start gap-3">
               <input
                 suppressHydrationWarning
                 name="capNumber"
@@ -172,7 +174,7 @@ export function ListsEditor({ initial }: { initial: Lists }) {
                 name="capTitle"
                 defaultValue={item.title}
                 placeholder="Title"
-                className={inputClass}
+                className={cn(inputClass, "order-last w-full sm:order-none sm:w-auto sm:flex-1")}
               />
               <RowControls
                 index={index}
@@ -211,7 +213,7 @@ export function ListsEditor({ initial }: { initial: Lists }) {
         {stats.map((stat, index) => (
           <div
             key={index}
-            className="grid gap-2 rounded-xl border border-white/8 bg-panel-2 p-3 sm:grid-cols-[6rem_5rem_1fr_auto]"
+            className="grid gap-2 rounded-xl border border-white/8 bg-panel-2 p-3 grid-cols-[1fr_1fr] sm:grid-cols-[6rem_5rem_1fr_auto]"
           >
             <input
               suppressHydrationWarning
@@ -255,7 +257,7 @@ export function ListsEditor({ initial }: { initial: Lists }) {
       >
         {philosophy.map((item, index) => (
           <div key={index} className="rounded-xl border border-white/8 bg-panel-2 p-4">
-            <div className="flex items-start gap-3">
+            <div className="flex flex-wrap items-start gap-3">
               <span className="mt-2.5 shrink-0 font-mono text-[11px] text-zinc-600">
                 {String(index + 1).padStart(2, "0")}
               </span>
@@ -264,7 +266,7 @@ export function ListsEditor({ initial }: { initial: Lists }) {
                 name="prTitle"
                 defaultValue={item.title}
                 placeholder="Title"
-                className={inputClass}
+                className={cn(inputClass, "order-last w-full sm:order-none sm:w-auto sm:flex-1")}
               />
               <RowControls
                 index={index}
@@ -349,7 +351,10 @@ export function ListsEditor({ initial }: { initial: Lists }) {
       </Section>
 
       {/* ---------------- Actions ---------------- */}
-      <div className="sticky bottom-4 flex flex-wrap items-center gap-4 rounded-2xl border border-white/12 bg-panel/95 p-6 backdrop-blur-md">
+      {/* Pinned only from lg. On a phone or tablet a 140px bar 16px off the
+          bottom sits exactly where the on-screen keyboard puts the field you
+          are typing into. */}
+      <div className="flex flex-wrap items-center gap-4 rounded-2xl border border-white/12 bg-panel/95 p-5 backdrop-blur-md sm:p-6 lg:sticky lg:bottom-4">
         <button
           type="submit"
           disabled={pending}
