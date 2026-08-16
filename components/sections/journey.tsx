@@ -6,7 +6,8 @@ import { Award, Briefcase, GraduationCap, Milestone, Plus } from "lucide-react";
 import { Reveal, SectionHeading } from "@/components/fx/reveal";
 import { EmberBackdrop } from "@/components/fx/ember-backdrop";
 import { TechBadge } from "@/components/ui/primitives";
-import { timeline, type TimelineEntry, type TimelineTrack } from "@/content/site";
+import { useTimeline } from "@/components/providers/timeline-provider";
+import { startYear, type TimelineEntry, type TimelineTrack } from "@/content/timeline";
 import { cn } from "@/lib/utils";
 import { useCopy } from "@/components/providers/copy-provider";
 
@@ -25,14 +26,9 @@ const kindMeta = {
   milestone: { icon: Milestone, label: "Milestone" },
 } as const;
 
-/** Pull the first four-digit year out of a period string. */
-function startYear(period: string) {
-  const match = period.match(/\d{4}/);
-  return match ? match[0] : "";
-}
-
 export function Journey() {
   const copy = useCopy("journey");
+  const timeline = useTimeline();
   const [view, setView] = useState<View>("tech");
   const [openId, setOpenId] = useState<string | null>(null);
 
@@ -42,7 +38,7 @@ export function Journey() {
         ? [...timeline].sort((a, b) => Number(startYear(b.period)) - Number(startYear(a.period)))
         : timeline.filter((entry) => entry.track === view);
     return list;
-  }, [view]);
+  }, [view, timeline]);
 
   return (
     <section id="journey" className="relative scroll-mt-24 px-3 py-3 sm:px-5 lg:px-6">

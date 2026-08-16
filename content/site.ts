@@ -742,6 +742,11 @@ export type Trip = {
   gradient: string;
   /** Cover photo, committed under public/media/trips. Empty falls back to the gradient. */
   coverUrl?: string;
+  /**
+   * ISO timestamp set when the trip is moved to the trash. Present means the
+   * trip is hidden everywhere but recoverable; absent means live.
+   */
+  deletedAt?: string;
   hook: string;
   reflection: string;
   itinerary: { day: string; title: string; detail: string }[];

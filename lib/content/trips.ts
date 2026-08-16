@@ -54,6 +54,9 @@ function normalise(raw: unknown): Trip | null {
     itinerary,
     gear: asStringList(t.gear),
     tips: asStringList(t.tips),
+    // Only carried when set: an always-present `deletedAt: undefined` would
+    // make every trip look like it had been through the trash.
+    ...(typeof t.deletedAt === "string" && t.deletedAt ? { deletedAt: t.deletedAt } : {}),
   };
 }
 
@@ -80,13 +83,35 @@ async function readTrips(): Promise<Trip[]> {
   }
 }
 
-export const getTrips = unstable_cache(readTrips, ["trips-list"], {
+const readAllTrips = unstable_cache(readTrips, ["trips-list"], {
   tags: [TRIPS_TAG],
   revalidate: 3600,
 });
 
-export async function getTripsFresh(): Promise<Trip[]> {
+/**
+ * Live trips — what the public site sees.
+ *
+ * Trashed trips are filtered here rather than at each call site, so a new
+ * listing can't accidentally surface one. Only `getTrashedTrips` sees them.
+ */
+export async function getTrips(): Promise<Trip[]> {
+  return (await readAllTrips()).filter((trip) => !trip.deletedAt);
+}
+
+/** Trashed trips, newest first. For the trash screen only. */
+export async function getTrashedTrips(): Promise<Trip[]> {
+  return (await readTrips())
+    .filter((trip) => trip.deletedAt)
+    .sort((a, b) => (b.deletedAt ?? "").localeCompare(a.deletedAt ?? ""));
+}
+
+/** Everything, trashed included — for actions that must see the whole set. */
+export async function getAllTripsRaw(): Promise<Trip[]> {
   return readTrips();
+}
+
+export async function getTripsFresh(): Promise<Trip[]> {
+  return (await readTrips()).filter((trip) => !trip.deletedAt);
 }
 
 export async function isTripsSeeded(): Promise<boolean> {

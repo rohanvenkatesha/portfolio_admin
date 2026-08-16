@@ -407,7 +407,7 @@ export function PostEditor({
         ) : (
           <div className="space-y-2">
             {route.map((stop, index) => (
-              <div key={index} className="grid gap-2 rounded-xl border border-white/8 bg-panel-2 p-3 sm:grid-cols-[auto_1.4fr_0.7fr_0.7fr_1.4fr_auto]">
+              <div key={index} className="grid gap-2 rounded-xl border border-white/8 bg-panel-2 p-3 lg:grid-cols-[auto_1.4fr_0.7fr_0.7fr_1.4fr_auto]">
                 <span className="ember-fill-hot hidden h-8 w-8 items-center justify-center self-center rounded-full font-mono text-[10px] font-bold text-white sm:flex">
                   {index + 1}
                 </span>
@@ -464,7 +464,7 @@ export function PostEditor({
         ) : (
           <div className="space-y-2">
             {riders.map((rider, index) => (
-              <div key={index} className="grid gap-2 rounded-xl border border-white/8 bg-panel-2 p-3 sm:grid-cols-[1fr_0.8fr_1.4fr_auto_auto]">
+              <div key={index} className="grid gap-2 rounded-xl border border-white/8 bg-panel-2 p-3 lg:grid-cols-[1fr_0.8fr_1.4fr_auto_auto]">
                 <input suppressHydrationWarning name="riderName" placeholder="Name" defaultValue={rider.name} className={inputClass} />
                 <input suppressHydrationWarning name="riderHandle" placeholder="@handle" defaultValue={rider.handle ?? ""} className={inputClass} />
                 <input suppressHydrationWarning name="riderHref" placeholder="https://…" defaultValue={rider.href} className={cn(inputClass, "font-mono text-[12px]")} />
@@ -521,7 +521,10 @@ export function PostEditor({
       </Section>
 
       {/* ---------------- Save ---------------- */}
-      <div className="sticky bottom-4 flex flex-wrap items-center gap-4 rounded-2xl border border-white/12 bg-panel/95 p-6 backdrop-blur-md">
+      {/* Pinned only from lg. On a phone or tablet a 140px bar 16px off the
+          bottom sits exactly where the on-screen keyboard puts the field you
+          are typing into. */}
+      <div className="flex flex-wrap items-center gap-4 rounded-2xl border border-white/12 bg-panel/95 p-5 backdrop-blur-md sm:p-6 lg:sticky lg:bottom-4">
         <label className="inline-flex cursor-pointer items-center gap-2.5">
           <input
             suppressHydrationWarning

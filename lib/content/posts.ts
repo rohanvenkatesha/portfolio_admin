@@ -45,9 +45,32 @@ const readAll = unstable_cache(readPosts, ["posts"], {
   revalidate: 3600,
 });
 
-/** Published posts only — everything the public site should ever see. */
+/**
+ * Published posts only — everything the public site should ever see.
+ *
+ * Trashed posts are excluded here rather than at each call site, so a new
+ * listing can't accidentally surface one: the only way to see a trashed post
+ * is `getTrashedPosts`, which the trash screen alone uses.
+ */
 export async function getPosts(): Promise<TripPost[]> {
-  return (await readAll()).filter((post) => post.published);
+  return (await readAll()).filter((post) => post.published && !post.deletedAt);
+}
+
+/** Live posts including drafts — what the admin's own lists show. */
+export async function getPostsFresh(): Promise<TripPost[]> {
+  return (await readPosts()).filter((post) => !post.deletedAt);
+}
+
+/** Trashed posts, newest first. For the trash screen only. */
+export async function getTrashedPosts(): Promise<TripPost[]> {
+  return (await readPosts())
+    .filter((post) => post.deletedAt)
+    .sort((a, b) => (b.deletedAt ?? "").localeCompare(a.deletedAt ?? ""));
+}
+
+/** Everything, trashed included — for actions that must see the whole set. */
+export async function getAllPostsRaw(): Promise<TripPost[]> {
+  return readPosts();
 }
 
 /** Published posts for one trip. */
@@ -65,7 +88,3 @@ export async function getPost(tripId: string, slug: string): Promise<TripPost | 
   return (await getPosts()).find((post) => post.tripId === tripId && post.slug === slug);
 }
 
-/** Every post including drafts, uncached — for the admin only. */
-export async function getPostsFresh(): Promise<TripPost[]> {
-  return readPosts();
-}

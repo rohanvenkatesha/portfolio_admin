@@ -122,7 +122,7 @@ export function PostList({ tripId, posts }: { tripId: string; posts: TripPost[] 
                   }}
                   className="rounded-full border border-red-500/50 px-3 py-1.5 text-[11px] font-medium text-red-300 transition-colors hover:bg-red-500/10"
                 >
-                  Delete for good
+                  Move to trash
                 </button>
                 <button
                   type="button"

@@ -4,7 +4,7 @@ import { Reveal, RevealGroup, RevealItem } from "@/components/fx/reveal";
 import { Counter } from "@/components/fx/effects";
 import { EmberBackdrop } from "@/components/fx/ember-backdrop";
 import { PillLink, TechBadge } from "@/components/ui/primitives";
-import { capabilities, stats } from "@/content/site";
+import { useLists } from "@/components/providers/lists-provider";
 import { useCopy } from "@/components/providers/copy-provider";
 
 /**
@@ -19,6 +19,7 @@ export function Capabilities() {
   // `numbers` here to avoid shadowing it.
   const services = useCopy("capabilities");
   const numbers = useCopy("stats");
+  const { capabilities, stats } = useLists();
 
   return (
     <section id="capabilities" className="relative scroll-mt-24 px-3 py-3 sm:px-5 lg:px-6">

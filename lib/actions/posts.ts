@@ -2,7 +2,7 @@
 
 import { revalidateTag, revalidatePath } from "next/cache";
 import { adminDb, getAdminUser } from "@/lib/firebase/admin";
-import { POSTS_COLLECTION, POSTS_DOC, POSTS_TAG, getPostsFresh } from "@/lib/content/posts";
+import { POSTS_COLLECTION, POSTS_DOC, POSTS_TAG, getAllPostsRaw } from "@/lib/content/posts";
 import { isValidMediaPath } from "@/lib/content/media";
 import { SOCIAL_ICONS, type SocialIcon } from "@/content/profile";
 import {
@@ -157,7 +157,9 @@ export async function createPost(tripId: string): Promise<ActionResult> {
   if (!tripId) return { ok: false, error: "Missing trip." };
 
   try {
-    const current = await getPostsFresh();
+    // The whole set, trash included: `write` replaces the document, so an
+    // action that read only the live posts would purge the trash on save.
+    const current = await getAllPostsRaw();
     const stamp = Date.now().toString(36);
 
     const post: TripPost = {
@@ -169,7 +171,7 @@ export async function createPost(tripId: string): Promise<ActionResult> {
       date: new Date().toISOString().slice(0, 10),
       published: false,
       // Newest first within the trip until it's given an explicit order.
-      order: current.filter((p) => p.tripId === tripId).length,
+      order: current.filter((p) => p.tripId === tripId && !p.deletedAt).length,
       blocks: [],
       route: [],
       stats: [],
@@ -200,16 +202,18 @@ export async function savePost(formData: FormData): Promise<ActionResult> {
   }
 
   try {
-    const current = await getPostsFresh();
-    const index = current.findIndex((p) => p.id === id);
+    const current = await getAllPostsRaw();
+    const index = current.findIndex((p) => p.id === id && !p.deletedAt);
     if (index === -1) return { ok: false, error: "That post no longer exists." };
 
     const slug = slugify(text(formData, "slug") || title, id);
 
     // Slugs form the URL and are scoped to a trip, so only clashes within the
-    // same trip matter.
+    // same trip matter. Trashed posts are ignored: nothing serves them, and
+    // holding a URL hostage from the trash would be baffling. `restorePost`
+    // resolves the reverse case by suffixing on the way back out.
     const clash = current.some(
-      (p) => p.id !== id && p.tripId === current[index].tripId && p.slug === slug
+      (p) => p.id !== id && !p.deletedAt && p.tripId === current[index].tripId && p.slug === slug
     );
     if (clash) {
       return { ok: false, error: `Another post in this trip already uses "${slug}".` };
@@ -243,22 +247,98 @@ export async function savePost(formData: FormData): Promise<ActionResult> {
   }
 }
 
+/**
+ * Move a post to the trash.
+ *
+ * A soft delete: the record stays, stamped with when it went. A post is
+ * usually hours of writing, and the previous behaviour removed it from the
+ * document with nothing to recover from.
+ */
 export async function deletePost(id: string): Promise<ActionResult> {
   const admin = await requireAdmin();
   if (!admin) return { ok: false, error: "Not authorised." };
 
   try {
-    const current = await getPostsFresh();
-    const post = current.find((p) => p.id === id);
-    if (!post) return { ok: false, error: "That post no longer exists." };
+    const current = await getAllPostsRaw();
+    const index = current.findIndex((p) => p.id === id && !p.deletedAt);
+    if (index === -1) return { ok: false, error: "That post no longer exists." };
+
+    const items = [...current];
+    items[index] = { ...items[index], deletedAt: new Date().toISOString() };
+
+    await write(items, admin.email);
+    return { ok: true, message: `Moved “${items[index].title}” to the trash.` };
+  } catch (error) {
+    console.error("[deletePost]", error);
+    return { ok: false, error: "Could not delete." };
+  }
+}
+
+export async function restorePost(id: string): Promise<ActionResult> {
+  const admin = await requireAdmin();
+  if (!admin) return { ok: false, error: "Not authorised." };
+
+  try {
+    const current = await getAllPostsRaw();
+    const index = current.findIndex((p) => p.id === id && p.deletedAt);
+    if (index === -1) return { ok: false, error: "That post isn't in the trash." };
+
+    const post = current[index];
+
+    /**
+     * Slugs are only unique among live posts, so one can be taken while this
+     * sat in the trash. Suffixing beats refusing — the post comes back either
+     * way, and a changed URL is easier to fix than a restore that won't run.
+     */
+    let slug = post.slug;
+    const taken = (candidate: string) =>
+      current.some(
+        (p) => p.id !== id && !p.deletedAt && p.tripId === post.tripId && p.slug === candidate
+      );
+    if (taken(slug)) {
+      let n = 2;
+      while (taken(`${post.slug}-${n}`)) n += 1;
+      slug = `${post.slug}-${n}`;
+    }
+
+    const items = [...current];
+    // Restored as a draft whatever it was before: after time in the trash you
+    // should decide it's ready, not have it reappear live.
+    const revived = { ...post, slug, published: false };
+    delete revived.deletedAt;
+    items[index] = revived;
+
+    await write(items, admin.email);
+    return {
+      ok: true,
+      message:
+        slug === post.slug
+          ? `Restored “${post.title}” as a draft.`
+          : `Restored “${post.title}” as a draft — its slug was taken, so it's now “${slug}”.`,
+    };
+  } catch (error) {
+    console.error("[restorePost]", error);
+    return { ok: false, error: "Could not restore." };
+  }
+}
+
+/** Permanent. Only reachable from the trash. */
+export async function purgePost(id: string): Promise<ActionResult> {
+  const admin = await requireAdmin();
+  if (!admin) return { ok: false, error: "Not authorised." };
+
+  try {
+    const current = await getAllPostsRaw();
+    const post = current.find((p) => p.id === id && p.deletedAt);
+    if (!post) return { ok: false, error: "That post isn't in the trash." };
 
     await write(
       current.filter((p) => p.id !== id),
       admin.email
     );
-    return { ok: true, message: `Deleted “${post.title}”.` };
+    return { ok: true, message: `Deleted “${post.title}” for good.` };
   } catch (error) {
-    console.error("[deletePost]", error);
+    console.error("[purgePost]", error);
     return { ok: false, error: "Could not delete." };
   }
 }
@@ -269,8 +349,8 @@ export async function togglePostPublished(id: string): Promise<ActionResult> {
   if (!admin) return { ok: false, error: "Not authorised." };
 
   try {
-    const current = await getPostsFresh();
-    const index = current.findIndex((p) => p.id === id);
+    const current = await getAllPostsRaw();
+    const index = current.findIndex((p) => p.id === id && !p.deletedAt);
     if (index === -1) return { ok: false, error: "That post no longer exists." };
 
     const items = [...current];

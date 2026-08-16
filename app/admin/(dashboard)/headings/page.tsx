@@ -6,7 +6,7 @@ import { CopyEditor } from "@/components/admin/copy-editor";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-export default async function AdminCopyPage() {
+export default async function AdminHeadingsPage() {
   const copy = await getCopyFresh();
 
   return (
@@ -21,12 +21,12 @@ export default async function AdminCopyPage() {
         </Link>
 
         <h1 className="mt-4 text-2xl font-bold tracking-tight text-white sm:text-3xl">
-          Section copy
+          Headings &amp; intros
         </h1>
         <p className="mt-2 max-w-2xl text-sm leading-relaxed text-zinc-500">
-          The eyebrow, headline and description above every section. Headlines are two lines — the
-          second is set in the accent colour, which is why it&apos;s a separate field. The preview
-          above each row shows how the halves read together.
+          The three lines that open each section — the small label above it, the big headline, and
+          the paragraph underneath. Headlines are two lines because the second half is set in the
+          accent colour; the preview on each row shows how the halves read together.
         </p>
       </div>
 
