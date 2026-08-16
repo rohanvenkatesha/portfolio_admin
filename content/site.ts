@@ -57,9 +57,7 @@ export const profile = {
    * shows a designed initials plate instead — the layout doesn't depend on a
    * photo existing.
    *
-   * It renders as an ember duotone that resolves to full colour on hover, so
-   * pick a shot with real separation between lights and darks — a flat,
-   * evenly-lit frame maps to a narrow band of orange and loses its shape.
+   * Shown as shot — no colour treatment — so what you commit is what appears.
    *
    * This is no longer the panel background; that's always the particle field.
    */
