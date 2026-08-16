@@ -4,13 +4,17 @@ import { ArrowUpRight, CalendarDays, MapPin, Route } from "lucide-react";
 import { DetailChrome } from "@/components/layout/detail-chrome";
 import { Footer } from "@/components/layout/footer";
 import { getTrips } from "@/lib/content/trips";
-import { profile } from "@/content/site";
+import { getProfile } from "@/lib/content/profile";
 import { cn } from "@/lib/utils";
 
-export const metadata: Metadata = {
-  title: "Solo travel guides",
-  description: `Every solo journey ${profile.name} has documented — day-by-day itineraries, gear lists, budgets and route notes.`,
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const profile = await getProfile();
+
+  return {
+    title: "Solo travel guides",
+    description: `Every solo journey ${profile.name} has documented — day-by-day itineraries, gear lists, budgets and route notes.`,
+  };
+}
 
 /**
  * The full travel archive.

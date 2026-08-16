@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion, useScroll, useMotionValueEvent } from "motion/react";
 import { Menu, Search, X } from "lucide-react";
-import { profile } from "@/content/site";
+import { useProfile } from "@/components/providers/profile-provider";
 import { navSections as fallbackNavSections } from "@/content/sections";
 import type { NavSection } from "./shell";
 import { cn } from "@/lib/utils";
@@ -15,6 +15,7 @@ export function Nav({
   onOpenPalette: () => void;
   navSections?: NavSection[];
 }) {
+  const profile = useProfile();
   const [scrolled, setScrolled] = useState(false);
   const [active, setActive] = useState<string>("hero");
   const [menuOpen, setMenuOpen] = useState(false);

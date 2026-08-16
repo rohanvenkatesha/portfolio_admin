@@ -6,7 +6,7 @@ import { DetailChrome } from "@/components/layout/detail-chrome";
 import { Footer } from "@/components/layout/footer";
 import { ProjectDetail } from "@/components/work/project-detail";
 import { Aurora } from "@/components/fx/effects";
-import { profile } from "@/content/site";
+import { getProfile } from "@/lib/content/profile";
 import { getProjects } from "@/lib/content/projects";
 
 /** Prerender every project at build time — the content is fully static. */
@@ -25,6 +25,7 @@ export async function generateMetadata({
   if (!project) return { title: "Project not found" };
 
   const description = `${project.blurb} Built with ${project.stack.slice(0, 4).join(", ")}.`;
+  const profile = await getProfile();
 
   return {
     title: project.title,

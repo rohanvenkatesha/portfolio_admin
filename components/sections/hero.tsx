@@ -14,7 +14,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { profile } from "@/content/site";
+import { useProfile } from "@/components/providers/profile-provider";
 
 /**
  * three.js is loaded on the client only and outside the first-load bundle. The
@@ -26,24 +26,10 @@ const HeroNetwork = dynamic(
   { ssr: false }
 );
 
-const MARQUEE_ITEMS = [
-  "Vertex AI",
-  "Gemini",
-  "LangGraph",
-  "pgvector",
-  "FastAPI",
-  "Next.js",
-  "YOLOv8",
-  "Document AI",
-  "Cloud Run",
-  "AWS Lambda",
-  "PostgreSQL",
-  "Docker",
-];
-
 const EASE = [0.16, 1, 0.3, 1] as const;
 
 export function Hero() {
+  const profile = useProfile();
   return (
     <section id="hero" className="relative scroll-mt-24 px-3 pt-24 sm:px-5 lg:px-6">
       <div className="mx-auto w-full max-w-[100rem]">
@@ -197,7 +183,7 @@ export function Hero() {
 
         {/* ---------------- Tech strip ---------------- */}
         <div className="mt-3 overflow-hidden rounded-2xl border border-white/8 bg-panel py-5">
-          <Marquee items={MARQUEE_ITEMS} />
+          <Marquee items={profile.marquee} />
         </div>
 
         {/* Scroll cue */}

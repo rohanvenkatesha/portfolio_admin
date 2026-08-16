@@ -7,7 +7,7 @@ import { Footer } from "@/components/layout/footer";
 import { DownloadGuideButton, TripDetail } from "@/components/travel/trip-detail";
 import { Aurora } from "@/components/fx/effects";
 import { Badge } from "@/components/ui/primitives";
-import { profile } from "@/content/site";
+import { getProfile } from "@/lib/content/profile";
 import { getTrips } from "@/lib/content/trips";
 import { cn } from "@/lib/utils";
 
@@ -28,6 +28,7 @@ export async function generateMetadata({
 
   const title = `${trip.destination} solo travel guide (${trip.days} days)`;
   const description = `${trip.hook} A day-by-day ${trip.days}-day itinerary for ${trip.destination}, ${trip.region} — route, gear, budget and solo travel notes.`;
+  const profile = await getProfile();
 
   return {
     title,

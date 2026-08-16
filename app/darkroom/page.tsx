@@ -4,12 +4,16 @@ import { Footer } from "@/components/layout/footer";
 import { getPhotos } from "@/lib/content/photos";
 import { getFilms } from "@/lib/content/films";
 import { DarkroomArchive } from "@/components/visuals/darkroom-archive";
-import { profile } from "@/content/site";
+import { getProfile } from "@/lib/content/profile";
 
-export const metadata: Metadata = {
-  title: "Darkroom — films & photography",
-  description: `The full archive of ${profile.name}'s films and photography, with camera and lens details on every frame.`,
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const profile = await getProfile();
+
+  return {
+    title: "Darkroom — films & photography",
+    description: `The full archive of ${profile.name}'s films and photography, with camera and lens details on every frame.`,
+  };
+}
 
 export default async function DarkroomPage() {
   const [photos, films] = await Promise.all([getPhotos(), getFilms()]);

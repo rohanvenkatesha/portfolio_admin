@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { getRedirectResult, signInWithPopup, signInWithRedirect, type Auth } from "firebase/auth";
 import { AlertCircle, Loader2, ShieldCheck } from "lucide-react";
 import { getFirebaseAuth, getGoogleProvider } from "@/lib/firebase/client";
-import { profile } from "@/content/site";
+import { useProfile } from "@/components/providers/profile-provider";
 
 /**
  * Turn a Firebase auth error into something actionable.
@@ -58,6 +58,7 @@ function shouldFallBackToRedirect(code: string, message: string) {
 }
 
 export function LoginForm() {
+  const profile = useProfile();
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);

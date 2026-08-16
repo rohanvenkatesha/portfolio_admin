@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { escapeHtml, headerSafe, isMailConfigured, mailer, readMailConfig } from "@/lib/mail";
-import { profile } from "@/content/site";
+import { getProfile } from "@/lib/content/profile";
 
 /** nodemailer opens TCP sockets, so this cannot run on the edge runtime. */
 export const runtime = "nodejs";
@@ -115,6 +115,7 @@ export async function POST(request: Request) {
 
   const { name, email, subject, message } = result.data;
   const config = readMailConfig()!;
+  const profile = await getProfile();
 
   try {
     await mailer(config).sendMail({

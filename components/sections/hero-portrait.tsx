@@ -3,7 +3,7 @@
 import { useRef } from "react";
 import Image from "next/image";
 import { motion, useMotionValue, useReducedMotion, useSpring, useTransform } from "motion/react";
-import { profile } from "@/content/site";
+import { useProfile } from "@/components/providers/profile-provider";
 import { cn } from "@/lib/utils";
 
 const EASE = [0.16, 1, 0.3, 1] as const;
@@ -29,6 +29,7 @@ const GRAIN =
  * the layout is finished with or without a photo.
  */
 export function HeroPortrait({ className }: { className?: string }) {
+  const profile = useProfile();
   const reduceMotion = useReducedMotion();
   const ref = useRef<HTMLDivElement>(null);
 
@@ -124,6 +125,7 @@ export function HeroPortrait({ className }: { className?: string }) {
  * will land in.
  */
 function PortraitPlaceholder() {
+  const profile = useProfile();
   return (
     <div className="absolute inset-0 grid place-items-center overflow-hidden">
       <div aria-hidden className="ember-fill absolute inset-0" />

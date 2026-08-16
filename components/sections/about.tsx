@@ -5,7 +5,8 @@ import { AnimatePresence, motion } from "motion/react";
 import { Code2, Palette, Plus, Quote, Sparkles } from "lucide-react";
 import { Reveal, RevealGroup, RevealItem, SectionHeading } from "@/components/fx/reveal";
 import { EmberBackdrop } from "@/components/fx/ember-backdrop";
-import { philosophy, profile, skillGroups } from "@/content/site";
+import { philosophy, skillGroups } from "@/content/site";
+import { useProfile } from "@/components/providers/profile-provider";
 import { cn } from "@/lib/utils";
 
 type Domain = "all" | "engineering" | "creative";
@@ -17,6 +18,7 @@ const DOMAINS: { id: Domain; label: string; icon: typeof Code2 }[] = [
 ];
 
 export function About() {
+  const profile = useProfile();
   const [domain, setDomain] = useState<Domain>("all");
   const [openGroup, setOpenGroup] = useState<string>(skillGroups[0].id);
 

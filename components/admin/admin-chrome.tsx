@@ -5,10 +5,11 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { LogOut, ExternalLink, Loader2 } from "lucide-react";
 import { getFirebaseAuth } from "@/lib/firebase/client";
-import { profile } from "@/content/site";
+import { useProfile } from "@/components/providers/profile-provider";
 
 /** Top bar for the admin area: who you are, and the way out. */
 export function AdminChrome({ email }: { email: string }) {
+  const profile = useProfile();
   const router = useRouter();
   const [signingOut, setSigningOut] = useState(false);
 

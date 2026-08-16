@@ -3,13 +3,14 @@
 import { Reveal } from "@/components/fx/reveal";
 import { EmberBackdrop } from "@/components/fx/ember-backdrop";
 import { PillLink } from "@/components/ui/primitives";
-import { profile } from "@/content/site";
+import { useProfile } from "@/components/providers/profile-provider";
 
 /**
  * Full-bleed closing panel — the loudest moment on the page, so it's the last
  * thing before the contact form.
  */
 export function CallToAction() {
+  const profile = useProfile();
   return (
     <section id="cta" className="relative scroll-mt-24 px-3 py-3 sm:px-5 lg:px-6">
       <div className="relative mx-auto w-full max-w-[100rem] overflow-hidden rounded-[1.75rem] border border-white/8">

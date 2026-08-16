@@ -12,7 +12,8 @@ import {
   Search,
 } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import { profile, projects, trips } from "@/content/site";
+import { projects, trips } from "@/content/site";
+import { useProfile } from "@/components/providers/profile-provider";
 import { navSections as fallbackNavSections } from "@/content/sections";
 import type { NavSection } from "./shell";
 import { cn } from "@/lib/utils";
@@ -73,6 +74,7 @@ function PaletteBody({
   onClose: () => void;
   navSections: NavSection[];
 }) {
+  const profile = useProfile();
   const [query, setQuery] = useState("");
   const [cursor, setCursor] = useState(0);
   const listRef = useRef<HTMLDivElement>(null);
@@ -129,7 +131,7 @@ function PaletteBody({
         action: close(() => window.location.assign(`mailto:${profile.email}`)),
       },
     ];
-  }, [onClose, router, navSections]);
+  }, [onClose, router, navSections, profile.name, profile.email]);
 
   const results = useMemo(() => {
     const q = query.trim().toLowerCase();

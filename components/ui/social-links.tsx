@@ -1,7 +1,7 @@
 "use client";
 
 import { Mail } from "lucide-react";
-import { socials } from "@/content/site";
+import { useProfile } from "@/components/providers/profile-provider";
 import { GithubIcon, InstagramIcon, LinkedinIcon, YoutubeIcon } from "./brand-icons";
 import { cn } from "@/lib/utils";
 
@@ -31,6 +31,7 @@ export function SocialLinks({
   showLabels?: boolean;
   size?: "sm" | "md";
 }) {
+  const { socials } = useProfile();
   return (
     <div className={cn("flex flex-wrap items-center gap-2.5", className)}>
       {socials.map((social) => {
