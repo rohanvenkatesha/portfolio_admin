@@ -13,13 +13,28 @@ import { cn } from "@/lib/utils";
  * through and never becomes markup. That's what removes the need for a
  * sanitiser: there is no path from a stored string to innerHTML.
  */
+/**
+ * Text sits on a reading measure; media runs the full column.
+ *
+ * A long post set at the same width as its photographs is tiring to read. In
+ * this column the prose was running 105 characters a line — well past the 60–75
+ * the eye tracks comfortably. Constraining only the text gives the images room
+ * and gives the page its rhythm, without either needing to know about the other.
+ *
+ * Not `ch`: that unit measures the "0" glyph, which in this typeface is 12.4px
+ * against an average prose character of about 7.6px, so `68ch` resolved to 846px
+ * and never applied. A fixed measure is both accurate and predictable — 34rem
+ * lands at roughly 72 characters at this size.
+ */
+const MEASURE = "max-w-[34rem]";
+
 export function PostBlocks({ blocks }: { blocks: PostBlock[] }) {
   if (blocks.length === 0) {
     return <p className="text-sm text-zinc-600">This post has no content yet.</p>;
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-10">
       {blocks.map((block, index) => (
         <Block key={index} block={block} />
       ))}
@@ -31,7 +46,12 @@ function Block({ block }: { block: PostBlock }) {
   switch (block.type) {
     case "heading":
       return (
-        <h2 className="mt-4 text-2xl font-bold tracking-tight text-white sm:text-3xl">
+        <h2
+          className={cn(
+            "pt-4 text-[1.75rem] font-bold leading-[1.15] tracking-tight text-white sm:text-4xl",
+            MEASURE
+          )}
+        >
           {block.text}
         </h2>
       );
@@ -40,7 +60,12 @@ function Block({ block }: { block: PostBlock }) {
       // `whitespace-pre-line` keeps the paragraph breaks the writer typed
       // without needing a markup pass over the text.
       return (
-        <p className="whitespace-pre-line text-[15px] leading-relaxed text-zinc-300">
+        <p
+          className={cn(
+            "whitespace-pre-line text-[16.5px] leading-[1.75] text-zinc-300 sm:text-[17px]",
+            MEASURE
+          )}
+        >
           {block.body}
         </p>
       );
@@ -65,13 +90,17 @@ function Block({ block }: { block: PostBlock }) {
       return <Gallery images={block.images} />;
 
     case "quote":
+      // Set wider and larger than the prose so it reads as a break in the
+      // writing rather than another paragraph in a box.
       return (
-        <figure className="relative overflow-hidden rounded-2xl border border-white/10 bg-panel-2 p-7">
+        <figure className="relative overflow-hidden rounded-2xl border-l-2 border-brand-500 bg-panel-2/70 py-7 pl-7 pr-8">
           <Quote className="h-6 w-6 text-brand-500" />
-          <blockquote className="mt-4 text-lg leading-relaxed text-white">{block.text}</blockquote>
+          <blockquote className="mt-4 max-w-[46ch] text-balance text-xl font-medium leading-[1.5] text-white sm:text-2xl">
+            {block.text}
+          </blockquote>
           {block.attribution ? (
-            <figcaption className="mt-3 font-mono text-[11px] text-zinc-500">
-              — {block.attribution}
+            <figcaption className="mt-4 font-mono text-[11px] uppercase tracking-[0.16em] text-zinc-500">
+              {block.attribution}
             </figcaption>
           ) : null}
         </figure>
