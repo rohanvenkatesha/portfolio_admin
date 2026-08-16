@@ -10,6 +10,8 @@ import { Reveal, SectionHeading } from "@/components/fx/reveal";
 import { CursorPreview } from "@/components/fx/cursor-preview";
 import { trips as fallbackTrips, type Trip } from "@/content/site";
 import { cn } from "@/lib/utils";
+import { useCopy } from "@/components/providers/copy-provider";
+import { withCount } from "@/content/copy";
 
 /**
  * The globe pulls in three.js, the heaviest dependency on the site. Loading it
@@ -33,6 +35,7 @@ export function Travel({
   /** Full collection size, when the list above is a truncated selection. */
   totalCount?: number;
 }) {
+  const copy = useCopy("travel");
   // Trips are deletable from the admin, so an empty list is a real state —
   // indexing [0] unguarded would crash the whole page.
   const [selectedId, setSelectedId] = useState(trips[0]?.id ?? "");
@@ -77,15 +80,15 @@ export function Travel({
     <section id="travel" className="relative scroll-mt-24 px-3 py-3 sm:px-5 lg:px-6">
       <div className="relative mx-auto w-full max-w-[100rem] overflow-hidden rounded-[1.75rem] border border-white/8 bg-panel px-6 py-14 sm:px-10 sm:py-16 lg:px-14">
         <SectionHeading
-          eyebrow="Solo Travel"
+          eyebrow={copy.eyebrow}
           title={
             <>
-              Places I went
+              {copy.titleLead}
               <br />
-              <span className="text-brand-500">on my own</span>
+              <span className="text-brand-500">{copy.titleAccent}</span>
             </>
           }
-          description={`${totalCount ?? trips.length} journeys on the map. Hover a destination to find it on the globe — open it for the full day-by-day guide.`}
+          description={withCount(copy.description, totalCount ?? trips.length)}
         />
 
         <div className="mt-12 grid gap-10 lg:grid-cols-[0.85fr_1.15fr] lg:gap-14">

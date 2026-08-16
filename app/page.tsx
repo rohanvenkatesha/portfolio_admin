@@ -15,6 +15,8 @@ import { getProjects } from "@/lib/content/projects";
 import { getPhotos } from "@/lib/content/photos";
 import { getTrips } from "@/lib/content/trips";
 import { getFilms } from "@/lib/content/films";
+import { getCopy } from "@/lib/content/copy";
+import { CopyProvider } from "@/components/providers/copy-provider";
 import type { Film, Photo, Project, Trip } from "@/content/site";
 import { HOME_LIMITS } from "@/content/limits";
 
@@ -52,13 +54,14 @@ const SECTION_RENDERERS: Record<SectionId, (data: PageData) => ReactNode> = {
 };
 
 export default async function Page() {
-  const [sections, navSections, projects, photos, trips, films] = await Promise.all([
+  const [sections, navSections, projects, photos, trips, films, copy] = await Promise.all([
     getActiveSections(),
     getNavSections(),
     getProjects(),
     getPhotos(),
     getTrips(),
     getFilms(),
+    getCopy(),
   ]);
 
   /**
@@ -74,7 +77,9 @@ export default async function Page() {
   };
 
   return (
-    <>
+    /* Sections are Client Components and can't reach the data layer, so the
+       copy is read once here and read back through context. */
+    <CopyProvider value={copy}>
       <Shell navSections={navSections} />
 
       <main className="relative flex-1">
@@ -90,6 +95,6 @@ export default async function Page() {
         navSections={navSections}
         withContact={sections.some((s) => s.id === "contact")}
       />
-    </>
+    </CopyProvider>
   );
 }

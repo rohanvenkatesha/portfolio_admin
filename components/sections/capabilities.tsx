@@ -5,6 +5,7 @@ import { Counter } from "@/components/fx/effects";
 import { EmberBackdrop } from "@/components/fx/ember-backdrop";
 import { PillLink, TechBadge } from "@/components/ui/primitives";
 import { capabilities, stats } from "@/content/site";
+import { useCopy } from "@/components/providers/copy-provider";
 
 /**
  * Two panels under the hero: what I'm hired to do, and the numbers behind it.
@@ -14,20 +15,26 @@ import { capabilities, stats } from "@/content/site";
  * neutral panels either side are what make it land.
  */
 export function Capabilities() {
+  // `stats` is already the numbers themselves, so the copy for that panel is
+  // `numbers` here to avoid shadowing it.
+  const services = useCopy("capabilities");
+  const numbers = useCopy("stats");
+
   return (
     <section id="capabilities" className="relative scroll-mt-24 px-3 py-3 sm:px-5 lg:px-6">
       <div className="mx-auto grid w-full max-w-[100rem] gap-3 lg:grid-cols-[1.55fr_1fr]">
         {/* ---------------- What I do ---------------- */}
         <div className="rounded-[1.75rem] border border-white/8 bg-panel p-7 sm:p-10">
           <Reveal direction="up">
+            {/* Both lines stay white here — this panel doesn't accent its
+                second line the way the SectionHeading sections do. */}
             <h2 className="max-w-xl text-balance text-3xl font-bold leading-[1.08] tracking-tight text-white sm:text-4xl">
-              Engineering that ships,
+              {services.titleLead}
               <br />
-              not just prototypes
+              {services.titleAccent}
             </h2>
             <p className="mt-4 max-w-lg text-sm leading-relaxed text-zinc-400">
-              Three things I get hired for, and have shipped into production across retail, fuel
-              networks, marketing automation and enterprise document workflows.
+              {services.description}
             </p>
           </Reveal>
 
@@ -66,13 +73,11 @@ export function Capabilities() {
           <div className="relative flex h-full flex-col justify-between p-7 sm:p-10">
             <Reveal direction="up">
               <h2 className="text-balance text-3xl font-bold leading-[1.08] tracking-tight text-white sm:text-4xl">
-                Work that delivers
+                {numbers.titleLead}
                 <br />
-                real results
+                {numbers.titleAccent}
               </h2>
-              <p className="mt-4 text-sm leading-relaxed text-white/70">
-                Every figure below traces back to a shipped system — not a rounded-up estimate.
-              </p>
+              <p className="mt-4 text-sm leading-relaxed text-white/70">{numbers.description}</p>
             </Reveal>
 
             <dl className="mt-9 space-y-6">

@@ -8,6 +8,7 @@ import { EmberBackdrop } from "@/components/fx/ember-backdrop";
 import { TechBadge } from "@/components/ui/primitives";
 import { timeline, type TimelineEntry, type TimelineTrack } from "@/content/site";
 import { cn } from "@/lib/utils";
+import { useCopy } from "@/components/providers/copy-provider";
 
 type View = TimelineTrack | "blended";
 
@@ -31,6 +32,7 @@ function startYear(period: string) {
 }
 
 export function Journey() {
+  const copy = useCopy("journey");
   const [view, setView] = useState<View>("tech");
   const [openId, setOpenId] = useState<string | null>(null);
 
@@ -48,15 +50,15 @@ export function Journey() {
         {/* ---------------- Heading + switcher, full width ---------------- */}
         <div className="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
           <SectionHeading
-            eyebrow="The Journey"
+            eyebrow={copy.eyebrow}
             title={
               <>
-                Two tracks,
+                {copy.titleLead}
                 <br />
-                <span className="text-brand-500">one person</span>
+                <span className="text-brand-500">{copy.titleAccent}</span>
               </>
             }
-            description="The engineering career and the creative life didn't happen in sequence — they happened at the same time, and kept feeding each other."
+            description={copy.description}
           />
 
           <Reveal direction="up" delay={0.12}>

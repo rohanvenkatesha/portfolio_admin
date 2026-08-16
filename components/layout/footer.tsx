@@ -12,6 +12,7 @@ import { projects as fallbackProjects, type Project } from "@/content/site";
 import { useProfile } from "@/components/providers/profile-provider";
 import { navSections as fallbackNavSections } from "@/content/sections";
 import type { NavSection } from "./shell";
+import { useCopy } from "@/components/providers/copy-provider";
 
 function subscribeToSeconds(onChange: () => void) {
   const interval = setInterval(onChange, 1000);
@@ -108,6 +109,7 @@ export function Footer({
   navSections?: NavSection[];
   withContact?: boolean;
 }) {
+  const copy = useCopy("contact");
   const profile = useProfile();
   const [showTop, setShowTop] = useState(false);
   const { scrollY } = useScroll();
@@ -141,15 +143,15 @@ export function Footer({
             <div className="grid gap-12 lg:grid-cols-[0.9fr_1.1fr] lg:gap-16">
               <div className="min-w-0">
                 <SectionHeading
-                  eyebrow="Contact"
+                  eyebrow={copy.eyebrow}
                   title={
                     <>
-                      Tell me what
+                      {copy.titleLead}
                       <br />
-                      <span className="text-brand-500">you&apos;re building</span>
+                      <span className="text-brand-500">{copy.titleAccent}</span>
                     </>
                   }
-                  description="Engineering work, a film, or just a good argument about lenses. The inbox is open."
+                  description={copy.description}
                 />
 
                 <Reveal direction="up" delay={0.12} className="mt-8">

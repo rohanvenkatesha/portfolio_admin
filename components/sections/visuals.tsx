@@ -25,6 +25,7 @@ import {
   type Photo,
 } from "@/content/site";
 import { cn } from "@/lib/utils";
+import { useCopy } from "@/components/providers/copy-provider";
 
 const GRAIN =
   "url(\"data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E\")";
@@ -42,6 +43,7 @@ export function Visuals({
   totalPhotos?: number;
   totalFilms?: number;
 }) {
+  const copy = useCopy("visuals");
   const [activeFilm, setActiveFilm] = useState<Film | null>(null);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   /** Which strip of the accordion gallery is expanded. */
@@ -72,15 +74,15 @@ export function Visuals({
     <section id="visuals" className="relative scroll-mt-24 px-3 py-3 sm:px-5 lg:px-6">
       <div className="relative mx-auto w-full max-w-[100rem] overflow-hidden rounded-[1.75rem] border border-white/8 bg-panel px-6 py-14 sm:px-10 sm:py-16 lg:px-14">
         <SectionHeading
-          eyebrow="Visual Storytelling"
+          eyebrow={copy.eyebrow}
           title={
             <>
-              The other half,
+              {copy.titleLead}
               <br />
-              <span className="text-brand-500">shot on location</span>
+              <span className="text-brand-500">{copy.titleAccent}</span>
             </>
           }
-          description="Films and frames from the practice that runs alongside the engineering. Shot, cut and graded end to end — usually alone, usually somewhere with bad wifi."
+          description={copy.description}
         />
 
         {/* ---------------- Films ---------------- */}
