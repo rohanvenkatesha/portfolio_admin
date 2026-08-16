@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowUpRight, Camera, Film, FolderGit2, LayoutList, MapPin, Type, UserRound } from "lucide-react";
+import { ArrowUpRight, Camera, Film, FolderGit2, LayoutList, MapPin, Milestone, Type, UserRound } from "lucide-react";
 import { getSectionsFresh } from "@/lib/content/sections";
 import { getProjectsFresh } from "@/lib/content/projects";
 import { getPhotosFresh } from "@/lib/content/photos";
@@ -115,6 +115,23 @@ export default async function AdminDashboard() {
           </span>
           <span className="mt-1 block text-[11px] leading-relaxed text-zinc-600">
             The cards under the hero, the stat counters, and everything inside About.
+          </span>
+        </span>
+        <ArrowUpRight className="h-4 w-4 shrink-0 text-zinc-600 transition-all group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-brand-400" />
+      </Link>
+
+      {/* Career and creative timeline */}
+      <Link
+        href="/admin/timeline"
+        className="group flex items-center justify-between gap-4 rounded-2xl border border-white/8 bg-panel p-6 transition-colors hover:border-brand-500/40"
+      >
+        <span className="min-w-0">
+          <span className="flex items-center gap-2 text-sm font-semibold text-white">
+            <Milestone className="h-4 w-4 text-brand-500" />
+            Journey
+          </span>
+          <span className="mt-1 block text-[11px] leading-relaxed text-zinc-600">
+            Roles, education, honours and milestones across both tracks.
           </span>
         </span>
         <ArrowUpRight className="h-4 w-4 shrink-0 text-zinc-600 transition-all group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-brand-400" />
