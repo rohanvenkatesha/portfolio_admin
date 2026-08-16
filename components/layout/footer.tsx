@@ -123,8 +123,20 @@ export function Footer({
             id="contact"
             className="scroll-mt-24 border-b border-white/8 px-6 py-14 sm:px-10 sm:py-16 lg:px-14"
           >
+            {/**
+             * `min-w-0` on both columns is load-bearing, not defensive.
+             *
+             * A grid track sized `auto`/`1fr` won't shrink below its content's
+             * min-content width, and the email address in ContactRows is
+             * `truncate` — which means `white-space: nowrap`, so its min-content
+             * is the whole 25-character string. That floored the track at 343px
+             * inside a 301px content box, pushing the heading, rows and form 42px
+             * past their own padding and 18px past the panel edge on a phone.
+             * Zeroing the minimum lets the track match the container and the
+             * address ellipsise, which is what `truncate` was there to do.
+             */}
             <div className="grid gap-12 lg:grid-cols-[0.9fr_1.1fr] lg:gap-16">
-              <div>
+              <div className="min-w-0">
                 <SectionHeading
                   eyebrow="Contact"
                   title={
@@ -146,7 +158,7 @@ export function Footer({
                 </Reveal>
               </div>
 
-              <Reveal direction="left" delay={0.1}>
+              <Reveal direction="left" delay={0.1} className="min-w-0">
                 <ContactForm />
               </Reveal>
             </div>
@@ -155,9 +167,21 @@ export function Footer({
 
         {/* ---------------- Sitemap ---------------- */}
         <div className="px-6 pt-14 sm:px-10 lg:px-14">
-          <div className="grid gap-10 lg:grid-cols-[1.5fr_1fr_1fr_1fr]">
+          {/**
+           * Three link lists and a brand block.
+           *
+           * One column until `lg` stacked all four on phones and tablets alike,
+           * running the sitemap to 896px — over two screens of footer on a
+           * phone. Menu and Elsewhere are short labels that pair happily in two
+           * columns; Selected Work holds full project titles and needs the full
+           * width, so it's ordered below them rather than beside.
+           *
+           * The order only differs below `lg`, where the four-column row puts
+           * everything back in document order.
+           */}
+          <div className="grid grid-cols-2 gap-x-6 gap-y-10 lg:grid-cols-[1.5fr_1fr_1fr_1fr] lg:gap-10">
             {/* Brand */}
-            <div>
+            <div className="col-span-2 lg:col-span-1">
               <div className="flex items-center gap-2.5">
                 <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-500 font-mono text-xs font-bold text-[var(--brand-ink)]">
                   {profile.initials}
@@ -188,8 +212,9 @@ export function Footer({
               </ul>
             </div>
 
-            {/* Selected work */}
-            <div>
+            {/* Selected work — full width below lg, since project titles wrap
+                badly in a half column */}
+            <div className="order-1 col-span-2 lg:order-none lg:col-span-1">
               <p className="eyebrow mb-5 text-zinc-600">Selected Work</p>
               <ul className="space-y-3">
                 {featured.map((project) => (

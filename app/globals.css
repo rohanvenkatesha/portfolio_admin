@@ -30,7 +30,7 @@
   --color-brand-200: var(--brand-200);
   --color-brand-300: var(--brand-300);
   --color-brand-400: var(--brand-400);
-  --color-brand-500: var(--brand, var(--brand-base));
+  --color-brand-500: var(--brand-500);
   --color-brand-600: var(--brand-600);
   --color-brand-700: var(--brand-700);
   --color-brand-800: var(--brand-800);
@@ -143,6 +143,10 @@
 :root {
   --brand-base: #ff5a1f;
 
+  /* The 500 step is the accent itself. Named like the rest of the ramp so
+     anything building a gradient can reference the whole scale uniformly. */
+  --brand-500: var(--brand, var(--brand-base));
+
   /**
    * Fallback ramp, mixed toward white and black.
    *
@@ -161,22 +165,31 @@
 }
 
 /**
- * The real ramp: move lightness, keep chroma and hue.
+ * The real ramp: move lightness proportionally, taper chroma, keep hue.
  *
- * `oklch(from …)` lets each step adjust L while carrying c and h through
- * untouched, so lighter shades stay as saturated as the accent instead of
- * fading toward grey. Offsets are relative, so a dark accent still yields a
- * usable ramp rather than being pinned to fixed lightness values.
+ * Two things have to hold or the ramp stops looking like one colour.
+ *
+ * Lightness is a *fraction* of the distance to white or black, not a fixed
+ * offset. A fixed `l + 0.24` blows past 1.0 on a light accent — the lime and
+ * bone presets both collapsed to white at the top of the ramp.
+ *
+ * Chroma tapers toward both ends. Carrying the accent's full chroma into a
+ * darker step puts the colour outside sRGB, and the browser resolves that by
+ * clipping channels rather than reducing chroma — which shifts the hue. At
+ * orange, blue clips to zero first, so brand-800 came out `#ac0000`: pure red
+ * next to orange buttons on the same accent. The multipliers below are the
+ * largest that keep every step of all six presets inside the gamut, so nothing
+ * is ever clipped and the hue is carried through untouched.
  */
 @supports (color: oklch(from red l c h)) {
   :root {
-    --brand-200: oklch(from var(--brand, var(--brand-base)) calc(l + 0.24) c h);
-    --brand-300: oklch(from var(--brand, var(--brand-base)) calc(l + 0.15) c h);
-    --brand-400: oklch(from var(--brand, var(--brand-base)) calc(l + 0.07) c h);
-    --brand-600: oklch(from var(--brand, var(--brand-base)) calc(l - 0.07) c h);
-    --brand-700: oklch(from var(--brand, var(--brand-base)) calc(l - 0.15) c h);
-    --brand-800: oklch(from var(--brand, var(--brand-base)) calc(l - 0.23) c h);
-    --brand-900: oklch(from var(--brand, var(--brand-base)) calc(l - 0.30) c h);
+    --brand-200: oklch(from var(--brand, var(--brand-base)) calc(l + (1 - l) * 0.58) calc(c * 0.246) h);
+    --brand-300: oklch(from var(--brand, var(--brand-base)) calc(l + (1 - l) * 0.36) calc(c * 0.532) h);
+    --brand-400: oklch(from var(--brand, var(--brand-base)) calc(l + (1 - l) * 0.18) calc(c * 0.766) h);
+    --brand-600: oklch(from var(--brand, var(--brand-base)) calc(l * 0.89) calc(c * 0.89) h);
+    --brand-700: oklch(from var(--brand, var(--brand-base)) calc(l * 0.76) calc(c * 0.76) h);
+    --brand-800: oklch(from var(--brand, var(--brand-base)) calc(l * 0.62) calc(c * 0.62) h);
+    --brand-900: oklch(from var(--brand, var(--brand-base)) calc(l * 0.50) calc(c * 0.50) h);
   }
 }
 
@@ -242,6 +255,71 @@
   backdrop-filter: blur(12px) saturate(120%);
   -webkit-backdrop-filter: blur(12px) saturate(120%);
   border: 1px solid rgb(255 255 255 / 0.07);
+}
+
+/* Solid counterpart to EmberBackdrop, for controls that should read as the same
+   material as the closing panel rather than as a flat chip of the accent. Same
+   stops and same diagonal as that component's base layer, so a button sitting
+   anywhere on the page matches the ember panel it echoes.
+
+   Three rungs, each one step up the accent ramp, so hovering warms the whole
+   gradient rather than jumping to a different colour:
+
+     ember-fill         600 → 800   large surfaces
+     ember-fill-hot     500 → 700   compact controls, or hover for the above
+     ember-fill-hotter  400 → 600   hover for compact controls
+
+   Which rung a control starts on depends on its size, and that is not fussiness.
+   A gradient painted corner to corner across a 32px chip is read as a single
+   averaged colour — the mean of 600 and 800, well below the accent. The same
+   ramp across a 285px button spreads far enough to show its bright end. Started
+   on the same rung, the small one looks like a duller orange than the large one
+   even though the CSS is identical. Compact controls start one rung up so the
+   two read alike.
+
+   The stops go through registered custom properties rather than straight into
+   the gradient. A `background-image` can't be transitioned — swapping one
+   gradient for another snaps — but an `@property`-registered <color> can, so
+   animating the stops gets the fade that a plain background-color hover used to
+   give for free. Every rung carries the transition, since any of them can be a
+   resting state; controls using these don't need a `transition-all` of their
+   own. */
+@property --ember-from {
+  syntax: "<color>";
+  inherits: false;
+  initial-value: transparent;
+}
+@property --ember-to {
+  syntax: "<color>";
+  inherits: false;
+  initial-value: transparent;
+}
+
+@utility ember-fill {
+  --ember-from: var(--brand-600);
+  --ember-to: var(--brand-800);
+  background-image: linear-gradient(to bottom right, var(--ember-from), var(--ember-to));
+  transition:
+    --ember-from 300ms var(--ease-out-expo),
+    --ember-to 300ms var(--ease-out-expo);
+}
+
+@utility ember-fill-hot {
+  --ember-from: var(--brand-500);
+  --ember-to: var(--brand-700);
+  background-image: linear-gradient(to bottom right, var(--ember-from), var(--ember-to));
+  transition:
+    --ember-from 300ms var(--ease-out-expo),
+    --ember-to 300ms var(--ease-out-expo);
+}
+
+@utility ember-fill-hotter {
+  --ember-from: var(--brand-400);
+  --ember-to: var(--brand-600);
+  background-image: linear-gradient(to bottom right, var(--ember-from), var(--ember-to));
+  transition:
+    --ember-from 300ms var(--ease-out-expo),
+    --ember-to 300ms var(--ease-out-expo);
 }
 
 /* One step brighter, for cards nested inside a panel */

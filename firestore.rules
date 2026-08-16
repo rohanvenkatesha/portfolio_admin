@@ -1,40 +1,37 @@
 rules_version = '2';
 
 /**
- * Firestore security rules — the second line of defence.
+ * Firestore security rules.
  *
- * The app already gates /admin server-side, but these rules matter because
- * anyone can call the Firestore REST/SDK API directly with a signed-in token,
- * bypassing the app entirely. Without them, any Google account could write.
+ * Nothing in this app reaches Firestore from a browser. The public site reads
+ * content in Server Components and the admin writes it in Server Actions, both
+ * through firebase-admin, which authenticates with a service account and
+ * bypasses these rules completely. The client bundle imports firebase/auth and
+ * nothing else.
+ *
+ * So the whole surface these rules govern is "someone calling the Firestore
+ * REST or Web SDK API directly", which is never a legitimate caller here.
+ * Denying it outright is both the safest and the most accurate description of
+ * how the app works.
+ *
+ * This replaces an earlier `allow read: if true` on content/ and settings/.
+ * That was world-readable — any stranger could fetch every document with a
+ * plain unauthenticated GET — and it was serving no one, since server-side
+ * reads never consulted it.
+ *
+ * If you ever add client-side Firestore (live updates, an offline cache, a
+ * comment form), this is the file that has to open back up. Grant the narrowest
+ * path that feature needs rather than restoring a blanket read, e.g.
+ *
+ *   match /content/{doc} {
+ *     allow read: if true;                 // published content only
+ *     allow write: if false;               // writes stay server-side
+ *   }
  *
  * Deploy with:  firebase deploy --only firestore:rules
- *
- * NOTE: keep this allowlist in sync with ADMIN_EMAILS in .env.local.
  */
 service cloud.firestore {
   match /databases/{database}/documents {
-
-    function isAdmin() {
-      return request.auth != null
-        && request.auth.token.email_verified == true
-        && request.auth.token.email.lower() in [
-             'rohanvenkatesha@gmail.com'
-           ];
-    }
-
-    // Published site content: world-readable, admin-writable.
-    match /content/{document=**} {
-      allow read: if true;
-      allow write: if isAdmin();
-    }
-
-    // Site settings, including section visibility.
-    match /settings/{document=**} {
-      allow read: if true;
-      allow write: if isAdmin();
-    }
-
-    // Anything not matched above is denied outright.
     match /{document=**} {
       allow read, write: if false;
     }

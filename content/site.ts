@@ -38,12 +38,30 @@ export const profile = {
   timezone: "America/Detroit", // IANA zone — powers the live clock in the footer
   email: "rohanvenkatesha@gmail.com",
   availability: "Available for AI & Full-Stack projects / visual collaborations",
-  resumeUrl: "/resume.pdf", // TODO: drop your PDF in /public
   /**
-   * Hero portrait. Drop a tall, well-lit photo at /public/portrait.jpg and set
-   * this to "/portrait.jpg" — the hero panel will use it as its background the
-   * way the reference design does, with the WebGL particle field as the
-   * fallback when it's empty.
+   * Google Drive preview link. Anything not starting with "/" is treated as
+   * external and opens in a new tab.
+   *
+   * A file committed at /public/resume.pdf would be better: it downloads in one
+   * click, survives Drive's sharing settings being changed, and doesn't hand
+   * Google a log of who read it. Swap this for "/resume.pdf" if you drop the
+   * PDF into the repo.
+   */
+  resumeUrl: "https://drive.google.com/file/d/17-GVQs_SwpCLk45OmdmF98Ifo1u-ur0u/view",
+  /**
+   * Hero portrait, shown in its own framed card beside the masthead.
+   *
+   * Drop a photo at /public/portrait.jpg and set this to "/portrait.jpg". A
+   * 4:5 crop fits the frame exactly; anything else is cover-cropped from the
+   * centre, so keep the face off the edges. While this is empty the frame
+   * shows a designed initials plate instead — the layout doesn't depend on a
+   * photo existing.
+   *
+   * It renders as an ember duotone that resolves to full colour on hover, so
+   * pick a shot with real separation between lights and darks — a flat,
+   * evenly-lit frame maps to a narrow band of orange and loses its shape.
+   *
+   * This is no longer the panel background; that's always the particle field.
    */
   portraitUrl: "",
   bio: `I build AI systems that survive contact with production — retrieval pipelines over millions of

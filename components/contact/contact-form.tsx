@@ -8,6 +8,8 @@ import { cn } from "@/lib/utils";
 
 type Fields = { name: string; email: string; subject: string; message: string };
 type Errors = Partial<Record<keyof Fields, string>>;
+/** "sent" went out over SMTP; "mailto" fell back to the visitor's mail client. */
+type Status = "idle" | "sending" | "sent" | "mailto";
 
 const EMPTY: Fields = { name: "", email: "", subject: "", message: "" };
 
@@ -24,7 +26,10 @@ function validate(fields: Fields): Errors {
 export function ContactForm() {
   const [fields, setFields] = useState<Fields>(EMPTY);
   const [errors, setErrors] = useState<Errors>({});
-  const [status, setStatus] = useState<"idle" | "sending" | "sent">("idle");
+  const [status, setStatus] = useState<Status>("idle");
+  const [sendError, setSendError] = useState<string | null>(null);
+  /** Honeypot. Hidden from people, so anything here came from a bot. */
+  const [company, setCompany] = useState("");
 
   function update(key: keyof Fields, value: string) {
     setFields((prev) => ({ ...prev, [key]: value }));
@@ -32,46 +37,68 @@ export function ContactForm() {
     if (errors[key]) setErrors((prev) => ({ ...prev, [key]: undefined }));
   }
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  /** Hand the message to the visitor's mail client — used when SMTP can't. */
+  function openMailClient() {
+    const body = `${fields.message}\n\n— ${fields.name} (${fields.email})`;
+    window.location.href = `mailto:${profile.email}?subject=${encodeURIComponent(
+      fields.subject
+    )}&body=${encodeURIComponent(body)}`;
+    setStatus("mailto");
+  }
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const nextErrors = validate(fields);
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) return;
 
+    setSendError(null);
     setStatus("sending");
 
-    /* ------------------------------------------------------------------
-     * No server is wired up, so this hands the message to the visitor's
-     * mail client rather than pretending to deliver it. To send properly,
-     * replace this block with a fetch to your own route handler:
-     *
-     *   await fetch("/api/contact", {
-     *     method: "POST",
-     *     headers: { "Content-Type": "application/json" },
-     *     body: JSON.stringify(fields),
-     *   });
-     * ------------------------------------------------------------------ */
-    const body = `${fields.message}\n\n— ${fields.name} (${fields.email})`;
-    const mailto = `mailto:${profile.email}?subject=${encodeURIComponent(
-      fields.subject
-    )}&body=${encodeURIComponent(body)}`;
+    try {
+      const response = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...fields, company }),
+      });
 
-    window.setTimeout(() => {
-      window.location.href = mailto;
-      setStatus("sent");
-    }, 700);
+      if (response.ok) {
+        setStatus("sent");
+        return;
+      }
+
+      const data = (await response.json().catch(() => ({}))) as {
+        error?: string;
+        fallback?: boolean;
+      };
+
+      // The server flags the failures a visitor can still route around —
+      // SMTP not configured, or the provider refusing right now. Rather than
+      // dead-ending them, hand the message to their mail client instead.
+      if (data.fallback) {
+        openMailClient();
+        return;
+      }
+
+      setSendError(data.error ?? "Something went wrong. Please try again.");
+      setStatus("idle");
+    } catch {
+      // Offline or the request never landed — the mail client still works.
+      openMailClient();
+    }
   }
 
   function reset() {
     setFields(EMPTY);
     setErrors({});
+    setSendError(null);
     setStatus("idle");
   }
 
   return (
     <div className="relative overflow-hidden rounded-2xl border border-white/8 bg-panel-2 p-7 sm:p-9">
       <AnimatePresence mode="wait">
-        {status === "sent" ? (
+        {status === "sent" || status === "mailto" ? (
           <motion.div
             key="success"
             initial={{ opacity: 0, scale: 0.94 }}
@@ -89,12 +116,26 @@ export function ContactForm() {
               <Check className="h-8 w-8 text-brand-400" />
             </motion.span>
 
-            <h3 className="mt-6 text-2xl font-bold text-white">Draft ready</h3>
-            <p className="mt-2.5 max-w-sm text-sm leading-relaxed text-zinc-400">
-              Your message was handed to your mail app, pre-addressed to{" "}
-              <span className="text-brand-400">{profile.email}</span>. Hit send there and it
-              lands with me.
-            </p>
+            {status === "sent" ? (
+              <>
+                <h3 className="mt-6 text-2xl font-bold text-white">Message sent</h3>
+                <p className="mt-2.5 max-w-sm text-sm leading-relaxed text-zinc-400">
+                  It landed in{" "}
+                  <span className="text-brand-400">{profile.email}</span>. I&apos;ll get back to
+                  you shortly — usually within a day or two.
+                </p>
+              </>
+            ) : (
+              <>
+                <h3 className="mt-6 text-2xl font-bold text-white">Draft ready</h3>
+                <p className="mt-2.5 max-w-sm text-sm leading-relaxed text-zinc-400">
+                  Sending directly didn&apos;t go through, so your message was handed to your mail
+                  app instead, pre-addressed to{" "}
+                  <span className="text-brand-400">{profile.email}</span>. Hit send there and it
+                  lands with me.
+                </p>
+              </>
+            )}
 
             <button
               onClick={reset}
@@ -148,20 +189,50 @@ export function ContactForm() {
               onChange={(v) => update("message", v)}
             />
 
+            {/* Honeypot: off-screen rather than display:none, since some bots
+                skip fields they can tell are hidden. Never focusable or
+                announced, so nobody using the form can land in it. */}
+            <div aria-hidden className="absolute left-[-9999px] top-0 h-px w-px overflow-hidden">
+              <input
+                suppressHydrationWarning
+                type="text"
+                name="company"
+                tabIndex={-1}
+                autoComplete="off"
+                value={company}
+                onChange={(e) => setCompany(e.target.value)}
+              />
+            </div>
+
+            <AnimatePresence>
+              {sendError ? (
+                <motion.p
+                  role="alert"
+                  initial={{ opacity: 0, y: -4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -4 }}
+                  className="flex items-start gap-2 rounded-xl border border-red-500/30 bg-red-500/[0.07] px-3.5 py-3 text-[12.5px] leading-relaxed text-red-300"
+                >
+                  <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                  {sendError}
+                </motion.p>
+              ) : null}
+            </AnimatePresence>
+
             <button
               type="submit"
               disabled={status === "sending"}
               className={cn(
                 "group/send relative inline-flex w-full items-center justify-center gap-2 overflow-hidden rounded-full",
-                "bg-brand-500 px-6 py-3.5 text-sm font-semibold text-[var(--brand-ink)] transition-all duration-300",
-                "hover:bg-brand-400",
+                "ember-fill px-6 py-3.5 text-sm font-semibold text-[var(--brand-ink)]",
+                "hover:ember-fill-hot",
                 "disabled:cursor-not-allowed disabled:opacity-70"
               )}
             >
               {status === "sending" ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  Preparing…
+                  Sending…
                 </>
               ) : (
                 <>
@@ -172,8 +243,7 @@ export function ContactForm() {
             </button>
 
             <p className="text-center text-[11px] leading-relaxed text-zinc-600">
-              Opens your mail client with the message pre-filled — nothing is sent or stored by
-              this site.
+              Sent straight to my inbox — nothing is stored by this site.
             </p>
           </motion.form>
         )}

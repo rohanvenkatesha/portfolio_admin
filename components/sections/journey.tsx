@@ -188,11 +188,17 @@ function JourneyCard({
           )}
         />
 
-        <div className="relative flex items-start gap-5 p-6 sm:gap-8 sm:p-8">
+        {/**
+         * Below `sm` the year moves onto its own line and the toggle pins to the
+         * corner. Side by side, the year, the gap and the 36px toggle ate 155 of
+         * a 301px card on a phone, leaving the text a 96px column — every title
+         * broke onto three lines and the card ran to 416px tall.
+         */}
+        <div className="relative flex flex-col gap-3 p-5 sm:flex-row sm:items-start sm:gap-8 sm:p-8">
           {/* Ghost year — white on the ember ground, since orange would vanish */}
           <span
             className={cn(
-              "shrink-0 font-mono font-bold leading-none tracking-tighter transition-colors duration-500",
+              "font-mono font-bold leading-none tracking-tighter transition-colors duration-500 sm:shrink-0",
               "text-4xl sm:text-5xl lg:text-6xl",
               open ? "text-white/90" : "text-white/10 group-hover:text-white/25"
             )}
@@ -290,10 +296,12 @@ function JourneyCard({
             </AnimatePresence>
           </div>
 
-          {/* Expand affordance — white on ember, so it stays visible */}
+          {/* Expand affordance — white on ember, so it stays visible. Pinned to
+              the corner on mobile so it shares the year's line instead of
+              claiming a third row. */}
           <span
             className={cn(
-              "flex h-9 w-9 shrink-0 items-center justify-center rounded-full border transition-all duration-500",
+              "absolute right-5 top-5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full border transition-all duration-500 sm:static",
               open
                 ? "rotate-45 border-white bg-white text-brand-600"
                 : "border-white/12 text-zinc-500 group-hover:border-white/30 group-hover:text-white"

@@ -99,7 +99,15 @@ export function About() {
               What I work with
             </h3>
 
-            <div className="inline-flex gap-1 rounded-full border border-white/8 bg-panel-2 p-1.5">
+            {/**
+             * Full-width segmented control on phones, hugging pill from `sm`.
+             *
+             * "Everything / Engineering / Creative" plus their icons measured
+             * 378px against a 301px column, so the last button was cut off. The
+             * labels carry the meaning here, so below `sm` the icons step aside
+             * and the three buttons split the row evenly.
+             */}
+            <div className="flex w-full gap-1 rounded-full border border-white/8 bg-panel-2 p-1.5 sm:inline-flex sm:w-auto">
               {DOMAINS.map(({ id, label, icon: Icon }) => {
                 const active = domain === id;
                 return (
@@ -107,7 +115,7 @@ export function About() {
                     key={id}
                     onClick={() => setDomain(id)}
                     className={cn(
-                      "relative inline-flex items-center gap-2 rounded-full px-4 py-2 text-[13px] font-medium transition-colors",
+                      "relative inline-flex flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-full px-2 py-2 text-[13px] font-medium transition-colors sm:flex-none sm:px-4",
                       active ? "text-white" : "text-zinc-500 hover:text-zinc-200"
                     )}
                   >
@@ -118,7 +126,7 @@ export function About() {
                         transition={{ type: "spring", stiffness: 380, damping: 32 }}
                       />
                     ) : null}
-                    <Icon className="relative z-10 h-3.5 w-3.5" />
+                    <Icon className="relative z-10 hidden h-3.5 w-3.5 sm:block" />
                     <span className="relative z-10">{label}</span>
                   </button>
                 );
