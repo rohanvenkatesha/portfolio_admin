@@ -5,7 +5,7 @@ import { AnimatePresence, motion } from "motion/react";
 import { Code2, Palette, Plus, Quote, Sparkles } from "lucide-react";
 import { Reveal, RevealGroup, RevealItem, SectionHeading } from "@/components/fx/reveal";
 import { EmberBackdrop } from "@/components/fx/ember-backdrop";
-import { philosophy, skillGroups } from "@/content/site";
+import { useLists } from "@/components/providers/lists-provider";
 import { useProfile } from "@/components/providers/profile-provider";
 import { cn } from "@/lib/utils";
 import { useCopy } from "@/components/providers/copy-provider";
@@ -21,12 +21,15 @@ const DOMAINS: { id: Domain; label: string; icon: typeof Code2 }[] = [
 export function About() {
   const copy = useCopy("about");
   const profile = useProfile();
+  const { philosophy, skillGroups } = useLists();
   const [domain, setDomain] = useState<Domain>("all");
-  const [openGroup, setOpenGroup] = useState<string>(skillGroups[0].id);
+  // Groups are editable, so an empty list is reachable — `?? ""` rather than
+  // indexing [0] blindly, which would throw and take the page with it.
+  const [openGroup, setOpenGroup] = useState<string>(skillGroups[0]?.id ?? "");
 
   const groups = useMemo(
     () => (domain === "all" ? skillGroups : skillGroups.filter((g) => g.domain === domain)),
-    [domain]
+    [domain, skillGroups]
   );
 
   return (

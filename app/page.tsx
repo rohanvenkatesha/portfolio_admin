@@ -16,7 +16,9 @@ import { getPhotos } from "@/lib/content/photos";
 import { getTrips } from "@/lib/content/trips";
 import { getFilms } from "@/lib/content/films";
 import { getCopy } from "@/lib/content/copy";
+import { getLists } from "@/lib/content/lists";
 import { CopyProvider } from "@/components/providers/copy-provider";
+import { ListsProvider } from "@/components/providers/lists-provider";
 import type { Film, Photo, Project, Trip } from "@/content/site";
 import { HOME_LIMITS } from "@/content/limits";
 
@@ -58,7 +60,7 @@ const SECTION_RENDERERS: Record<SectionId, (data: PageData) => ReactNode> = {
 };
 
 export default async function Page() {
-  const [sections, navSections, projects, photos, trips, films, copy] = await Promise.all([
+  const [sections, navSections, projects, photos, trips, films, copy, lists] = await Promise.all([
     getActiveSections(),
     getNavSections(),
     getProjects(),
@@ -66,6 +68,7 @@ export default async function Page() {
     getTrips(),
     getFilms(),
     getCopy(),
+    getLists(),
   ]);
 
   /**
@@ -85,21 +88,23 @@ export default async function Page() {
     /* Sections are Client Components and can't reach the data layer, so the
        copy is read once here and read back through context. */
     <CopyProvider value={copy}>
-      <Shell navSections={navSections} />
+      <ListsProvider value={lists}>
+        <Shell navSections={navSections} />
 
-      <main className="relative flex-1">
-        {sections.map((section) => (
-          <div key={section.id} className="contents">
-            {SECTION_RENDERERS[section.id](data)}
-          </div>
-        ))}
-      </main>
+        <main className="relative flex-1">
+          {sections.map((section) => (
+            <div key={section.id} className="contents">
+              {SECTION_RENDERERS[section.id](data)}
+            </div>
+          ))}
+        </main>
 
-      <Footer
-        projects={projects}
-        navSections={navSections}
-        withContact={sections.some((s) => s.id === "contact")}
-      />
+        <Footer
+          projects={projects}
+          navSections={navSections}
+          withContact={sections.some((s) => s.id === "contact")}
+        />
+      </ListsProvider>
     </CopyProvider>
   );
 }
