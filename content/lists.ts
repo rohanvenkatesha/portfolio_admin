@@ -39,14 +39,19 @@ export type Principle = { title: string; body: string };
 export const SKILL_DOMAINS = ["engineering", "creative"] as const;
 export type SkillDomain = (typeof SKILL_DOMAINS)[number];
 
-export const SKILL_ACCENTS = ["cyan", "violet", "amber", "lime", "rose"] as const;
-export type SkillAccent = (typeof SKILL_ACCENTS)[number];
-
+/**
+ * No per-group accent.
+ *
+ * The repo shape carries one, but nothing reads it: the About section never
+ * referenced it, and the badge map routes all five of its colour names to the
+ * same brand token. That's deliberate — the palette is single-accent by design,
+ * with variety coming from typography and scale rather than a set of hues. A
+ * colour picker here would be a control that changes nothing.
+ */
 export type SkillGroup = {
   id: string;
   label: string;
   domain: SkillDomain;
-  accent: SkillAccent;
   /** `level` is a 0–100 self-assessment; it drives the bars. */
   skills: { name: string; level: number }[];
 };
@@ -71,7 +76,6 @@ export const DEFAULT_LISTS: Lists = {
     id: g.id,
     label: g.label,
     domain: g.domain as SkillDomain,
-    accent: g.accent as SkillAccent,
     skills: g.skills.map((s) => ({ name: s.name, level: s.level })),
   })),
 };
@@ -168,9 +172,6 @@ function skillGroups(value: unknown, fallback: SkillGroup[]): SkillGroup[] {
         domain: SKILL_DOMAINS.includes(g.domain as SkillDomain)
           ? (g.domain as SkillDomain)
           : "engineering",
-        accent: SKILL_ACCENTS.includes(g.accent as SkillAccent)
-          ? (g.accent as SkillAccent)
-          : "cyan",
         skills,
       },
     ];

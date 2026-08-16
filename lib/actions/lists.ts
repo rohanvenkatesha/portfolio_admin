@@ -5,12 +5,10 @@ import { adminDb, getAdminUser } from "@/lib/firebase/admin";
 import { LISTS_DOC, LISTS_TAG, SETTINGS_COLLECTION } from "@/lib/content/lists";
 import {
   DEFAULT_LISTS,
-  SKILL_ACCENTS,
   SKILL_DOMAINS,
   normaliseLists,
   textToSkills,
   type Lists,
-  type SkillAccent,
   type SkillDomain,
 } from "@/content/lists";
 
@@ -68,7 +66,6 @@ export async function saveLists(formData: FormData): Promise<ActionResult> {
   const sgIds = all("sgId");
   const sgLabels = all("sgLabel");
   const sgDomains = all("sgDomain");
-  const sgAccents = all("sgAccent");
   const sgSkills = all("sgSkills");
 
   // Everything goes through the same normaliser as the read path, so blank or
@@ -92,9 +89,6 @@ export async function saveLists(formData: FormData): Promise<ActionResult> {
       domain: (SKILL_DOMAINS.includes(sgDomains[i] as SkillDomain)
         ? sgDomains[i]
         : "engineering") as SkillDomain,
-      accent: (SKILL_ACCENTS.includes(sgAccents[i] as SkillAccent)
-        ? sgAccents[i]
-        : "cyan") as SkillAccent,
       skills: textToSkills(sgSkills[i] ?? ""),
     })),
   });

@@ -15,7 +15,6 @@ import {
 } from "lucide-react";
 import { resetLists, saveLists, type ActionResult } from "@/lib/actions/lists";
 import {
-  SKILL_ACCENTS,
   SKILL_DOMAINS,
   skillsToText,
   type Capability,
@@ -294,7 +293,7 @@ export function ListsEditor({ initial }: { initial: Lists }) {
         onAdd={() =>
           setGroups((g) => [
             ...g,
-            { id: `s-${Date.now().toString(36)}`, label: "", domain: "engineering", accent: "cyan", skills: [] },
+            { id: `s-${Date.now().toString(36)}`, label: "", domain: "engineering", skills: [] },
           ])
         }
       >
@@ -302,7 +301,9 @@ export function ListsEditor({ initial }: { initial: Lists }) {
           <div key={group.id} className="rounded-xl border border-white/8 bg-panel-2 p-4">
             <input type="hidden" name="sgId" value={group.id} />
 
-            <div className="grid gap-2 sm:grid-cols-[1fr_9rem_8rem_auto]">
+            {/* No colour picker: the palette is single-accent by design, so a
+                per-group colour would be a control that changes nothing. */}
+            <div className="grid gap-2 sm:grid-cols-[1fr_10rem_auto]">
               <input
                 suppressHydrationWarning
                 name="sgLabel"
@@ -319,18 +320,6 @@ export function ListsEditor({ initial }: { initial: Lists }) {
                 {SKILL_DOMAINS.map((d) => (
                   <option key={d} value={d} className="bg-panel-2">
                     {d}
-                  </option>
-                ))}
-              </select>
-              <select
-                suppressHydrationWarning
-                name="sgAccent"
-                defaultValue={group.accent}
-                className={inputClass}
-              >
-                {SKILL_ACCENTS.map((a) => (
-                  <option key={a} value={a} className="bg-panel-2">
-                    {a}
                   </option>
                 ))}
               </select>
