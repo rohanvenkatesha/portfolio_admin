@@ -11,14 +11,14 @@ export type GalleryImage = { src: string; caption?: string };
 const EASE = "ease-[cubic-bezier(0.16,1,0.3,1)]";
 
 /**
- * Bento tiling.
+ * Bento tiling, chosen by how many images there are.
  *
- * A six-tile repeating pattern: one hero, two squares, one wide, one tall, one
- * square. Cycling it means any number of images tiles without gaps and without
- * the grid degenerating into uniform thumbnails — the variation is what makes a
- * wall of photos read as a composition rather than a contact sheet.
+ * A fixed pattern only works past a handful. With two images a four-column
+ * grid whose first tile spans 2×2 leaves half the grid empty — it reads as
+ * broken rather than composed. Small counts get their own arrangement, and
+ * only from four does the repeating pattern take over.
  *
- * Row spans only apply from `sm`. On a phone the grid is two even columns:
+ * Row spans apply from `sm` only. On a phone the grid is two even columns:
  * a bento at 375px is just small rectangles in slightly different sizes.
  */
 const BENTO = [
@@ -30,36 +30,19 @@ const BENTO = [
   "sm:col-span-1 sm:row-span-1",
 ];
 
+function spanFor(count: number, index: number): string {
+  if (count === 1) return "col-span-2 sm:col-span-4 sm:row-span-3";
+  if (count === 2) return "col-span-2 sm:col-span-2 sm:row-span-2";
+  if (count === 3) {
+    return index === 0
+      ? "col-span-2 sm:col-span-2 sm:row-span-2"
+      : "col-span-1 sm:col-span-2 sm:row-span-1";
+  }
+  return BENTO[index % BENTO.length];
+}
+
 export function PostGallery({ images }: { images: GalleryImage[] }) {
   const [open, setOpen] = useState<number | null>(null);
-
-  const close = useCallback(() => setOpen(null), []);
-  const step = useCallback(
-    (delta: number) => setOpen((i) => (i === null ? null : (i + delta + images.length) % images.length)),
-    [images.length]
-  );
-
-  // Keyboard drives the lightbox: escape closes, arrows move. Bound only while
-  // it's open so the page keeps its own arrow-key scrolling otherwise.
-  useEffect(() => {
-    if (open === null) return;
-
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") close();
-      if (event.key === "ArrowRight") step(1);
-      if (event.key === "ArrowLeft") step(-1);
-    };
-
-    window.addEventListener("keydown", onKey);
-    // The page behind must not scroll under the overlay.
-    const previous = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-
-    return () => {
-      window.removeEventListener("keydown", onKey);
-      document.body.style.overflow = previous;
-    };
-  }, [open, close, step]);
 
   if (images.length === 0) return null;
 
@@ -70,7 +53,7 @@ export function PostGallery({ images }: { images: GalleryImage[] }) {
         stagger={0.05}
       >
         {images.map((image, index) => (
-          <RevealItem key={image.src + index} className={cn(BENTO[index % BENTO.length], "min-h-0")}>
+          <RevealItem key={image.src + index} className={cn(spanFor(images.length, index), "min-h-0")}>
             <button
               type="button"
               onClick={() => setOpen(index)}
@@ -131,57 +114,108 @@ export function PostGallery({ images }: { images: GalleryImage[] }) {
         ))}
       </RevealGroup>
 
-      {/* ---------------- Lightbox ---------------- */}
-      {open !== null ? (
-        <div
-          role="dialog"
-          aria-modal
-          aria-label="Image viewer"
-          onClick={close}
-          className="fixed inset-0 z-[90] grid place-items-center bg-void/96 p-4 backdrop-blur-xl [animation:dialog-overlay-in_200ms_ease-out] sm:p-8"
-        >
-          <button
-            type="button"
-            onClick={close}
-            aria-label="Close"
-            className="absolute right-4 top-4 z-10 flex h-11 w-11 items-center justify-center rounded-full border border-white/15 text-zinc-300 transition-colors hover:border-brand-500 hover:bg-brand-500 hover:text-white sm:right-6 sm:top-6"
-          >
-            <X className="h-4 w-4" />
-          </button>
-
-          {images.length > 1 ? (
-            <>
-              <LightboxArrow side="left" onClick={() => step(-1)} />
-              <LightboxArrow side="right" onClick={() => step(1)} />
-            </>
-          ) : null}
-
-          <figure
-            // Stop the backdrop's click-to-close firing from the image itself.
-            onClick={(event) => event.stopPropagation()}
-            className="relative max-h-full w-full max-w-6xl [animation:dialog-content-in_280ms_var(--ease-out-expo)]"
-          >
-            <Image
-              // Keyed on src so switching frames remounts and replays the
-              // entrance rather than swapping the pixels in place.
-              key={images[open].src}
-              src={images[open].src}
-              alt={images[open].caption ?? ""}
-              width={1800}
-              height={1200}
-              className="h-auto max-h-[78vh] w-full rounded-2xl object-contain"
-            />
-
-            <figcaption className="mt-4 flex items-center justify-between gap-4">
-              <span className="text-[12.5px] text-zinc-400">{images[open].caption ?? ""}</span>
-              <span className="shrink-0 font-mono text-[11px] text-zinc-600">
-                {String(open + 1).padStart(2, "0")} / {String(images.length).padStart(2, "0")}
-              </span>
-            </figcaption>
-          </figure>
-        </div>
-      ) : null}
+      <Lightbox images={images} index={open} onChange={setOpen} />
     </>
+  );
+}
+
+/**
+ * The image viewer, controlled by its parent.
+ *
+ * Shared rather than duplicated: the body's inline images open the same viewer
+ * over the same list, so clicking a photo mid-paragraph and clicking it in the
+ * gallery land on the same frame with the same navigation.
+ */
+export function Lightbox({
+  images,
+  index,
+  onChange,
+}: {
+  images: GalleryImage[];
+  index: number | null;
+  onChange: (next: number | null) => void;
+}) {
+  const close = useCallback(() => onChange(null), [onChange]);
+  const step = useCallback(
+    (delta: number) => {
+      if (index === null) return;
+      onChange((index + delta + images.length) % images.length);
+    },
+    [index, images.length, onChange]
+  );
+
+  // Keyboard drives the viewer: escape closes, arrows move. Bound only while
+  // it's open so the page keeps its own arrow-key scrolling otherwise.
+  useEffect(() => {
+    if (index === null) return;
+
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") close();
+      if (event.key === "ArrowRight") step(1);
+      if (event.key === "ArrowLeft") step(-1);
+    };
+
+    window.addEventListener("keydown", onKey);
+    // The page behind must not scroll under the overlay.
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = previous;
+    };
+  }, [index, close, step]);
+
+  if (index === null || !images[index]) return null;
+
+  return (
+    <div
+      role="dialog"
+      aria-modal
+      aria-label="Image viewer"
+      onClick={close}
+      className="fixed inset-0 z-[90] grid place-items-center bg-void/96 p-4 backdrop-blur-xl [animation:dialog-overlay-in_200ms_ease-out] sm:p-8"
+    >
+      <button
+        type="button"
+        onClick={close}
+        aria-label="Close"
+        className="absolute right-4 top-4 z-10 flex h-11 w-11 items-center justify-center rounded-full border border-white/15 text-zinc-300 transition-colors hover:border-brand-500 hover:bg-brand-500 hover:text-white sm:right-6 sm:top-6"
+      >
+        <X className="h-4 w-4" />
+      </button>
+
+      {images.length > 1 ? (
+        <>
+          <LightboxArrow side="left" onClick={() => step(-1)} />
+          <LightboxArrow side="right" onClick={() => step(1)} />
+        </>
+      ) : null}
+
+      <figure
+        // Stop the backdrop's click-to-close firing from the image itself.
+        onClick={(event) => event.stopPropagation()}
+        className="relative max-h-full w-full max-w-6xl [animation:dialog-content-in_280ms_var(--ease-out-expo)]"
+      >
+        <Image
+          // Keyed on src so switching frames remounts and replays the entrance
+          // rather than swapping the pixels in place.
+          key={images[index].src}
+          src={images[index].src}
+          alt={images[index].caption ?? ""}
+          width={1800}
+          height={1200}
+          className="h-auto max-h-[78vh] w-full rounded-2xl object-contain"
+        />
+
+        <figcaption className="mt-4 flex items-center justify-between gap-4">
+          <span className="text-[12.5px] text-zinc-400">{images[index].caption ?? ""}</span>
+          <span className="shrink-0 font-mono text-[11px] text-zinc-600">
+            {String(index + 1).padStart(2, "0")} / {String(images.length).padStart(2, "0")}
+          </span>
+        </figcaption>
+      </figure>
+    </div>
   );
 }
 

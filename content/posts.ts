@@ -229,10 +229,23 @@ export function normalisePost(raw: unknown): TripPost {
  * catches it.
  */
 export function collectImages(blocks: PostBlock[]): { src: string; caption?: string }[] {
-  return blocks.flatMap((block) => {
+  const all = blocks.flatMap((block) => {
     if (block.type === "image") return [{ src: block.src, caption: block.caption }];
     if (block.type === "gallery") return block.images;
     return [];
+  });
+
+  /**
+   * Deduped by path. The same photo often appears twice on purpose — once
+   * inline where the writing refers to it, once in a gallery — and the gallery
+   * section showing it twice looks like a bug rather than a decision. First
+   * occurrence wins, so the caption written next to the prose is the one kept.
+   */
+  const seen = new Set<string>();
+  return all.filter((image) => {
+    if (seen.has(image.src)) return false;
+    seen.add(image.src);
+    return true;
   });
 }
 

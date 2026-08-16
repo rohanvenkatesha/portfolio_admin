@@ -2,10 +2,11 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { Play, Quote } from "lucide-react";
+import { Expand, Play, Quote } from "lucide-react";
 import { Reveal } from "@/components/fx/reveal";
 import { EmberBackdrop } from "@/components/fx/ember-backdrop";
-import { youtubeEmbedUrl, youtubeThumbnail, type PostBlock } from "@/content/posts";
+import { collectImages, youtubeEmbedUrl, youtubeThumbnail, type PostBlock } from "@/content/posts";
+import { Lightbox } from "@/components/travel/post-gallery";
 import { cn } from "@/lib/utils";
 
 /**
@@ -46,24 +47,39 @@ const MEDIA = "max-w-[44rem]";
 const EASE = "ease-[cubic-bezier(0.16,1,0.3,1)]";
 
 export function PostBlocks({ blocks }: { blocks: PostBlock[] }) {
+  /**
+   * The same deduped list the gallery section shows, so an image opened from
+   * the body lands on the right frame and can be paged through to the rest.
+   */
+  const images = collectImages(blocks);
+  const [open, setOpen] = useState<number | null>(null);
+  const indexOf = (src: string) => images.findIndex((image) => image.src === src);
+
   if (blocks.length === 0) {
     return <p className="text-sm text-zinc-600">This post has no content yet.</p>;
   }
 
   return (
-    <div className="space-y-10">
-      {blocks.map((block, index) => (
-        // Staggered like RevealGroup elsewhere, but capped — past a few blocks
-        // a growing delay just means waiting for your own article.
-        <Reveal key={index} direction="up" delay={Math.min(index * 0.05, 0.2)}>
-          <Block block={block} />
-        </Reveal>
-      ))}
-    </div>
+    <>
+      {/* Centred in the panel rather than pinned left. The text measure is far
+          narrower than the panel by design, and left-aligning it left the right
+          half of every section empty. */}
+      <div className="mx-auto flex w-full max-w-[44rem] flex-col gap-10">
+        {blocks.map((block, index) => (
+          // Staggered like RevealGroup elsewhere, but capped — past a few blocks
+          // a growing delay just means waiting for your own article.
+          <Reveal key={index} direction="up" delay={Math.min(index * 0.05, 0.2)}>
+            <Block block={block} onOpenImage={(src) => setOpen(indexOf(src))} />
+          </Reveal>
+        ))}
+      </div>
+
+      <Lightbox images={images} index={open} onChange={setOpen} />
+    </>
   );
 }
 
-function Block({ block }: { block: PostBlock }) {
+function Block({ block, onOpenImage }: { block: PostBlock; onOpenImage: (src: string) => void }) {
   switch (block.type) {
     case "heading":
       // Accent rule above the heading, echoing the dot-and-eyebrow pairing
@@ -103,7 +119,12 @@ function Block({ block }: { block: PostBlock }) {
        */
       return (
         <figure className={cn("group", MEDIA)}>
-          <div className="relative aspect-[16/10] w-full overflow-hidden rounded-2xl border border-white/10 bg-panel-2">
+          <button
+            type="button"
+            onClick={() => onOpenImage(block.src)}
+            aria-label={block.caption || "Open image"}
+            className="relative block aspect-[16/10] w-full overflow-hidden rounded-2xl border border-white/10 bg-panel-2 transition-colors duration-300 hover:border-brand-500/50"
+          >
             <Image
               src={block.src}
               alt={block.caption ?? ""}
@@ -111,13 +132,33 @@ function Block({ block }: { block: PostBlock }) {
               sizes="(max-width: 704px) 100vw, 704px"
               className={cn("object-cover transition-transform duration-700", EASE, "group-hover:scale-[1.03]")}
             />
-          </div>
+
+            <span
+              aria-hidden
+              className={cn(
+                "absolute inset-0 origin-bottom scale-y-0 bg-gradient-to-t from-brand-500/25 to-transparent transition-transform duration-500",
+                EASE,
+                "group-hover:scale-y-100"
+              )}
+            />
+
+            <span
+              aria-hidden
+              className={cn(
+                "absolute right-3 top-3 flex h-9 w-9 translate-y-2 items-center justify-center rounded-full border border-white/25 bg-void/50 opacity-0 backdrop-blur-md transition-all duration-500",
+                EASE,
+                "group-hover:translate-y-0 group-hover:border-brand-500 group-hover:bg-brand-500 group-hover:opacity-100"
+              )}
+            >
+              <Expand className="h-3.5 w-3.5 text-white" />
+            </span>
+          </button>
           {block.caption ? <Caption>{block.caption}</Caption> : null}
         </figure>
       );
 
     case "gallery":
-      return <Strip images={block.images} />;
+      return <Strip images={block.images} onOpenImage={onOpenImage} />;
 
     case "quote":
       /**
@@ -172,34 +213,49 @@ function Caption({ children }: { children: React.ReactNode }) {
  * fades at both edges so it's obvious there's more. The gallery section further
  * down is where these get to be large.
  */
-function Strip({ images }: { images: { src: string; caption?: string }[] }) {
+function Strip({
+  images,
+  onOpenImage,
+}: {
+  images: { src: string; caption?: string }[];
+  onOpenImage: (src: string) => void;
+}) {
   return (
     <div className={MEDIA}>
-      <div className="mask-fade-x no-scrollbar -mx-1 flex snap-x snap-mandatory gap-3 overflow-x-auto px-1 pb-1">
+      {/* No negative margin bleed: it made the scroller 8px wider than its
+          parent, which the page's overflow-x: clip hid but still reported. */}
+      <div className="mask-fade-x no-scrollbar flex snap-x snap-mandatory gap-3 overflow-x-auto pb-1">
         {images.map((image, index) => (
           <figure
             key={image.src + index}
             className="group relative aspect-[4/3] w-[15rem] shrink-0 snap-start overflow-hidden rounded-xl border border-white/10 bg-panel-2 sm:w-[17rem]"
           >
-            <Image
-              src={image.src}
-              alt={image.caption ?? ""}
-              fill
-              sizes="272px"
-              className={cn("object-cover transition-transform duration-700", EASE, "group-hover:scale-[1.06]")}
-            />
+            <button
+              type="button"
+              onClick={() => onOpenImage(image.src)}
+              aria-label={image.caption || `Open image ${index + 1}`}
+              className="absolute inset-0 h-full w-full"
+            >
+              <Image
+                src={image.src}
+                alt={image.caption ?? ""}
+                fill
+                sizes="272px"
+                className={cn("object-cover transition-transform duration-700", EASE, "group-hover:scale-[1.06]")}
+              />
 
-            <span
-              aria-hidden
-              className={cn(
-                "absolute inset-0 origin-bottom scale-y-0 bg-gradient-to-t from-brand-500/30 to-transparent transition-transform duration-500",
-                EASE,
-                "group-hover:scale-y-100"
-              )}
-            />
+              <span
+                aria-hidden
+                className={cn(
+                  "absolute inset-0 origin-bottom scale-y-0 bg-gradient-to-t from-brand-500/30 to-transparent transition-transform duration-500",
+                  EASE,
+                  "group-hover:scale-y-100"
+                )}
+              />
+            </button>
 
             {image.caption ? (
-              <figcaption className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-void/90 to-transparent px-3 pb-2.5 pt-6 text-[11px] leading-snug text-white/85">
+              <figcaption className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-void/90 to-transparent px-3 pb-2.5 pt-6 text-[11px] leading-snug text-white/85">
                 {image.caption}
               </figcaption>
             ) : null}
