@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion, useScroll, useMotionValueEvent } from "motion/react";
-import { Command, Menu, X } from "lucide-react";
+import { Menu, Search, X } from "lucide-react";
 import { profile } from "@/content/site";
 import { navSections as fallbackNavSections } from "@/content/sections";
 import type { NavSection } from "./shell";
@@ -74,11 +74,18 @@ export function Nav({
             className="group flex items-center gap-2.5"
             aria-label={`${profile.name} — home`}
           >
-            <span className="relative flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-brand-400 to-brand-500 font-mono text-[11px] font-bold text-[var(--brand-ink)]">
+            {/* A rung up from the large surfaces — at 32px the gradient reads as
+                one averaged colour, and on `ember-fill` that average sat well
+                below the accent next to a full-width button. */}
+            <span className="ember-fill-hot relative flex h-8 w-8 items-center justify-center rounded-lg font-mono text-[11px] font-bold text-[var(--brand-ink)] group-hover:ember-fill-hotter">
               {profile.initials}
-              <span className="absolute inset-0 rounded-lg bg-gradient-to-br from-brand-400 to-brand-500 opacity-0 blur-md transition-opacity duration-300 group-hover:opacity-80" />
+              <span className="ember-fill-hotter absolute inset-0 rounded-lg opacity-0 blur-md transition-opacity duration-300 group-hover:opacity-80" />
             </span>
-            <span className="hidden whitespace-nowrap text-sm font-semibold tracking-tight text-white sm:block">
+            {/* Hidden through the `md` band only. That's the one range where
+                the section links are already showing but the bar isn't yet wide
+                enough for both — together they overran it by 41px. Below `md`
+                the links are in the sheet, so the name fits again. */}
+            <span className="hidden whitespace-nowrap text-sm font-semibold tracking-tight text-white sm:block md:hidden lg:block">
               {profile.name}
             </span>
           </a>
@@ -110,19 +117,21 @@ export function Nav({
           </ul>
 
           <div className="flex items-center gap-2">
-            {/* Command palette trigger */}
+            {/* Palette trigger. It searches sections, projects and trips, so a
+                magnifier says what it does; the ⌘/Ctrl+K shortcut it used to
+                advertise lives in the tooltip now rather than on the button. */}
             <button
               onClick={onOpenPalette}
-              aria-label="Open command palette"
-              className="glass inline-flex items-center gap-2 rounded-full px-3 py-2 text-[11px] text-zinc-400 transition-all hover:border-brand-400/40 hover:text-brand-200"
+              aria-label="Search the site"
+              title="Search — ⌘K"
+              className="glass rounded-full p-2.5 text-zinc-400 transition-colors hover:border-brand-400/40 hover:text-brand-200"
             >
-              <Command className="h-3.5 w-3.5" />
-              <span className="hidden font-mono sm:block">K</span>
+              <Search className="h-4 w-4" />
             </button>
 
             <a
               href="#contact"
-              className="hidden rounded-full bg-brand-500 px-4 py-2 text-[13px] font-semibold text-[var(--brand-ink)] transition-all hover:bg-brand-400 sm:block"
+              className="ember-fill-hot hidden rounded-full px-4 py-2 text-[13px] font-semibold text-[var(--brand-ink)] hover:ember-fill-hotter sm:block"
             >
               Hire me
             </a>

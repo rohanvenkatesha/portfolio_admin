@@ -93,10 +93,16 @@ type ButtonBaseProps = {
 /* Pill button — the primary call-to-action shape                              */
 /* -------------------------------------------------------------------------- */
 
+/**
+ * Every variant carries a border, transparent where the design doesn't show
+ * one. Only `outline` used to have it, which made it 42px tall against the
+ * others' 40 — so a solid and an outline pill sitting side by side were two
+ * pixels out of alignment.
+ */
 const pillVariants = {
-  solid: "bg-brand-500 text-[var(--brand-ink)] hover:bg-brand-400",
-  outline: "border border-white/15 bg-white/[0.04] text-white hover:border-white/35 hover:bg-white/[0.08]",
-  light: "bg-white text-black hover:bg-zinc-200",
+  solid: "border-transparent bg-brand-500 text-[var(--brand-ink)] hover:bg-brand-400",
+  outline: "border-white/15 bg-white/[0.04] text-white hover:border-white/35 hover:bg-white/[0.08]",
+  light: "border-transparent bg-white text-black hover:bg-zinc-200",
 } as const;
 
 type PillVariant = keyof typeof pillVariants;
@@ -107,7 +113,7 @@ type PillVariant = keyof typeof pillVariants;
  */
 function pillClasses(variant: PillVariant, className?: string) {
   return cn(
-    "group/pill inline-flex items-center gap-2.5 rounded-full pl-1.5 pr-5 py-1.5",
+    "group/pill inline-flex items-center gap-2.5 rounded-full border pl-1.5 pr-5 py-1.5",
     "text-sm font-semibold transition-all duration-300 active:scale-[0.97]",
     pillVariants[variant],
     className

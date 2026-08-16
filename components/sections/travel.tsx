@@ -185,7 +185,9 @@ export function Travel({
                       </div>
 
                       {/* Arrow slides in and rotates */}
-                      <span className="flex h-10 w-10 shrink-0 translate-x-3 items-center justify-center rounded-full border border-white/12 opacity-0 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:translate-x-0 group-hover:border-brand-500 group-hover:bg-brand-500 group-hover:opacity-100">
+                      {/* Hover-only, so on a phone it was 60px of a 269px row
+                          reserved for something that can never appear. */}
+                      <span className="hidden h-10 w-10 shrink-0 translate-x-3 items-center justify-center rounded-full border border-white/12 opacity-0 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:translate-x-0 group-hover:border-brand-500 group-hover:bg-brand-500 group-hover:opacity-100 sm:flex">
                         <ArrowUpRight className="h-4 w-4 text-white transition-transform duration-300 group-hover:rotate-45" />
                       </span>
                     </div>
