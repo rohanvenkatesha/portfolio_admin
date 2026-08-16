@@ -51,14 +51,8 @@ export async function listMedia(folder: string): Promise<MediaFile[]> {
 }
 
 /**
- * Whether a stored path is a legitimate repo image reference.
- *
- * Guards the write path: without it, a crafted request could point site
- * imagery at an arbitrary URL. Anchored, and no "..", so it can't escape
- * public/media.
+ * Re-exported from content/media-path so the write path and the read
+ * normalisers share one definition. It lives there rather than here because
+ * the normalisers are client-importable and this module is `server-only`.
  */
-export function isValidMediaPath(value: string): boolean {
-  if (!value.startsWith(`/${MEDIA_ROOT}/`)) return false;
-  if (value.includes("..")) return false;
-  return /\.(jpe?g|png|webp|avif|gif)$/i.test(value);
-}
+export { isValidMediaPath } from "@/content/media-path";
