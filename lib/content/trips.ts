@@ -2,6 +2,7 @@ import "server-only";
 
 import { unstable_cache } from "next/cache";
 import { adminDb, isAdminConfigured } from "@/lib/firebase/admin";
+import { isValidMediaPath } from "@/lib/content/media";
 import { trips as staticTrips, type Trip } from "@/content/site";
 
 export const TRIPS_TAG = "trips";
@@ -44,6 +45,10 @@ function normalise(raw: unknown): Trip | null {
     budget: String(t.budget ?? ""),
     vibe: String(t.vibe ?? ""),
     gradient: String(t.gradient ?? "from-orange-500/40 to-orange-700/20"),
+    // Only a path under /media is accepted — see isValidMediaPath. Anything
+    // else (an absolute URL, a traversal attempt) is dropped, and the trip
+    // falls back to its gradient rather than rendering a broken image.
+    coverUrl: typeof t.coverUrl === "string" && isValidMediaPath(t.coverUrl) ? t.coverUrl : undefined,
     hook: String(t.hook ?? ""),
     reflection: String(t.reflection ?? ""),
     itinerary,

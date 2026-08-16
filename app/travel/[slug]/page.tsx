@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, ArrowRight, CalendarDays, MapPin, Route, Wallet } from "lucide-react";
@@ -7,8 +8,9 @@ import { Footer } from "@/components/layout/footer";
 import { DownloadGuideButton, TripDetail } from "@/components/travel/trip-detail";
 import { Aurora } from "@/components/fx/effects";
 import { Badge } from "@/components/ui/primitives";
-import { profile } from "@/content/site";
+import { getProfile } from "@/lib/content/profile";
 import { getTrips } from "@/lib/content/trips";
+import { getPostsForTrip } from "@/lib/content/posts";
 import { cn } from "@/lib/utils";
 
 /** Prerender every itinerary at build time — the content is fully static. */
@@ -28,6 +30,7 @@ export async function generateMetadata({
 
   const title = `${trip.destination} solo travel guide (${trip.days} days)`;
   const description = `${trip.hook} A day-by-day ${trip.days}-day itinerary for ${trip.destination}, ${trip.region} — route, gear, budget and solo travel notes.`;
+  const profile = await getProfile();
 
   return {
     title,
@@ -55,6 +58,8 @@ export default async function TripPage({ params }: PageProps<"/travel/[slug]">) 
 
   if (!trip) notFound();
 
+  const posts = await getPostsForTrip(trip.id);
+
   const previous = trips[(index - 1 + trips.length) % trips.length];
   const next = trips[(index + 1) % trips.length];
 
@@ -81,6 +86,23 @@ export default async function TripPage({ params }: PageProps<"/travel/[slug]">) 
               trip.gradient
             )}
           >
+            {/* Cover fills the plate when there is one; the gradient stays as
+                the ground beneath it. The scrim is what keeps the title
+                readable over an arbitrary photo. */}
+            {trip.coverUrl ? (
+              <>
+                <Image
+                  src={trip.coverUrl}
+                  alt=""
+                  fill
+                  priority
+                  sizes="(max-width: 896px) 100vw, 896px"
+                  className="object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/55 to-black/30" />
+              </>
+            ) : null}
+
             <div className="relative">
               <div className="flex flex-wrap items-center gap-2.5">
                 <Badge accent="cyan">{trip.year}</Badge>
@@ -116,6 +138,72 @@ export default async function TripPage({ params }: PageProps<"/travel/[slug]">) 
           <div className="glass mt-4 rounded-2xl">
             <TripDetail trip={trip} showHeader={false} />
           </div>
+
+          {/* Write-ups belonging to this trip */}
+          {posts.length ? (
+            <section className="mt-10">
+              <h2 className="text-2xl font-bold tracking-tight text-white">
+                Stories from this trip
+              </h2>
+              <p className="mt-1.5 text-[13px] text-zinc-500">
+                {posts.length} {posts.length === 1 ? "write-up" : "write-ups"} — routes, photos and
+                the parts the itinerary leaves out.
+              </p>
+
+              <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                {posts.map((post) => (
+                  <Link
+                    key={post.id}
+                    href={`/travel/${trip.slug}/${post.slug}`}
+                    className="group relative flex flex-col overflow-hidden rounded-2xl border border-white/8 bg-panel-2 transition-colors hover:border-brand-500/40"
+                  >
+                    {post.coverUrl ? (
+                      <div className="relative aspect-[16/9] w-full overflow-hidden">
+                        <Image
+                          src={post.coverUrl}
+                          alt=""
+                          fill
+                          sizes="(max-width: 640px) 100vw, 440px"
+                          className="object-cover transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-105"
+                        />
+                      </div>
+                    ) : null}
+
+                    <div className="flex flex-1 flex-col p-5">
+                      {post.date ? (
+                        <span className="font-mono text-[10px] text-zinc-600">
+                          <time dateTime={post.date}>
+                            {new Date(`${post.date}T00:00:00Z`).toLocaleDateString("en-GB", {
+                              day: "numeric",
+                              month: "short",
+                              year: "numeric",
+                              timeZone: "UTC",
+                            })}
+                          </time>
+                        </span>
+                      ) : null}
+
+                      <h3 className="mt-1.5 text-base font-semibold text-white transition-colors group-hover:text-brand-400">
+                        {post.title}
+                      </h3>
+
+                      {post.excerpt ? (
+                        <p className="mt-2 line-clamp-3 flex-1 text-[13px] leading-relaxed text-zinc-400">
+                          {post.excerpt}
+                        </p>
+                      ) : null}
+
+                      <span className="mt-4 inline-flex items-center gap-1.5 font-mono text-[10px] text-zinc-600">
+                        {post.route.length ? `${post.route.length} stops` : null}
+                        {post.route.length && post.blocks.length ? " · " : null}
+                        {post.blocks.length ? `${post.blocks.length} sections` : null}
+                      </span>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </section>
+          ) : null}
 
           {/* Prev / next */}
           <nav className="mt-6 grid gap-3 sm:grid-cols-2">

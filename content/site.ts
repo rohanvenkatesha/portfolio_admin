@@ -57,9 +57,7 @@ export const profile = {
    * shows a designed initials plate instead — the layout doesn't depend on a
    * photo existing.
    *
-   * It renders as an ember duotone that resolves to full colour on hover, so
-   * pick a shot with real separation between lights and darks — a flat,
-   * evenly-lit frame maps to a narrow band of orange and loses its shape.
+   * Shown as shot — no colour treatment — so what you commit is what appears.
    *
    * This is no longer the panel background; that's always the particle field.
    */
@@ -736,7 +734,14 @@ export type Trip = {
   distanceKm: number;
   budget: string;
   vibe: string;
+  /**
+   * Fallback treatment when there's no cover photo — a Tailwind gradient pair
+   * like "from-orange-500/40 to-orange-700/20". Still used behind the image as
+   * the loading colour, so it's never dropped.
+   */
   gradient: string;
+  /** Cover photo, committed under public/media/trips. Empty falls back to the gradient. */
+  coverUrl?: string;
   hook: string;
   reflection: string;
   itinerary: { day: string; title: string; detail: string }[];

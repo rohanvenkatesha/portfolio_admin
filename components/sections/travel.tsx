@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { motion } from "motion/react";
@@ -10,6 +11,8 @@ import { Reveal, SectionHeading } from "@/components/fx/reveal";
 import { CursorPreview } from "@/components/fx/cursor-preview";
 import { trips as fallbackTrips, type Trip } from "@/content/site";
 import { cn } from "@/lib/utils";
+import { useCopy } from "@/components/providers/copy-provider";
+import { withCount } from "@/content/copy";
 
 /**
  * The globe pulls in three.js, the heaviest dependency on the site. Loading it
@@ -27,32 +30,49 @@ const Globe = dynamic(() => import("@/components/three/globe").then((m) => m.Glo
 /** Trips come from the server (Firestore, or the repo as fallback). */
 export function Travel({
   trips = fallbackTrips,
+  allTrips,
   totalCount,
 }: {
+  /** The rows listed beside the globe — a curated slice on the home page. */
   trips?: Trip[];
+  /**
+   * Every trip, for the globe. The rows are capped so the section doesn't run
+   * away with the page, but the map is the one place where the full count is
+   * the point — a globe showing three pins reads as three trips taken.
+   * Defaults to the listed rows, so detail routes needn't pass it.
+   */
+  allTrips?: Trip[];
   /** Full collection size, when the list above is a truncated selection. */
   totalCount?: number;
 }) {
+  const copy = useCopy("travel");
+  const plotted = allTrips ?? trips;
+
   // Trips are deletable from the admin, so an empty list is a real state —
   // indexing [0] unguarded would crash the whole page.
   const [selectedId, setSelectedId] = useState(trips[0]?.id ?? "");
   const [hovered, setHovered] = useState<Trip | null>(null);
 
+  /**
+   * Resolved against every trip, not just the listed ones: a pin for a trip
+   * that didn't make the cut is still clickable, and its readout has to
+   * resolve or the coordinates would fall back to the wrong destination.
+   */
   const selected = useMemo(
-    (): Trip | undefined => trips.find((trip) => trip.id === selectedId) ?? trips[0],
-    [selectedId, trips]
+    (): Trip | undefined => plotted.find((trip) => trip.id === selectedId) ?? plotted[0],
+    [selectedId, plotted]
   );
 
   // Markers are static — memoised so the globe effect never re-runs
   const markers = useMemo<GlobeMarker[]>(
     () =>
-      trips.map((trip) => ({
+      plotted.map((trip) => ({
         id: trip.id,
         lat: trip.lat,
         lng: trip.lng,
         label: trip.destination,
       })),
-    [trips]
+    [plotted]
   );
 
   const handleSelect = useCallback((id: string) => setSelectedId(id), []);
@@ -71,21 +91,21 @@ export function Travel({
 
 
   // Nothing to render — better an honest empty state than a broken globe.
-  if (trips.length === 0 || !selected) return null;
+  if (plotted.length === 0 || !selected) return null;
 
   return (
     <section id="travel" className="relative scroll-mt-24 px-3 py-3 sm:px-5 lg:px-6">
       <div className="relative mx-auto w-full max-w-[100rem] overflow-hidden rounded-[1.75rem] border border-white/8 bg-panel px-6 py-14 sm:px-10 sm:py-16 lg:px-14">
         <SectionHeading
-          eyebrow="Solo Travel"
+          eyebrow={copy.eyebrow}
           title={
             <>
-              Places I went
+              {copy.titleLead}
               <br />
-              <span className="text-brand-500">on my own</span>
+              <span className="text-brand-500">{copy.titleAccent}</span>
             </>
           }
-          description={`${totalCount ?? trips.length} journeys on the map. Hover a destination to find it on the globe — open it for the full day-by-day guide.`}
+          description={withCount(copy.description, totalCount ?? trips.length)}
         />
 
         <div className="mt-12 grid gap-10 lg:grid-cols-[0.85fr_1.15fr] lg:gap-14">
@@ -218,6 +238,9 @@ export function Travel({
       <CursorPreview visible={hovered !== null} className="w-64">
         {hovered ? (
           <div className={cn("relative aspect-[4/3] bg-gradient-to-br", hovered.gradient)}>
+            {hovered.coverUrl ? (
+              <Image src={hovered.coverUrl} alt="" fill sizes="256px" className="object-cover" />
+            ) : null}
             <div className="absolute inset-0 bg-gradient-to-t from-black/85 to-transparent" />
             <div className="absolute inset-x-0 bottom-0 p-4">
               <p className="text-base font-semibold text-white">{hovered.destination}</p>

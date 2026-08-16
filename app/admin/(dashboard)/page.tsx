@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowUpRight, Camera, Film, FolderGit2, MapPin } from "lucide-react";
+import { ArrowUpRight, Camera, Film, FolderGit2, MapPin, Type, UserRound } from "lucide-react";
 import { getSectionsFresh } from "@/lib/content/sections";
 import { getProjectsFresh } from "@/lib/content/projects";
 import { getPhotosFresh } from "@/lib/content/photos";
@@ -68,6 +68,40 @@ export default async function AdminDashboard() {
           );
         })}
       </div>
+
+      {/* Everything identifying you — name, bio, contact, portrait, links */}
+      <Link
+        href="/admin/profile"
+        className="group flex items-center justify-between gap-4 rounded-2xl border border-white/8 bg-panel p-6 transition-colors hover:border-brand-500/40"
+      >
+        <span className="min-w-0">
+          <span className="flex items-center gap-2 text-sm font-semibold text-white">
+            <UserRound className="h-4 w-4 text-brand-500" />
+            Profile
+          </span>
+          <span className="mt-1 block text-[11px] leading-relaxed text-zinc-600">
+            Name, rotating roles, bio, contact details, portrait, tech strip and social links.
+          </span>
+        </span>
+        <ArrowUpRight className="h-4 w-4 shrink-0 text-zinc-600 transition-all group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-brand-400" />
+      </Link>
+
+      {/* Every section's eyebrow, headline and description */}
+      <Link
+        href="/admin/copy"
+        className="group flex items-center justify-between gap-4 rounded-2xl border border-white/8 bg-panel p-6 transition-colors hover:border-brand-500/40"
+      >
+        <span className="min-w-0">
+          <span className="flex items-center gap-2 text-sm font-semibold text-white">
+            <Type className="h-4 w-4 text-brand-500" />
+            Section copy
+          </span>
+          <span className="mt-1 block text-[11px] leading-relaxed text-zinc-600">
+            The eyebrow, headline and description above all nine sections.
+          </span>
+        </span>
+        <ArrowUpRight className="h-4 w-4 shrink-0 text-zinc-600 transition-all group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-brand-400" />
+      </Link>
 
       <ThemeEditor initial={theme} />
 

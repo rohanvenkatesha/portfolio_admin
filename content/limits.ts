@@ -8,7 +8,9 @@
  *   photos  The accordion gives each collapsed strip an equal share of the
  *           row. Past ~8 the strips are too narrow to read or aim at.
  *   trips   Rows stay readable indefinitely, but the section shouldn't
- *           dominate the page.
+ *           dominate the page. This caps the *rows* only — the globe beside
+ *           them always plots every trip, since a half-empty map would
+ *           undersell the travelling rather than tease it.
  *   films   One tidy row of three on desktop.
  *
  * Reordering in the admin decides *which* items appear, so curation needs no
@@ -16,6 +18,6 @@
  */
 export const HOME_LIMITS = {
   photos: 8,
-  trips: 5,
+  trips: 3,
   films: 3,
 } as const;

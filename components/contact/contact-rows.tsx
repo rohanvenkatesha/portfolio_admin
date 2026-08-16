@@ -1,7 +1,7 @@
 "use client";
 
 import { ArrowUpRight, FileText, Mail, MapPin } from "lucide-react";
-import { profile } from "@/content/site";
+import { useProfile } from "@/components/providers/profile-provider";
 
 /**
  * The direct routes to me — email, location, résumé.
@@ -10,6 +10,7 @@ import { profile } from "@/content/site";
  * the page ends on a pattern it has already taught the reader.
  */
 export function ContactRows() {
+  const profile = useProfile();
   return (
     <div className="border-t border-white/8">
       <ContactRow

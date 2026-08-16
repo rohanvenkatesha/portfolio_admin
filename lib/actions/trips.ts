@@ -3,9 +3,21 @@
 import { revalidateTag, revalidatePath } from "next/cache";
 import { adminDb, getAdminUser } from "@/lib/firebase/admin";
 import { TRIPS_COLLECTION, TRIPS_DOC, TRIPS_TAG, getTripsFresh } from "@/lib/content/trips";
+import { isValidMediaPath } from "@/lib/content/media";
 import { trips as staticTrips, type Trip } from "@/content/site";
 
 export type ActionResult = { ok: true; message: string } | { ok: false; error: string };
+
+/**
+ * Covers must be a repo path under /media, validated by shape rather than by
+ * hostname — without it a crafted request could point site imagery anywhere.
+ * Returns undefined for "cleared", false for "rejected".
+ */
+function safeCoverPath(raw: FormDataEntryValue | null): string | undefined | false {
+  const value = String(raw ?? "").trim();
+  if (!value) return undefined;
+  return isValidMediaPath(value) ? value : false;
+}
 
 /** Server Actions are public POST endpoints — re-check auth in every one. */
 async function requireAdmin(): Promise<{ email: string } | null> {
@@ -140,6 +152,11 @@ export async function saveTrip(formData: FormData): Promise<ActionResult> {
     const index = current.findIndex((t) => t.id === id);
     if (index === -1) return { ok: false, error: "That trip no longer exists." };
 
+    const coverUrl = safeCoverPath(formData.get("coverUrl"));
+    if (coverUrl === false) {
+      return { ok: false, error: "The cover must be an image committed under public/media." };
+    }
+
     const items = [...current];
     items[index] = {
       ...current[index],
@@ -153,6 +170,7 @@ export async function saveTrip(formData: FormData): Promise<ActionResult> {
       distanceKm: Math.max(0, Number(formData.get("distanceKm")) || 0),
       budget: String(formData.get("budget") ?? "").trim(),
       vibe: String(formData.get("vibe") ?? "").trim(),
+      coverUrl,
       hook: String(formData.get("hook") ?? "").trim(),
       reflection: String(formData.get("reflection") ?? "").trim(),
       itinerary: parseItinerary(formData.get("itinerary")),

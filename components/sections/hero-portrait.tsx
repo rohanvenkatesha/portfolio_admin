@@ -3,7 +3,7 @@
 import { useRef } from "react";
 import Image from "next/image";
 import { motion, useMotionValue, useReducedMotion, useSpring, useTransform } from "motion/react";
-import { profile } from "@/content/site";
+import { useProfile } from "@/components/providers/profile-provider";
 import { cn } from "@/lib/utils";
 
 const EASE = [0.16, 1, 0.3, 1] as const;
@@ -13,22 +13,21 @@ const GRAIN =
   "url(\"data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")";
 
 /**
- * The hero portrait, rendered as an ember duotone.
+ * The hero portrait.
  *
- * The photo is desaturated and then remapped between two points: a `darken`
- * layer in the accent clamps the highlights, and a `lighten` layer in a warm
- * near-black lifts the shadows. Everything between lands on the ramp joining
- * them, which is what makes it read as one material with the ember panels
- * rather than a photo dropped on top of them.
+ * The photo is shown as shot — no duotone, no colour treatment. It carried an
+ * ember duotone that resolved to colour on hover; the tint was doing more harm
+ * than the palette tie-in was worth, so the photograph now speaks for itself.
  *
- * Hovering fades both layers out and releases the greyscale over 700ms, so the
- * true colour floods back in. That reveal is the only event here — there are
- * deliberately no frames, badges or plates competing with it.
+ * What's left is quiet: it tilts toward the pointer, lifts slightly on hover,
+ * and sits in its own bloom of accent light. No frames, badges or plates
+ * competing with the face.
  *
  * With `profile.portraitUrl` unset the frame shows an ember plate instead, so
  * the layout is finished with or without a photo.
  */
 export function HeroPortrait({ className }: { className?: string }) {
+  const profile = useProfile();
   const reduceMotion = useReducedMotion();
   const ref = useRef<HTMLDivElement>(null);
 
@@ -76,35 +75,24 @@ export function HeroPortrait({ className }: { className?: string }) {
         className="group/portrait relative isolate aspect-[4/5] w-full overflow-hidden rounded-[1.5rem] bg-void"
       >
         {profile.portraitUrl ? (
-          <>
-            <Image
-              src={profile.portraitUrl}
-              alt={profile.name}
-              fill
-              priority
-              sizes="(max-width: 640px) 272px, (max-width: 1024px) 320px, 384px"
-              className="object-cover object-center grayscale contrast-[1.15] transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover/portrait:scale-[1.03] group-hover/portrait:contrast-100 group-hover/portrait:grayscale-0"
-            />
-
-            {/* Highlights clamp down to the accent… */}
-            <div
-              aria-hidden
-              className="pointer-events-none absolute inset-0 bg-brand-500 mix-blend-darken transition-opacity duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover/portrait:opacity-0"
-            />
-            {/* …and shadows lift to a warm black, closing the duotone */}
-            <div
-              aria-hidden
-              className="pointer-events-none absolute inset-0 bg-[#170b04] mix-blend-lighten transition-opacity duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover/portrait:opacity-0"
-            />
-          </>
+          <Image
+            src={profile.portraitUrl}
+            alt={profile.name}
+            fill
+            priority
+            sizes="(max-width: 640px) 272px, (max-width: 1024px) 320px, 384px"
+            className="object-cover object-center transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover/portrait:scale-[1.03]"
+          />
         ) : (
           <PortraitPlaceholder />
         )}
 
-        {/* Grain, over whichever of the two is showing */}
+        {/* Grain, over whichever of the two is showing. Lighter than it was
+            under the duotone — that treatment could carry heavy texture, a
+            full-colour photograph just looks dirty under it. */}
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-0 opacity-[0.16] mix-blend-overlay"
+          className="pointer-events-none absolute inset-0 opacity-[0.07] mix-blend-overlay"
           style={{ backgroundImage: GRAIN }}
         />
 
@@ -124,6 +112,7 @@ export function HeroPortrait({ className }: { className?: string }) {
  * will land in.
  */
 function PortraitPlaceholder() {
+  const profile = useProfile();
   return (
     <div className="absolute inset-0 grid place-items-center overflow-hidden">
       <div aria-hidden className="ember-fill absolute inset-0" />

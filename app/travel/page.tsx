@@ -1,16 +1,21 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { ArrowUpRight, CalendarDays, MapPin, Route } from "lucide-react";
 import { DetailChrome } from "@/components/layout/detail-chrome";
 import { Footer } from "@/components/layout/footer";
 import { getTrips } from "@/lib/content/trips";
-import { profile } from "@/content/site";
+import { getProfile } from "@/lib/content/profile";
 import { cn } from "@/lib/utils";
 
-export const metadata: Metadata = {
-  title: "Solo travel guides",
-  description: `Every solo journey ${profile.name} has documented — day-by-day itineraries, gear lists, budgets and route notes.`,
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const profile = await getProfile();
+
+  return {
+    title: "Solo travel guides",
+    description: `Every solo journey ${profile.name} has documented — day-by-day itineraries, gear lists, budgets and route notes.`,
+  };
+}
 
 /**
  * The full travel archive.
@@ -31,7 +36,7 @@ export default async function TravelIndexPage() {
     <>
       <DetailChrome backHref="/#travel" backLabel="Back to portfolio" />
 
-      <main className="relative flex-1 px-3 pt-28 sm:px-5 lg:px-6">
+      <main className="relative flex-1 px-3 pb-3 pt-28 sm:px-5 lg:px-6">
         <div className="mx-auto w-full max-w-[100rem]">
           <header className="rounded-[1.75rem] border border-white/8 bg-panel px-6 py-14 sm:px-10 lg:px-14">
             <div className="flex items-center gap-2.5">
@@ -64,12 +69,24 @@ export default async function TravelIndexPage() {
                   href={`/travel/${trip.slug}`}
                   className="group relative flex aspect-[4/3] flex-col justify-end overflow-hidden rounded-2xl border border-white/8 p-6"
                 >
+                  {/* Gradient stays underneath as the loading colour, so the
+                      card is never a blank rectangle while the photo decodes. */}
                   <div
                     className={cn(
                       "absolute inset-0 bg-gradient-to-br transition-transform duration-700 ease-out group-hover:scale-105",
                       trip.gradient
                     )}
-                  />
+                  >
+                    {trip.coverUrl ? (
+                      <Image
+                        src={trip.coverUrl}
+                        alt=""
+                        fill
+                        sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 33vw"
+                        className="object-cover"
+                      />
+                    ) : null}
+                  </div>
                   <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
 
                   <div className="relative">

@@ -3,7 +3,7 @@
 import { useState, type FormEvent } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { AlertCircle, Check, Loader2, Send } from "lucide-react";
-import { profile } from "@/content/site";
+import { useProfile } from "@/components/providers/profile-provider";
 import { cn } from "@/lib/utils";
 
 type Fields = { name: string; email: string; subject: string; message: string };
@@ -24,6 +24,7 @@ function validate(fields: Fields): Errors {
 }
 
 export function ContactForm() {
+  const profile = useProfile();
   const [fields, setFields] = useState<Fields>(EMPTY);
   const [errors, setErrors] = useState<Errors>({});
   const [status, setStatus] = useState<Status>("idle");

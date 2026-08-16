@@ -15,6 +15,8 @@ import { getProjects } from "@/lib/content/projects";
 import { getPhotos } from "@/lib/content/photos";
 import { getTrips } from "@/lib/content/trips";
 import { getFilms } from "@/lib/content/films";
+import { getCopy } from "@/lib/content/copy";
+import { CopyProvider } from "@/components/providers/copy-provider";
 import type { Film, Photo, Project, Trip } from "@/content/site";
 import { HOME_LIMITS } from "@/content/limits";
 
@@ -23,6 +25,8 @@ type PageData = {
   projects: Project[];
   photos: Photo[];
   trips: Trip[];
+  /** Unsliced, for the globe — it plots every trip, not just the listed ones. */
+  allTrips: Trip[];
   films: Film[];
   /** Full collection sizes, so sections can offer "view all". */
   totals: { photos: number; trips: number; films: number };
@@ -44,7 +48,9 @@ const SECTION_RENDERERS: Record<SectionId, (data: PageData) => ReactNode> = {
   visuals: ({ photos, films, totals }) => (
     <Visuals photos={photos} films={films} totalPhotos={totals.photos} totalFilms={totals.films} />
   ),
-  travel: ({ trips, totals }) => <Travel trips={trips} totalCount={totals.trips} />,
+  travel: ({ trips, allTrips, totals }) => (
+    <Travel trips={trips} allTrips={allTrips} totalCount={totals.trips} />
+  ),
   about: () => <About />,
   cta: () => <CallToAction />,
   // Contact is rendered by the footer, which they now share a panel with.
@@ -52,13 +58,14 @@ const SECTION_RENDERERS: Record<SectionId, (data: PageData) => ReactNode> = {
 };
 
 export default async function Page() {
-  const [sections, navSections, projects, photos, trips, films] = await Promise.all([
+  const [sections, navSections, projects, photos, trips, films, copy] = await Promise.all([
     getActiveSections(),
     getNavSections(),
     getProjects(),
     getPhotos(),
     getTrips(),
     getFilms(),
+    getCopy(),
   ]);
 
   /**
@@ -69,12 +76,15 @@ export default async function Page() {
     projects,
     photos: photos.slice(0, HOME_LIMITS.photos),
     trips: trips.slice(0, HOME_LIMITS.trips),
+    allTrips: trips,
     films: films.slice(0, HOME_LIMITS.films),
     totals: { photos: photos.length, trips: trips.length, films: films.length },
   };
 
   return (
-    <>
+    /* Sections are Client Components and can't reach the data layer, so the
+       copy is read once here and read back through context. */
+    <CopyProvider value={copy}>
       <Shell navSections={navSections} />
 
       <main className="relative flex-1">
@@ -90,6 +100,6 @@ export default async function Page() {
         navSections={navSections}
         withContact={sections.some((s) => s.id === "contact")}
       />
-    </>
+    </CopyProvider>
   );
 }

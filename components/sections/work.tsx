@@ -11,6 +11,8 @@ import { ProjectDetail } from "@/components/work/project-detail";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { projectFilters, projects as fallbackProjects, type Project } from "@/content/site";
 import { cn } from "@/lib/utils";
+import { useCopy } from "@/components/providers/copy-provider";
+import { withCount } from "@/content/copy";
 
 /** Cards shown before the visitor asks for the rest. */
 const INITIAL_COUNT = 6;
@@ -35,6 +37,7 @@ const GRAIN =
  * prop is optional so the section still renders standalone in isolation.
  */
 export function Work({ projects = fallbackProjects }: { projects?: Project[] }) {
+  const copy = useCopy("work");
   const [filter, setFilter] = useState<(typeof projectFilters)[number]>("All");
   const [active, setActive] = useState<Project | null>(null);
   const [expanded, setExpanded] = useState(false);
@@ -53,15 +56,15 @@ export function Work({ projects = fallbackProjects }: { projects?: Project[] }) 
         {/* Heading + filters */}
         <div className="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
           <SectionHeading
-            eyebrow="Selected Work"
+            eyebrow={copy.eyebrow}
             title={
               <>
-                Things I&apos;ve
+                {copy.titleLead}
                 <br />
-                <span className="text-brand-500">actually built</span>
+                <span className="text-brand-500">{copy.titleAccent}</span>
               </>
             }
-            description={`${projects.length} public projects — retrieval systems, computer vision, full-stack apps and compiler front-ends. Every one links to its source.`}
+            description={withCount(copy.description, projects.length)}
           />
 
           <Reveal direction="up" delay={0.1}>

@@ -5,8 +5,10 @@ import { AnimatePresence, motion } from "motion/react";
 import { Code2, Palette, Plus, Quote, Sparkles } from "lucide-react";
 import { Reveal, RevealGroup, RevealItem, SectionHeading } from "@/components/fx/reveal";
 import { EmberBackdrop } from "@/components/fx/ember-backdrop";
-import { philosophy, profile, skillGroups } from "@/content/site";
+import { philosophy, skillGroups } from "@/content/site";
+import { useProfile } from "@/components/providers/profile-provider";
 import { cn } from "@/lib/utils";
+import { useCopy } from "@/components/providers/copy-provider";
 
 type Domain = "all" | "engineering" | "creative";
 
@@ -17,6 +19,8 @@ const DOMAINS: { id: Domain; label: string; icon: typeof Code2 }[] = [
 ];
 
 export function About() {
+  const copy = useCopy("about");
+  const profile = useProfile();
   const [domain, setDomain] = useState<Domain>("all");
   const [openGroup, setOpenGroup] = useState<string>(skillGroups[0].id);
 
@@ -29,15 +33,15 @@ export function About() {
     <section id="about" className="relative scroll-mt-24 px-3 py-3 sm:px-5 lg:px-6">
       <div className="relative mx-auto w-full max-w-[100rem] overflow-hidden rounded-[1.75rem] border border-white/8 bg-panel px-6 py-14 sm:px-10 sm:py-16 lg:px-14">
         <SectionHeading
-          eyebrow="About"
+          eyebrow={copy.eyebrow}
           title={
             <>
-              How I think
+              {copy.titleLead}
               <br />
-              <span className="text-brand-500">about the work</span>
+              <span className="text-brand-500">{copy.titleAccent}</span>
             </>
           }
-          description="Two disciplines that look unrelated from outside and feel identical from inside: notice what matters, cut everything else, get it in front of people."
+          description={copy.description}
         />
 
         {/* ---------------- Narrative + principles ---------------- */}

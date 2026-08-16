@@ -4,7 +4,7 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { CustomCursor } from "@/components/fx/cursor";
 import { GrainOverlay, ScrollProgress } from "@/components/fx/effects";
-import { profile } from "@/content/site";
+import { useProfile } from "@/components/providers/profile-provider";
 
 /**
  * Chrome for standalone detail routes.
@@ -17,6 +17,7 @@ export function DetailChrome({ backHref = "/", backLabel = "Back to portfolio" }
   backHref?: string;
   backLabel?: string;
 }) {
+  const profile = useProfile();
   return (
     <>
       <ScrollProgress />
