@@ -386,6 +386,92 @@
 }
 
 /* ------------------------------------------------------------------
+   Route map
+
+   Leaflet renders its own DOM, so these reach into it by class name rather
+   than through the component. Kept together here so the whole treatment is
+   readable in one place.
+   ------------------------------------------------------------------ */
+.route-frame {
+  border: 1px solid rgb(255 255 255 / 0.1);
+  border-radius: 2px;
+}
+
+/* Pushes the basemap down so the accent is the brightest thing in frame. */
+.route-canvas .leaflet-tile-pane {
+  filter: grayscale(0.55) contrast(1.15) brightness(0.72);
+}
+
+.route-glow {
+  filter: blur(6px);
+}
+
+/* The dash crawls forwards along the path, giving the line a direction. */
+.route-line {
+  stroke-dasharray: 9 13;
+  animation: route-dash 24s linear infinite;
+}
+
+@keyframes route-dash {
+  to {
+    stroke-dashoffset: -440;
+  }
+}
+
+.route-pin {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 9999px;
+  background: var(--pin);
+  color: #fff;
+  font: 600 11px/1 ui-monospace, monospace;
+  box-shadow:
+    0 0 0 3px rgb(0 0 0 / 0.55),
+    0 0 18px -2px var(--pin);
+}
+
+/* Only the final stop pulses — every pin doing it turned the map into a
+   strobe, and the end of the route is the one worth drawing the eye to. */
+.route-pin-last::after {
+  content: "";
+  position: absolute;
+  inset: -6px;
+  border-radius: 9999px;
+  border: 1px solid var(--pin);
+  animation: var(--animate-pulse-ring);
+}
+
+.route-canvas .leaflet-control-zoom a {
+  background: rgb(10 10 12 / 0.85);
+  border-color: rgb(255 255 255 / 0.12);
+  color: rgb(255 255 255 / 0.75);
+  backdrop-filter: blur(8px);
+}
+
+.route-canvas .leaflet-control-zoom a:hover {
+  background: var(--brand);
+  color: #fff;
+}
+
+.route-canvas .leaflet-control-attribution {
+  background: rgb(10 10 12 / 0.7);
+  color: rgb(255 255 255 / 0.35);
+  font-size: 9px;
+}
+
+.route-canvas .leaflet-popup-content-wrapper,
+.route-canvas .leaflet-popup-tip {
+  background: rgb(10 10 12 / 0.95);
+  color: rgb(228 228 231);
+  border: 1px solid rgb(255 255 255 / 0.12);
+  border-radius: 2px;
+  backdrop-filter: blur(8px);
+}
+
+/* ------------------------------------------------------------------
    Accessibility: honour reduced-motion at the CSS level too
    ------------------------------------------------------------------ */
 @media (prefers-reduced-motion: reduce) {

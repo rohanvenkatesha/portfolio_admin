@@ -2,11 +2,10 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { Expand, Play, Quote } from "lucide-react";
+import { Expand, Play } from "lucide-react";
 import { Reveal } from "@/components/fx/reveal";
-import { EmberBackdrop } from "@/components/fx/ember-backdrop";
 import { collectImages, youtubeEmbedUrl, youtubeThumbnail, type PostBlock } from "@/content/posts";
-import { Lightbox } from "@/components/travel/post-gallery";
+import { Lightbox } from "@/components/travel/lightbox";
 import { cn } from "@/lib/utils";
 
 /**
@@ -16,20 +15,18 @@ import { cn } from "@/lib/utils";
  * through and never becomes markup. That's what removes the need for a
  * sanitiser: there is no path from a stored string to innerHTML.
  *
- * Visually this borrows the home page's vocabulary rather than inventing a
- * second one — the same reveal-on-scroll, the same ember treatment for the
- * moment that should carry weight, the same hover language on anything
- * clickable.
+ * There is no card or panel here. Structure comes from the width each kind of
+ * block is allowed to take and from the type scale — the same way a printed
+ * page is organised.
  */
 
 /**
- * Text carries a reading measure; everything else spans the panel.
+ * Text carries a reading measure; media takes the whole column.
  *
- * The section runs edge to edge like the rest of the site, but prose can't:
- * unconstrained it ran 105 characters a line here, well past the 60–75 the eye
- * tracks comfortably. Only the text is capped, so the layout is full width
- * while the reading stays a sane length. Flush left, never centred — every
- * other section on this site starts at the same left edge.
+ * That difference is the layout. The article column is deliberately far wider
+ * than a comfortable line of prose, so capping the text leaves images, video
+ * and pull quotes visibly breaking out past where the reading stops. Uncapped
+ * it ran 105 characters a line, well past the 60–75 the eye tracks easily.
  *
  * Not `ch`: that unit measures the "0" glyph, which in this typeface is 12.4px
  * against an average prose character of about 7.6px, so the `68ch` first tried
@@ -114,7 +111,7 @@ function Block({ block, onOpenImage }: { block: PostBlock; onOpenImage: (src: st
             type="button"
             onClick={() => onOpenImage(block.src)}
             aria-label={block.caption || "Open image"}
-            className="relative block aspect-[16/9] w-full overflow-hidden rounded-2xl border border-white/10 bg-panel-2 transition-colors duration-300 hover:border-brand-500/50 sm:aspect-[21/9]"
+            className="relative block aspect-[16/9] w-full overflow-hidden rounded-sm border border-white/10 bg-panel-2 transition-colors duration-300 hover:border-brand-500/50 sm:aspect-[21/9]"
           >
             <Image
               src={block.src}
@@ -153,7 +150,7 @@ function Block({ block, onOpenImage }: { block: PostBlock; onOpenImage: (src: st
      *
      * A gallery mid-paragraph was either a grid that stopped the reading dead
      * or a sideways strip that was awkward to scroll. Its images still reach
-     * the reader — collectImages feeds them into the bento gallery below, which
+     * the reader — collectImages feeds them into the gallery reel below, which
      * is a better place to look at a set of photographs than the middle of a
      * sentence. The block is kept as the quick way to push several frames into
      * that gallery at once.
@@ -163,31 +160,32 @@ function Block({ block, onOpenImage }: { block: PostBlock; onOpenImage: (src: st
 
     case "quote":
       /**
-       * The one block that gets the ember treatment.
+       * A pull quote, set at display size.
        *
-       * Used the way the home page uses it — the personal statement in About,
-       * the closing call to action — for the moment that should carry weight.
-       * The palette inverts to white on the warm ground, since the orange
-       * accent would vanish into it.
+       * This was an ember panel, which made the loudest moment in the writing
+       * also the only boxed thing in it — one card sitting mid-article. Scale
+       * carries it instead: the quote is simply the largest type in the body,
+       * which is how print has marked the same thing for a century.
        */
       return (
-        <figure className="relative overflow-hidden rounded-2xl border border-white/8">
-          <EmberBackdrop drift={false} />
-
-          <div className="relative p-8 sm:p-10">
-            <Quote className="h-7 w-7 text-white/50" />
-            <blockquote className="mt-5 max-w-[46ch] text-balance text-xl font-medium leading-[1.5] text-white sm:text-2xl">
-              {block.text}
-            </blockquote>
-            {block.attribution ? (
-              <figcaption className="mt-5 flex items-center gap-2.5">
-                <span aria-hidden className="h-px w-6 bg-white/50" />
-                <span className="font-mono text-[11px] uppercase tracking-[0.16em] text-white/70">
-                  {block.attribution}
-                </span>
-              </figcaption>
-            ) : null}
-          </div>
+        <figure className="py-4">
+          <blockquote className="max-w-[24ch] text-balance text-3xl font-bold leading-[1.15] tracking-tight text-white sm:text-4xl lg:text-5xl">
+            <span aria-hidden className="mr-1 text-brand-500">
+              &ldquo;
+            </span>
+            {block.text}
+            <span aria-hidden className="text-brand-500">
+              &rdquo;
+            </span>
+          </blockquote>
+          {block.attribution ? (
+            <figcaption className="mt-6 flex items-center gap-2.5">
+              <span aria-hidden className="h-px w-8 bg-brand-500" />
+              <span className="font-mono text-[10.5px] uppercase tracking-[0.2em] text-zinc-500">
+                {block.attribution}
+              </span>
+            </figcaption>
+          ) : null}
         </figure>
       );
 
@@ -223,7 +221,7 @@ function Video({ url, caption }: { url: string; caption?: string }) {
 
   return (
     <figure className="w-full">
-      <div className="relative aspect-video w-full overflow-hidden rounded-2xl border border-white/10 bg-panel-2">
+      <div className="relative aspect-video w-full overflow-hidden rounded-sm border border-white/10 bg-panel-2">
         {playing ? (
           <iframe
             src={`${embed}?autoplay=1`}

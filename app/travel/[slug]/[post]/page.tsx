@@ -3,14 +3,17 @@ import Image from "next/image";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { notFound } from "next/navigation";
-import { ArrowLeft, ArrowRight, ArrowUpRight, CalendarDays, MapPin } from "lucide-react";
+import { ArrowLeft, ArrowRight, ArrowUpRight } from "lucide-react";
 import { DetailChrome } from "@/components/layout/detail-chrome";
 import { Footer } from "@/components/layout/footer";
 import { PostBlocks } from "@/components/travel/post-blocks";
-import { PostGallery } from "@/components/travel/post-gallery";
+import { PostGalleryReel } from "@/components/travel/post-gallery-reel";
+import { HeroTitle, StatValue } from "@/components/travel/post-hero-fx";
+import { RelatedJourneys } from "@/components/travel/related-journeys";
 import { RiderLinks } from "@/components/travel/rider-links";
+import { ReadingProgress } from "@/components/travel/reading-progress";
 import { EmberBackdrop } from "@/components/fx/ember-backdrop";
-import { Reveal, RevealGroup, RevealItem, SectionHeading } from "@/components/fx/reveal";
+import { Reveal, RevealGroup, RevealItem } from "@/components/fx/reveal";
 import { getProfile } from "@/lib/content/profile";
 import { getTrips } from "@/lib/content/trips";
 import { getPost, getPosts } from "@/lib/content/posts";
@@ -25,20 +28,32 @@ const RouteMap = dynamic(() =>
 const EASE = "ease-[cubic-bezier(0.16,1,0.3,1)]";
 
 /**
- * A post is laid out as the home page is: a stack of full-width panels, each
- * opening with a SectionHeading, separated by the same 12px gutters. The
- * previous version used a sticky rail beside a narrow article — a shape that
- * appears nowhere else on this site, which is what made it read as a different
- * page however closely the details were matched.
+ * The post page, rebuilt as an editorial spread.
+ *
+ * Two earlier versions failed in opposite directions: one dressed the article
+ * in the home page's marketing panels, the other boxed it into a card layout
+ * with a rail of glass tiles. Both put chrome between the reader and the
+ * writing.
+ *
+ * There are no cards here. Structure is carried by hairline rules, an oversized
+ * numeral per section, and the width a thing is allowed to occupy — media runs
+ * the full spread, text is held to a reading measure, and the gap between the
+ * two is the layout. Metadata is monospace and small; headlines are enormous.
  */
-const SECTION = "relative px-3 py-3 sm:px-5 lg:px-6";
-const PANEL =
-  "relative mx-auto w-full max-w-[100rem] overflow-hidden rounded-[1.75rem] border border-white/8 bg-panel px-6 py-14 sm:px-10 sm:py-16 lg:px-14";
+
+/** Page gutters. Everything shares them so nothing drifts out of alignment. */
+const GUTTER = "px-5 sm:px-8 lg:px-14";
 
 /**
- * Only published posts get a prerendered path. A draft therefore 404s rather
- * than sitting on a guessable URL, which is the whole point of the flag.
+ * The reading spread: a numbered margin, then the article.
+ *
+ * The margin holds the section number and label, sticky within its own section
+ * so it stays beside the writing it names. Below `lg` it collapses and the
+ * label sits inline above the text — a 100px margin on a phone is a wasted
+ * fifth of the screen.
  */
+const SPREAD = "mx-auto grid w-full max-w-[78rem] gap-y-5 lg:grid-cols-[9rem_minmax(0,1fr)] lg:gap-x-10";
+
 export async function generateStaticParams() {
   const [trips, posts] = await Promise.all([getTrips(), getPosts()]);
 
@@ -57,13 +72,29 @@ async function resolve(slug: string, postSlug: string) {
   return post ? { trip, post, trips } : null;
 }
 
+/** Numeric and monospace — it sits in a metadata strip, not in a sentence. */
 function formatDate(date: string) {
-  return new Date(`${date}T00:00:00Z`).toLocaleDateString("en-GB", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-    timeZone: "UTC",
-  });
+  return new Date(`${date}T00:00:00Z`)
+    .toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      timeZone: "UTC",
+    })
+    .toUpperCase();
+}
+
+/**
+ * Reading time from the body text.
+ *
+ * 220 words a minute, rounded up, floor of one. Counted from the text blocks
+ * only — captions and stop notes are glanced at, not read through.
+ */
+function readingTime(blocks: { type: string; body?: string }[]): number {
+  const words = blocks
+    .filter((b) => b.type === "text")
+    .reduce((total, b) => total + (b.body ?? "").trim().split(/\s+/).filter(Boolean).length, 0);
+  return Math.max(1, Math.ceil(words / 220));
 }
 
 export async function generateMetadata({
@@ -101,123 +132,179 @@ export default async function TripPostPage({ params }: PageProps<"/travel/[slug]
   const previous = index > 0 ? siblings[index - 1] : null;
   const next = index >= 0 && index < siblings.length - 1 ? siblings[index + 1] : null;
 
-  // Every image in the body, in reading order, for the gallery section.
   const images = collectImages(post.blocks);
+  const minutes = readingTime(post.blocks);
 
   const related = post.relatedTripIds
     .map((id) => trips.find((t) => t.id === id))
     .filter((t): t is (typeof trips)[number] => Boolean(t) && t!.id !== trip.id);
 
+  // Sections are numbered in the margin, so they have to be counted in the
+  // order they actually render rather than hardcoded.
+  const order: string[] = [
+    "story",
+    ...(post.route.length ? ["route"] : []),
+    ...(images.length ? ["frames"] : []),
+    ...(post.riders.length ? ["company"] : []),
+  ];
+  const numberOf = (key: string) => String(order.indexOf(key) + 1).padStart(2, "0");
+
   return (
     <>
+      <ReadingProgress />
       <DetailChrome backHref={`/travel/${trip.slug}`} backLabel={trip.destination} />
 
-      <main className="relative flex-1 pb-3 pt-24">
-        {/* ================= Hero — the shape of the home page's ================= */}
-        <section className={cn(SECTION, "pt-0")}>
-          <div className="mx-auto w-full max-w-[100rem]">
-            <div className="relative flex min-h-[clamp(20rem,52svh,30rem)] flex-col overflow-hidden rounded-[1.75rem] border border-white/8 bg-panel sm:rounded-[2.25rem]">
-              <div className="absolute inset-0 bg-grid opacity-70" />
+      <main className="relative flex-1">
+        {/* ================= Hero ==============================================
+            Full bleed, anchored bottom-left. Centred titles read as posters;
+            an article should start where the reading starts.
+            ===================================================================== */}
+        <section className="relative flex min-h-[78svh] w-full items-end overflow-hidden">
+          {post.coverUrl ? (
+            <Image src={post.coverUrl} alt="" fill priority sizes="100vw" className="object-cover" />
+          ) : (
+            <EmberBackdrop />
+          )}
 
-              {post.coverUrl ? (
-                <Image
-                  src={post.coverUrl}
-                  alt=""
-                  fill
-                  priority
-                  sizes="100vw"
-                  className="z-[1] object-cover"
-                />
-              ) : (
-                // No cover is a normal state, so the ember treatment stands in
-                // rather than leaving a flat panel.
-                <div className="absolute inset-0 z-[1]">
-                  <EmberBackdrop />
-                </div>
-              )}
+          {/* HeroRays (React Bits LightRays) is deliberately not mounted here.
+              Its WebGL init awaits a timer before appending its canvas, which
+              loses a race with React StrictMode's double-invoked effects in
+              dev: the container stays empty and the rays never appear. The
+              wrapper is kept in post-hero-fx.tsx for when that's sorted. */}
 
-              <div className="absolute inset-0 z-[2] bg-gradient-to-t from-panel via-panel/60 to-panel/20" />
-              <div className="absolute -left-40 top-1/3 z-[2] h-[34rem] w-[34rem] rounded-full bg-brand-600/12 blur-[130px]" />
+          {/* Weighted to the bottom, where the type sits. */}
+          <div className="absolute inset-0 z-[2] bg-gradient-to-t from-void via-void/80 to-void/25" />
+          <div className="absolute inset-x-0 bottom-0 z-[2] h-40 bg-gradient-to-t from-void to-transparent" />
 
-              {/* Same two-tier masthead the hero uses: identity above, support
-                  below, flowing from the top so spare height falls to the base
-                  instead of opening a hole in the middle. */}
-              <div className="relative z-10 flex flex-1 flex-col gap-10 p-6 sm:p-9 lg:gap-12 lg:p-12">
-                <div>
-                  <Reveal direction="up">
-                    <Link
-                      href={`/travel/${trip.slug}`}
-                      className="group inline-flex items-center gap-2 rounded-full border border-white/15 bg-void/40 py-1.5 pl-3 pr-3.5 font-mono text-[10px] uppercase tracking-[0.18em] text-white backdrop-blur-md transition-all duration-300 hover:border-brand-500 hover:bg-brand-500"
-                    >
-                      <MapPin className="h-3 w-3" />
-                      {trip.destination}
-                      <ArrowUpRight className="h-3 w-3 transition-transform duration-300 group-hover:rotate-45" />
-                    </Link>
-                  </Reveal>
-
-                  <Reveal direction="up" delay={0.08}>
-                    <h1 className="display-name mt-6 max-w-[20ch] text-balance text-white [font-size:clamp(2rem,5vw,4.75rem)]">
-                      {post.title}
-                    </h1>
-                  </Reveal>
-
+          <div className={cn("relative z-10 w-full pb-16 pt-32 sm:pb-20", GUTTER)}>
+            <div className="mx-auto w-full max-w-[78rem]">
+              {/* Metadata strip: everything you'd want before committing to
+                  read, in one monospace line. */}
+              <Reveal direction="up">
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-2 font-mono text-[10.5px] uppercase tracking-[0.2em] text-zinc-400 sm:text-[11px]">
+                  <Link
+                    href={`/travel/${trip.slug}`}
+                    className="group inline-flex items-center gap-1.5 text-brand-400 transition-colors hover:text-brand-300"
+                  >
+                    {trip.destination}
+                    <ArrowUpRight className="h-3 w-3 transition-transform duration-300 group-hover:rotate-45" />
+                  </Link>
                   {post.date ? (
-                    <Reveal direction="up" delay={0.16}>
-                      <div className="mt-5 flex items-center gap-3 text-base font-medium text-zinc-400 sm:text-lg">
-                        <span className="h-px w-8 shrink-0 bg-brand-500" />
-                        <span className="inline-flex items-center gap-2">
-                          <CalendarDays className="h-4 w-4 text-brand-500" />
-                          <time dateTime={post.date}>{formatDate(post.date)}</time>
-                        </span>
-                      </div>
-                    </Reveal>
+                    <>
+                      <Rule />
+                      <time dateTime={post.date}>{formatDate(post.date)}</time>
+                    </>
+                  ) : null}
+                  <Rule />
+                  <span>{minutes} min read</span>
+                  {post.route.length ? (
+                    <>
+                      <Rule />
+                      <span>{post.route.length} stops</span>
+                    </>
                   ) : null}
                 </div>
+              </Reveal>
 
-                {post.excerpt ? (
-                  <Reveal direction="up" delay={0.24}>
-                    <p className="max-w-2xl text-pretty text-sm leading-relaxed text-zinc-300 sm:text-base">
-                      {post.excerpt}
-                    </p>
-                  </Reveal>
-                ) : null}
-              </div>
+              {/* The one piece of display type on the page, and it is very
+                  large — at this scale the title does the work that a panel,
+                  a border and an eyebrow were doing before. */}
+              <h1 className="display-name mt-7 max-w-[16ch] text-white [font-size:clamp(2.5rem,7.5vw,6.5rem)] [line-height:0.94]">
+                <HeroTitle text={post.title} />
+              </h1>
+
+              {post.excerpt ? (
+                <Reveal direction="up" delay={0.16}>
+                  <p className="mt-8 max-w-[38rem] text-pretty text-[15.5px] leading-relaxed text-zinc-300 sm:text-[17px]">
+                    {post.excerpt}
+                  </p>
+                </Reveal>
+              ) : null}
             </div>
           </div>
         </section>
 
-        {/* ================= Numbers — the ember panel from Capabilities ======== */}
+        {/* ================= Figures ============================================
+            A full-bleed band of numerals divided by hairlines. No cards: at this
+            size the numbers are the graphic.
+            ===================================================================== */}
         {post.stats.length ? (
-          <section className={SECTION}>
-            <div className="relative mx-auto w-full max-w-[100rem] overflow-hidden rounded-[1.75rem] border border-white/8">
-              <EmberBackdrop drift={false} />
+          <section className={cn("w-full border-y border-white/10", GUTTER)}>
+            <RevealGroup
+              className="mx-auto grid w-full max-w-[78rem] grid-cols-2 lg:grid-cols-4"
+              stagger={0.07}
+            >
+              {post.stats.map((stat, i) => (
+                <RevealItem
+                  key={stat.label}
+                  className={cn(
+                    "py-8 sm:py-12",
+                    // Hairlines between, never around — a closing border on the
+                    // last column would box the band back into a card.
+                    "border-white/10 pr-6",
+                    i % 2 === 1 && "border-l pl-6 lg:pl-8",
+                    i >= 2 && "border-t lg:border-t-0",
+                    i % 4 !== 0 && "lg:border-l lg:pl-8"
+                  )}
+                >
+                  <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-500">
+                    {stat.label}
+                  </p>
+                  <p className="mt-3 text-4xl font-bold tabular-nums tracking-tight text-white sm:text-5xl lg:text-[3.5rem] lg:leading-[1]">
+                    <StatValue value={stat.value} />
+                  </p>
+                </RevealItem>
+              ))}
+            </RevealGroup>
+          </section>
+        ) : null}
 
-              {/* Palette inverts on the warm ground — the orange accent would
-                  disappear into it. */}
-              <div className="relative px-6 py-14 sm:px-10 sm:py-16 lg:px-14">
-                <SectionHeading
-                  eyebrow="By the numbers"
-                  tone="ember"
-                  title={
-                    <>
-                      What it took
-                      <br />
-                      to get there
-                    </>
-                  }
-                />
+        {/* ================= The writing ======================================== */}
+        <section className={cn("w-full pt-20 sm:pt-28", GUTTER)}>
+          <div className={SPREAD}>
+            <Margin number={numberOf("story")} label="The Story" />
+            <div className="min-w-0">
+              <PostBlocks blocks={post.blocks} />
+            </div>
+          </div>
+        </section>
+
+        {/* ================= Route ==============================================
+            Map full bleed, stops beneath it in a numbered list that stays
+            legible whether there are three or fifteen.
+            ===================================================================== */}
+        {post.route.length ? (
+          <section className={cn("w-full pt-24 sm:pt-32", GUTTER)}>
+            <div className={SPREAD}>
+              <Margin number={numberOf("route")} label="The Route" />
+
+              <div className="min-w-0">
+                <Reveal direction="up">
+                  <RouteMap waypoints={post.route} className="h-[26rem] sm:h-[34rem]" />
+                </Reveal>
 
                 <RevealGroup
-                  className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4"
-                  stagger={0.08}
+                  className="mt-10 grid gap-x-10 gap-y-0 sm:grid-cols-2"
+                  stagger={0.04}
                 >
-                  {post.stats.map((stat) => (
-                    <RevealItem key={stat.label}>
-                      <div className="border-t border-white/25 pt-5">
-                        <p className="font-mono text-4xl font-bold tracking-tight text-white sm:text-5xl">
-                          {stat.value}
+                  {post.route.map((stop, i) => (
+                    <RevealItem
+                      key={`${stop.name}-${i}`}
+                      className="flex gap-5 border-t border-white/10 py-5"
+                    >
+                      <span className="font-mono text-[11px] leading-6 text-brand-500">
+                        {String(i + 1).padStart(2, "0")}
+                      </span>
+                      <div className="min-w-0">
+                        <h3 className="text-[15.5px] font-semibold text-white">{stop.name}</h3>
+                        {stop.note ? (
+                          <p className="mt-1.5 text-[13.5px] leading-relaxed text-zinc-500">
+                            {stop.note}
+                          </p>
+                        ) : null}
+                        <p className="mt-2 font-mono text-[10.5px] tracking-wider text-zinc-700">
+                          {stop.lat.toFixed(3)}, {stop.lng.toFixed(3)}
                         </p>
-                        <p className="mt-2 text-[13px] leading-tight text-white/70">{stat.label}</p>
                       </div>
                     </RevealItem>
                   ))}
@@ -227,287 +314,83 @@ export default async function TripPostPage({ params }: PageProps<"/travel/[slug]
           </section>
         ) : null}
 
-        {/* ================= The write-up ======================================= */}
-        <section className={SECTION}>
-          <div className={PANEL}>
-            <SectionHeading
-              eyebrow="The Write-up"
-              title={
-                <>
-                  How it
-                  <br />
-                  <span className="text-brand-500">actually went</span>
-                </>
-              }
-            />
-
-            <div className="mt-12">
-              <PostBlocks blocks={post.blocks} />
-            </div>
-          </div>
-        </section>
-
-        {/* ================= Gallery — every frame, bento-tiled ================= */}
+        {/* ================= Frames ============================================= */}
         {images.length ? (
-          <section className={SECTION}>
-            <div className={PANEL}>
-              <SectionHeading
-                eyebrow="The Gallery"
-                title={
-                  <>
-                    {images.length} frames,
-                    <br />
-                    <span className="text-brand-500">full size</span>
-                  </>
-                }
-                description="Every photo from this leg. Click one to open the viewer — arrow keys move between them."
+          <section className={cn("w-full pt-24 sm:pt-32", GUTTER)}>
+            <div className={SPREAD}>
+              <Margin
+                number={numberOf("frames")}
+                label="Frames"
+                note={`${images.length} ${images.length === 1 ? "photograph" : "photographs"}`}
               />
-
-              <div className="mt-12">
-                <PostGallery images={images} />
+              <div className="min-w-0">
+                <PostGalleryReel images={images} />
               </div>
             </div>
           </section>
         ) : null}
 
-        {/* ================= Route ==============================================
-            Placed after the writing, not before it. Leading with a map asks you
-            to study the geography before you know why it matters.
-            ===================================================================== */}
-        {post.route.length ? (
-          <section className={SECTION}>
-            <div className={PANEL}>
-              <SectionHeading
-                eyebrow="The Route"
-                title={
-                  <>
-                    {post.route.length} {post.route.length === 1 ? "stop" : "stops"},
-                    <br />
-                    <span className="text-brand-500">start to finish</span>
-                  </>
-                }
-                description="Drag to look around, or click the map to enable scroll zoom. Tap any pin for its note."
-              />
-
-              {/* Map full width, stops in a grid beneath.
-
-                  One full-width row per stop was fine for three and unusable
-                  for fifteen — the section became a scroll of near-identical
-                  rows. Compact cards in a responsive grid stay legible at any
-                  count, and the map above is doing the spatial work anyway. */}
-              <Reveal direction="up" className="mt-12">
-                <div className="relative overflow-hidden rounded-2xl border border-white/8 bg-panel-2 p-3 sm:p-4">
-                  <RouteMap
-                    waypoints={post.route}
-                    className="h-[20rem] sm:h-[26rem] lg:h-[32rem]"
-                  />
-                  <div className="pointer-events-none absolute left-6 top-6 sm:left-7 sm:top-7">
-                    <p className="eyebrow text-zinc-500">Drag to explore</p>
-                  </div>
-                </div>
-              </Reveal>
-
-              <RevealGroup
-                className="mt-4 grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3"
-                stagger={0.04}
-              >
-                {post.route.map((stop, i) => (
-                  <RevealItem key={`${stop.name}-${i}`}>
-                    <div className="group relative h-full overflow-hidden rounded-xl border border-white/8 bg-panel-2 transition-colors duration-300 hover:border-brand-500/40">
-                      <span
-                        aria-hidden
-                        className={cn(
-                          "absolute inset-0 origin-left scale-x-0 bg-gradient-to-r from-brand-500/12 to-transparent transition-transform duration-500",
-                          EASE,
-                          "group-hover:scale-x-100"
-                        )}
-                      />
-
-                      <div className="relative flex gap-3 p-4">
-                        <span className="ember-fill-hot mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full font-mono text-[10px] font-bold text-white">
-                          {i + 1}
-                        </span>
-
-                        <div
-                          className={cn(
-                            "min-w-0 flex-1 transition-transform duration-500",
-                            EASE,
-                            "group-hover:translate-x-1"
-                          )}
-                        >
-                          <p className="truncate text-[13.5px] font-semibold text-white transition-colors duration-300 group-hover:text-brand-400">
-                            {stop.name}
-                          </p>
-                          {stop.note ? (
-                            <p className="mt-1 line-clamp-2 text-[12px] leading-relaxed text-zinc-500">
-                              {stop.note}
-                            </p>
-                          ) : null}
-                          <p className="mt-2 font-mono text-[10px] text-zinc-600">
-                            {stop.lat.toFixed(3)}°, {stop.lng.toFixed(3)}°
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </RevealItem>
-                ))}
-              </RevealGroup>
-            </div>
-          </section>
-        ) : null}
-
-        {/* ================= Riders ============================================= */}
+        {/* ================= Company ============================================ */}
         {post.riders.length ? (
-          <section className={SECTION}>
-            <div className={PANEL}>
-              <SectionHeading
-                eyebrow="Company"
-                title={
-                  <>
-                    Who I
-                    <br />
-                    <span className="text-brand-500">rode with</span>
-                  </>
-                }
-                description="The people who were there for it — follow along with them too."
-              />
-
-              <Reveal direction="up" delay={0.1} className="mt-12">
-                <RiderLinks riders={post.riders} />
-              </Reveal>
+          <section className={cn("w-full pt-24 sm:pt-32", GUTTER)}>
+            <div className={SPREAD}>
+              <Margin number={numberOf("company")} label="Company" />
+              <div className="min-w-0">
+                <Reveal direction="up">
+                  <RiderLinks riders={post.riders} />
+                </Reveal>
+              </div>
             </div>
           </section>
         ) : null}
 
-        {/* ================= Related journeys =================================== */}
+        {/* ================= Elsewhere ==========================================
+            Oversized list rows rather than cards — the same treatment the
+            related trips get everywhere else, at editorial scale.
+            ===================================================================== */}
         {related.length ? (
-          <section className={SECTION}>
-            <div className={PANEL}>
-              <SectionHeading
-                eyebrow="Elsewhere"
-                title={
-                  <>
-                    Other roads,
-                    <br />
-                    <span className="text-brand-500">other years</span>
-                  </>
-                }
-              />
+          <section className={cn("w-full pt-28 sm:pt-36", GUTTER)}>
+            <div className="mx-auto w-full max-w-[78rem]">
+              <Reveal direction="up">
+                <p className="font-mono text-[10.5px] uppercase tracking-[0.2em] text-zinc-500">
+                  Elsewhere
+                </p>
+              </Reveal>
 
-              <RevealGroup className="mt-12 border-t border-white/8" stagger={0.08}>
-                {related.map((other, i) => (
-                  <RevealItem key={other.id}>
-                    <div className="border-b border-white/8">
-                      <Link
-                        href={`/travel/${other.slug}`}
-                        className="group relative block overflow-hidden px-4 py-7"
-                      >
-                        <span
-                          aria-hidden
-                          className={cn(
-                            "absolute inset-0 origin-left scale-x-0 bg-gradient-to-r from-brand-500/12 to-transparent transition-transform duration-500",
-                            EASE,
-                            "group-hover:scale-x-100"
-                          )}
-                        />
-
-                        <div className="relative flex items-center gap-5">
-                          <span className="font-mono text-[11px] text-zinc-600 transition-colors duration-300 group-hover:text-brand-500">
-                            {String(i + 1).padStart(2, "0")}
-                          </span>
-
-                          <div
-                            className={cn(
-                              "min-w-0 flex-1 transition-transform duration-500",
-                              EASE,
-                              "group-hover:translate-x-2"
-                            )}
-                          >
-                            <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-                              <h3 className="text-xl font-semibold text-white transition-colors duration-300 group-hover:text-brand-400 sm:text-2xl">
-                                {other.destination}
-                              </h3>
-                              <span className="font-mono text-[11px] text-zinc-600">
-                                {other.year}
-                              </span>
-                            </div>
-                            <p className="mt-1 text-[13px] text-zinc-500">{other.region}</p>
-                          </div>
-
-                          <span
-                            aria-hidden
-                            className={cn(
-                              "hidden h-10 w-10 shrink-0 translate-x-3 items-center justify-center rounded-full border border-white/12 opacity-0 transition-all duration-500 sm:flex",
-                              EASE,
-                              "group-hover:translate-x-0 group-hover:border-brand-500 group-hover:bg-brand-500 group-hover:opacity-100"
-                            )}
-                          >
-                            <ArrowUpRight className="h-4 w-4 text-white transition-transform duration-300 group-hover:rotate-45" />
-                          </span>
-                        </div>
-                      </Link>
-                    </div>
-                  </RevealItem>
-                ))}
-              </RevealGroup>
+              <div className="mt-8 border-t border-white/10">
+                <RelatedJourneys
+                  items={related.map((other) => ({
+                    slug: other.slug,
+                    destination: other.destination,
+                    coverUrl: other.coverUrl,
+                  }))}
+                />
+              </div>
             </div>
           </section>
         ) : null}
 
         {/* ================= Prev / next ======================================== */}
         {previous || next ? (
-          <section className={SECTION}>
-            <div className="mx-auto grid w-full max-w-[100rem] gap-3 sm:grid-cols-2">
+          <section className={cn("w-full pb-24 pt-28 sm:pt-36", GUTTER)}>
+            <div className="mx-auto grid w-full max-w-[78rem] gap-px overflow-hidden border-y border-white/10 sm:grid-cols-2">
               {previous ? (
-                <Link
+                <Adjacent
                   href={`/travel/${trip.slug}/${previous.slug}`}
-                  className="group relative overflow-hidden rounded-[1.75rem] border border-white/8 bg-panel p-8 transition-all duration-300 hover:border-brand-500/40 sm:p-10"
-                >
-                  <span
-                    aria-hidden
-                    className={cn(
-                      "absolute inset-0 origin-left scale-x-0 bg-gradient-to-r from-brand-500/12 to-transparent transition-transform duration-500",
-                      EASE,
-                      "group-hover:scale-x-100"
-                    )}
-                  />
-                  <span className="relative">
-                    <span className="eyebrow flex items-center gap-1.5 text-zinc-600">
-                      <ArrowLeft className="h-3 w-3 transition-transform duration-300 group-hover:-translate-x-1" />
-                      Previous
-                    </span>
-                    <span className="mt-3 block text-xl font-semibold text-white transition-colors duration-300 group-hover:text-brand-400 sm:text-2xl">
-                      {previous.title}
-                    </span>
-                  </span>
-                </Link>
+                  label="Previous"
+                  title={previous.title}
+                  direction="back"
+                />
               ) : (
-                <span />
+                <span className="hidden sm:block" />
               )}
-
               {next ? (
-                <Link
+                <Adjacent
                   href={`/travel/${trip.slug}/${next.slug}`}
-                  className="group relative overflow-hidden rounded-[1.75rem] border border-white/8 bg-panel p-8 text-right transition-all duration-300 hover:border-brand-500/40 sm:col-start-2 sm:p-10"
-                >
-                  <span
-                    aria-hidden
-                    className={cn(
-                      "absolute inset-0 origin-right scale-x-0 bg-gradient-to-l from-brand-500/12 to-transparent transition-transform duration-500",
-                      EASE,
-                      "group-hover:scale-x-100"
-                    )}
-                  />
-                  <span className="relative">
-                    <span className="eyebrow flex items-center justify-end gap-1.5 text-zinc-600">
-                      Next
-                      <ArrowRight className="h-3 w-3 transition-transform duration-300 group-hover:translate-x-1" />
-                    </span>
-                    <span className="mt-3 block text-xl font-semibold text-white transition-colors duration-300 group-hover:text-brand-400 sm:text-2xl">
-                      {next.title}
-                    </span>
-                  </span>
-                </Link>
+                  label="Next"
+                  title={next.title}
+                  direction="forward"
+                />
               ) : null}
             </div>
           </section>
@@ -517,4 +400,90 @@ export default async function TripPostPage({ params }: PageProps<"/travel/[slug]
       <Footer />
     </>
   );
+}
+
+/* -------------------------------------------------------------------------- */
+/* Spread furniture                                                            */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * The numbered margin beside a section.
+ *
+ * Sticky within its own section, so the number tracks the writing it belongs to
+ * and releases when the next section arrives — the effect a printed running
+ * head has, without a fixed bar taking up screen.
+ */
+function Margin({ number, label, note }: { number: string; label: string; note?: string }) {
+  return (
+    <div className="lg:sticky lg:top-28 lg:self-start">
+      <div className="flex items-baseline gap-3 lg:block">
+        <p className="font-mono text-[11px] tabular-nums text-brand-500 lg:text-[13px]">{number}</p>
+        <p className="font-mono text-[10.5px] uppercase tracking-[0.2em] text-zinc-500 lg:mt-3">
+          {label}
+        </p>
+      </div>
+      {note ? (
+        <p className="mt-2 hidden font-mono text-[10.5px] tracking-wider text-zinc-700 lg:block">
+          {note}
+        </p>
+      ) : null}
+      <span aria-hidden className="mt-5 hidden h-px w-10 bg-white/15 lg:block" />
+    </div>
+  );
+}
+
+function Adjacent({
+  href,
+  label,
+  title,
+  direction,
+}: {
+  href: string;
+  label: string;
+  title: string;
+  direction: "back" | "forward";
+}) {
+  const Icon = direction === "back" ? ArrowLeft : ArrowRight;
+
+  return (
+    <Link
+      href={href}
+      className={cn(
+        "group relative overflow-hidden px-2 py-10 transition-colors sm:px-6 sm:py-14",
+        direction === "forward" && "text-right sm:col-start-2"
+      )}
+    >
+      <span
+        aria-hidden
+        className={cn(
+          "absolute inset-0 scale-x-0 bg-gradient-to-r from-brand-500/10 to-transparent transition-transform duration-500",
+          direction === "back" ? "origin-left" : "origin-right bg-gradient-to-l",
+          EASE,
+          "group-hover:scale-x-100"
+        )}
+      />
+      <span
+        className={cn(
+          "relative flex items-center gap-2 font-mono text-[10.5px] uppercase tracking-[0.2em] text-zinc-500",
+          direction === "forward" && "justify-end"
+        )}
+      >
+        {direction === "back" ? (
+          <Icon className="h-3 w-3 transition-transform duration-300 group-hover:-translate-x-1" />
+        ) : null}
+        {label}
+        {direction === "forward" ? (
+          <Icon className="h-3 w-3 transition-transform duration-300 group-hover:translate-x-1" />
+        ) : null}
+      </span>
+      <span className="relative mt-4 block text-2xl font-bold tracking-tight text-white transition-colors duration-300 group-hover:text-brand-400 sm:text-3xl">
+        {title}
+      </span>
+    </Link>
+  );
+}
+
+/** The divider between metadata items. */
+function Rule() {
+  return <span aria-hidden className="h-3 w-px bg-white/20" />;
 }
