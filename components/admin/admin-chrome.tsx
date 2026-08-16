@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { LogOut, ExternalLink, Loader2 } from "lucide-react";
 import { getFirebaseAuth } from "@/lib/firebase/client";
 import { useProfile } from "@/components/providers/profile-provider";
+import { AdminNav } from "@/components/admin/admin-nav";
 
 /** Top bar for the admin area: who you are, and the way out. */
 export function AdminChrome({ email }: { email: string }) {
@@ -29,15 +30,16 @@ export function AdminChrome({ email }: { email: string }) {
   return (
     <header className="sticky top-0 z-50 border-b border-white/8 bg-panel/95 backdrop-blur-md">
       <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-4 px-4 py-3.5 sm:px-6">
-        <div className="flex items-center gap-3">
-          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-500 font-mono text-[11px] font-bold text-[var(--brand-ink)]">
+        <Link href="/admin" className="group flex items-center gap-3">
+          {/* Same mark as the public nav, on the same rung of the ember ramp */}
+          <span className="ember-fill-hot flex h-8 w-8 items-center justify-center rounded-lg font-mono text-[11px] font-bold text-[var(--brand-ink)] group-hover:ember-fill-hotter">
             {profile.initials}
           </span>
           <div className="min-w-0">
             <p className="text-sm font-semibold text-white">Admin</p>
             <p className="truncate font-mono text-[11px] text-zinc-500">{email}</p>
           </div>
-        </div>
+        </Link>
 
         <div className="flex items-center gap-2">
           <Link
@@ -62,6 +64,10 @@ export function AdminChrome({ email }: { email: string }) {
             Sign out
           </button>
         </div>
+      </div>
+
+      <div className="mx-auto w-full max-w-6xl px-4 pb-2.5 sm:px-6">
+        <AdminNav />
       </div>
     </header>
   );

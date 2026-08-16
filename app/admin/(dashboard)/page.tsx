@@ -1,153 +1,170 @@
 import Link from "next/link";
-import { ArrowUpRight, Camera, Film, FolderGit2, LayoutList, MapPin, Milestone, Type, UserRound } from "lucide-react";
+import {
+  ArrowUpRight,
+  Camera,
+  Film,
+  FolderGit2,
+  LayoutList,
+  MapPin,
+  Milestone,
+  NotebookPen,
+  Type,
+  UserRound,
+} from "lucide-react";
 import { getSectionsFresh } from "@/lib/content/sections";
 import { getProjectsFresh } from "@/lib/content/projects";
 import { getPhotosFresh } from "@/lib/content/photos";
 import { getTripsFresh } from "@/lib/content/trips";
 import { getFilmsFresh } from "@/lib/content/films";
+import { getPostsFresh } from "@/lib/content/posts";
+import { getThemeFresh } from "@/lib/content/theme";
 import { SectionManager } from "@/components/admin/section-manager";
 import { ThemeEditor } from "@/components/admin/theme-editor";
-import { getThemeFresh } from "@/lib/content/theme";
+import { Card, Eyebrow, Group } from "@/components/admin/admin-ui";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export default async function AdminDashboard() {
-  const [theme, sections, projects, photos, trips, films] = await Promise.all([
+  const [theme, sections, projects, photos, trips, films, posts] = await Promise.all([
     getThemeFresh(),
     getSectionsFresh(),
     getProjectsFresh(),
     getPhotosFresh(),
     getTripsFresh(),
     getFilmsFresh(),
+    getPostsFresh(),
   ]);
 
-  const counts = [
-    { label: "Projects", value: projects.length, icon: FolderGit2, href: "/admin/projects" },
-    { label: "Photos", value: photos.length, icon: Camera, href: "/admin/photos" },
-    { label: "Trips", value: trips.length, icon: MapPin, href: "/admin/trips" },
-    { label: "Films", value: films.length, icon: Film, href: "/admin/films" },
-  ];
+  const published = posts.filter((post) => post.published).length;
+  const drafts = posts.length - published;
 
   return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight text-white sm:text-3xl">Overview</h1>
-        <p className="mt-2 text-sm text-zinc-500">
-          Changes publish immediately — the live pages revalidate in the background.
+    <div className="space-y-14 pb-8">
+      {/* ---------------- Masthead ---------------- */}
+      <header>
+        <Eyebrow>Admin</Eyebrow>
+        <h1 className="mt-4 text-3xl font-bold leading-[1.05] tracking-tight text-white sm:text-4xl">
+          Everything on the site,
+          <br />
+          <span className="text-brand-500">editable from here</span>
+        </h1>
+        <p className="mt-4 max-w-2xl text-sm leading-relaxed text-zinc-500">
+          Changes publish immediately — the live pages revalidate in the background. Nothing here
+          needs a deploy.
         </p>
-      </div>
+      </header>
 
-      {/* Counts */}
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        {counts.map(({ label, value, icon: Icon, href }) => {
-          const body = (
+      {/* ---------------- Collections ---------------- */}
+      <Group
+        eyebrow="Collections"
+        lead="The things"
+        accent="you've made"
+        description="Ordering decides what reaches the home page; everything else lives on its index route."
+      >
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <Card
+            href="/admin/projects"
+            icon={FolderGit2}
+            title="Projects"
+            description="Case studies, stacks and cover images."
+            count={projects.length}
+          />
+          <Card
+            href="/admin/photos"
+            icon={Camera}
+            title="Photos"
+            description="Frames, captions and EXIF."
+            count={photos.length}
+          />
+          <Card
+            href="/admin/films"
+            icon={Film}
+            title="Films"
+            description="Titles, roles and embeds."
+            count={films.length}
+          />
+          <Card
+            href="/admin/trips"
+            icon={MapPin}
+            title="Trips"
+            description="Guides, itineraries and covers."
+            count={trips.length}
+          />
+        </div>
+
+        {/* Posts hang off trips rather than having a route of their own, so
+            they get a line here instead of a card that would mislead. */}
+        <p className="mt-3 flex flex-wrap items-center gap-2 rounded-2xl border border-white/8 bg-panel px-5 py-4 text-[12px] text-zinc-500">
+          <NotebookPen className="h-3.5 w-3.5 text-brand-500" />
+          <span className="font-mono text-white">{published}</span> published blog{" "}
+          {published === 1 ? "post" : "posts"}
+          {drafts ? (
             <>
-              <Icon className="h-4 w-4 text-zinc-600" />
-              <p className="mt-4 font-mono text-3xl font-bold text-white">{value}</p>
-              <p className="mt-1 text-[12px] text-zinc-500">{label}</p>
+              {" · "}
+              <span className="font-mono text-white">{drafts}</span>{" "}
+              {drafts === 1 ? "draft" : "drafts"}
             </>
-          );
+          ) : null}
+          <span className="text-zinc-600">— written inside a trip.</span>
+        </p>
+      </Group>
 
-          return href ? (
-            <Link
-              key={label}
-              href={href}
-              className="group rounded-2xl border border-white/8 bg-panel p-5 transition-colors hover:border-brand-500/40"
-            >
-              {body}
-              <span className="mt-3 inline-flex items-center gap-1 text-[11px] font-medium text-brand-400 opacity-0 transition-opacity group-hover:opacity-100">
-                Manage <ArrowUpRight className="h-3 w-3" />
-              </span>
-            </Link>
-          ) : (
-            <div key={label} className="rounded-2xl border border-white/8 bg-panel p-5">
-              {body}
-              <span className="mt-3 block text-[11px] text-zinc-700">Editing in a later phase</span>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Everything identifying you — name, bio, contact, portrait, links */}
-      <Link
-        href="/admin/profile"
-        className="group flex items-center justify-between gap-4 rounded-2xl border border-white/8 bg-panel p-6 transition-colors hover:border-brand-500/40"
+      {/* ---------------- Words ---------------- */}
+      <Group
+        eyebrow="Words"
+        lead="What the site"
+        accent="says about you"
+        description="Your identity, the headline above each section, and the card lists inside them."
       >
-        <span className="min-w-0">
-          <span className="flex items-center gap-2 text-sm font-semibold text-white">
-            <UserRound className="h-4 w-4 text-brand-500" />
-            Profile
-          </span>
-          <span className="mt-1 block text-[11px] leading-relaxed text-zinc-600">
-            Name, rotating roles, bio, contact details, portrait, tech strip and social links.
-          </span>
-        </span>
-        <ArrowUpRight className="h-4 w-4 shrink-0 text-zinc-600 transition-all group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-brand-400" />
-      </Link>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <Card
+            href="/admin/profile"
+            icon={UserRound}
+            title="Profile & identity"
+            description="Name, rotating roles, bio, contact details, portrait, tech strip and social links."
+          />
+          <Card
+            href="/admin/copy"
+            icon={Type}
+            title="Section copy"
+            description="The eyebrow, headline and description above all nine sections."
+          />
+          <Card
+            href="/admin/timeline"
+            icon={Milestone}
+            title="Journey"
+            description="Roles, education, honours and milestones across both tracks."
+          />
+          <Card
+            href="/admin/lists"
+            icon={LayoutList}
+            title="Services & skills"
+            description="The cards under the hero, the stat counters, principles and the skill matrix."
+          />
+        </div>
+      </Group>
 
-      {/* Every section's eyebrow, headline and description */}
-      <Link
-        href="/admin/copy"
-        className="group flex items-center justify-between gap-4 rounded-2xl border border-white/8 bg-panel p-6 transition-colors hover:border-brand-500/40"
+      {/* ---------------- Appearance ---------------- */}
+      <Group
+        eyebrow="Appearance"
+        lead="How it"
+        accent="looks and flows"
+        description="Colour drives the whole accent ramp; the order below is the order visitors scroll through."
       >
-        <span className="min-w-0">
-          <span className="flex items-center gap-2 text-sm font-semibold text-white">
-            <Type className="h-4 w-4 text-brand-500" />
-            Section copy
-          </span>
-          <span className="mt-1 block text-[11px] leading-relaxed text-zinc-600">
-            The eyebrow, headline and description above all nine sections.
-          </span>
-        </span>
-        <ArrowUpRight className="h-4 w-4 shrink-0 text-zinc-600 transition-all group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-brand-400" />
-      </Link>
-
-      {/* The repeating card lists behind Services and About */}
-      <Link
-        href="/admin/lists"
-        className="group flex items-center justify-between gap-4 rounded-2xl border border-white/8 bg-panel p-6 transition-colors hover:border-brand-500/40"
-      >
-        <span className="min-w-0">
-          <span className="flex items-center gap-2 text-sm font-semibold text-white">
-            <LayoutList className="h-4 w-4 text-brand-500" />
-            Services, numbers, principles &amp; skills
-          </span>
-          <span className="mt-1 block text-[11px] leading-relaxed text-zinc-600">
-            The cards under the hero, the stat counters, and everything inside About.
-          </span>
-        </span>
-        <ArrowUpRight className="h-4 w-4 shrink-0 text-zinc-600 transition-all group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-brand-400" />
-      </Link>
-
-      {/* Career and creative timeline */}
-      <Link
-        href="/admin/timeline"
-        className="group flex items-center justify-between gap-4 rounded-2xl border border-white/8 bg-panel p-6 transition-colors hover:border-brand-500/40"
-      >
-        <span className="min-w-0">
-          <span className="flex items-center gap-2 text-sm font-semibold text-white">
-            <Milestone className="h-4 w-4 text-brand-500" />
-            Journey
-          </span>
-          <span className="mt-1 block text-[11px] leading-relaxed text-zinc-600">
-            Roles, education, honours and milestones across both tracks.
-          </span>
-        </span>
-        <ArrowUpRight className="h-4 w-4 shrink-0 text-zinc-600 transition-all group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-brand-400" />
-      </Link>
-
-      <ThemeEditor initial={theme} />
-
-      <SectionManager sections={sections} />
+        <div className="space-y-3">
+          <ThemeEditor initial={theme} />
+          <SectionManager sections={sections} />
+        </div>
+      </Group>
 
       <Link
         href="/"
         target="_blank"
-        className="inline-flex items-center gap-1.5 text-sm font-medium text-brand-400 transition-colors hover:text-brand-300"
+        className="group inline-flex items-center gap-1.5 text-sm font-medium text-brand-400 transition-colors hover:text-brand-300"
       >
         Open the live site
-        <ArrowUpRight className="h-3.5 w-3.5" />
+        <ArrowUpRight className="h-3.5 w-3.5 transition-transform duration-300 group-hover:rotate-45" />
       </Link>
     </div>
   );
