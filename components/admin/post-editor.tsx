@@ -30,7 +30,9 @@ const BLOCK_META: Record<BlockType, { label: string; body: string; caption?: str
   text: { label: "Paragraph", body: "Text — blank lines separate paragraphs", textarea: true },
   heading: { label: "Heading", body: "Heading" },
   image: { label: "Image", body: "Image", caption: "Caption (optional)" },
-  gallery: { label: "Gallery", body: "Images", caption: "" },
+  // Renders nothing where it sits — it's the bulk way to push frames into the
+  // gallery section. The label has to say so or it looks broken after saving.
+  gallery: { label: "Add to gallery", body: "Images", caption: "" },
   quote: { label: "Pull quote", body: "Quote", caption: "Attribution (optional)", textarea: true },
   video: { label: "Video", body: "YouTube URL", caption: "Caption (optional)" },
 };
@@ -329,6 +331,12 @@ export function PostEditor({
                     {block.type === "image" || block.type === "gallery" ? (
                       <>
                         <input type="hidden" name="blockBody" value={block.body} />
+                        {block.type === "gallery" ? (
+                          <p className="rounded-lg border border-white/8 bg-panel px-3 py-2 text-[11px] leading-relaxed text-zinc-500">
+                            These don&apos;t appear here in the post — they go into the gallery
+                            section at the bottom, alongside every other image.
+                          </p>
+                        ) : null}
                         <MediaGrid
                           files={media}
                           value={block.body}

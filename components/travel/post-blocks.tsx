@@ -23,26 +23,19 @@ import { cn } from "@/lib/utils";
  */
 
 /**
- * Text sits on a reading measure; media runs the full column.
+ * Text carries a reading measure; everything else spans the panel.
  *
- * A long post set at the same width as its photographs is tiring to read. In
- * this column the prose was running 105 characters a line — well past the 60–75
- * the eye tracks comfortably. Constraining only the text gives the images room
- * and gives the page its rhythm, without either needing to know about the other.
+ * The section runs edge to edge like the rest of the site, but prose can't:
+ * unconstrained it ran 105 characters a line here, well past the 60–75 the eye
+ * tracks comfortably. Only the text is capped, so the layout is full width
+ * while the reading stays a sane length. Flush left, never centred — every
+ * other section on this site starts at the same left edge.
  *
  * Not `ch`: that unit measures the "0" glyph, which in this typeface is 12.4px
- * against an average prose character of about 7.6px, so `68ch` resolved to 846px
- * and never applied. A fixed measure is both accurate and predictable — 34rem
- * lands at roughly 72 characters at this size.
+ * against an average prose character of about 7.6px, so the `68ch` first tried
+ * here resolved to 846px and never applied at all.
  */
-const MEASURE = "max-w-[34rem]";
-
-/**
- * Media runs wider than the text but well short of the panel. Full-width
- * imagery turned the post into a slideshow; this keeps a photo a beat in the
- * writing. The gallery section is where images get to be big.
- */
-const MEDIA = "max-w-[44rem]";
+const MEASURE = "max-w-[36rem]";
 
 const EASE = "ease-[cubic-bezier(0.16,1,0.3,1)]";
 
@@ -61,10 +54,9 @@ export function PostBlocks({ blocks }: { blocks: PostBlock[] }) {
 
   return (
     <>
-      {/* Centred in the panel rather than pinned left. The text measure is far
-          narrower than the panel by design, and left-aligning it left the right
-          half of every section empty. */}
-      <div className="mx-auto flex w-full max-w-[44rem] flex-col gap-10">
+      {/* Full width and flush left, like every other section. Text carries its
+          own reading measure; media spans the panel end to end. */}
+      <div className="flex w-full flex-col gap-12">
         {blocks.map((block, index) => (
           // Staggered like RevealGroup elsewhere, but capped — past a few blocks
           // a growing delay just means waiting for your own article.
@@ -109,27 +101,26 @@ function Block({ block, onOpenImage }: { block: PostBlock; onOpenImage: (src: st
 
     case "image":
       /**
-       * Sized to sit with the writing rather than interrupt it.
+       * Full-bleed across the panel, in a cinematic crop.
        *
-       * At full column width an image swamped the paragraph either side of it
-       * and the post became a slideshow with captions. It's capped a little
-       * wider than the measure — enough to feel like a break in the text, not
-       * enough to become the subject. The full-size versions live in the
-       * gallery section.
+       * 21:9 rather than something squarer: at this width a 3:2 frame is over
+       * 900px tall and takes the whole screen, which is what made images feel
+       * like they were interrupting the writing rather than punctuating it.
+       * The wide crop spans the panel end to end without swallowing it.
        */
       return (
-        <figure className={cn("group", MEDIA)}>
+        <figure className="group w-full">
           <button
             type="button"
             onClick={() => onOpenImage(block.src)}
             aria-label={block.caption || "Open image"}
-            className="relative block aspect-[16/10] w-full overflow-hidden rounded-2xl border border-white/10 bg-panel-2 transition-colors duration-300 hover:border-brand-500/50"
+            className="relative block aspect-[16/9] w-full overflow-hidden rounded-2xl border border-white/10 bg-panel-2 transition-colors duration-300 hover:border-brand-500/50 sm:aspect-[21/9]"
           >
             <Image
               src={block.src}
               alt={block.caption ?? ""}
               fill
-              sizes="(max-width: 704px) 100vw, 704px"
+              sizes="(max-width: 1024px) 100vw, 1488px"
               className={cn("object-cover transition-transform duration-700", EASE, "group-hover:scale-[1.03]")}
             />
 
@@ -157,8 +148,18 @@ function Block({ block, onOpenImage }: { block: PostBlock; onOpenImage: (src: st
         </figure>
       );
 
+    /**
+     * Deliberately renders nothing inline.
+     *
+     * A gallery mid-paragraph was either a grid that stopped the reading dead
+     * or a sideways strip that was awkward to scroll. Its images still reach
+     * the reader — collectImages feeds them into the bento gallery below, which
+     * is a better place to look at a set of photographs than the middle of a
+     * sentence. The block is kept as the quick way to push several frames into
+     * that gallery at once.
+     */
     case "gallery":
-      return <Strip images={block.images} onOpenImage={onOpenImage} />;
+      return null;
 
     case "quote":
       /**
@@ -205,73 +206,6 @@ function Caption({ children }: { children: React.ReactNode }) {
 }
 
 /**
- * An inline gallery, as a horizontal strip.
- *
- * Deliberately not a grid. In the body a gallery is a passing note — "these
- * three, here" — and a grid of full-width tiles stops the reading dead. The
- * strip stays one row tall however many images it holds, scrolls sideways, and
- * fades at both edges so it's obvious there's more. The gallery section further
- * down is where these get to be large.
- */
-function Strip({
-  images,
-  onOpenImage,
-}: {
-  images: { src: string; caption?: string }[];
-  onOpenImage: (src: string) => void;
-}) {
-  return (
-    <div className={MEDIA}>
-      {/* No negative margin bleed: it made the scroller 8px wider than its
-          parent, which the page's overflow-x: clip hid but still reported. */}
-      <div className="mask-fade-x no-scrollbar flex snap-x snap-mandatory gap-3 overflow-x-auto pb-1">
-        {images.map((image, index) => (
-          <figure
-            key={image.src + index}
-            className="group relative aspect-[4/3] w-[15rem] shrink-0 snap-start overflow-hidden rounded-xl border border-white/10 bg-panel-2 sm:w-[17rem]"
-          >
-            <button
-              type="button"
-              onClick={() => onOpenImage(image.src)}
-              aria-label={image.caption || `Open image ${index + 1}`}
-              className="absolute inset-0 h-full w-full"
-            >
-              <Image
-                src={image.src}
-                alt={image.caption ?? ""}
-                fill
-                sizes="272px"
-                className={cn("object-cover transition-transform duration-700", EASE, "group-hover:scale-[1.06]")}
-              />
-
-              <span
-                aria-hidden
-                className={cn(
-                  "absolute inset-0 origin-bottom scale-y-0 bg-gradient-to-t from-brand-500/30 to-transparent transition-transform duration-500",
-                  EASE,
-                  "group-hover:scale-y-100"
-                )}
-              />
-            </button>
-
-            {image.caption ? (
-              <figcaption className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-void/90 to-transparent px-3 pb-2.5 pt-6 text-[11px] leading-snug text-white/85">
-                {image.caption}
-              </figcaption>
-            ) : null}
-          </figure>
-        ))}
-      </div>
-
-      <p className="mt-3 flex items-center gap-2.5 text-[11px] text-zinc-600">
-        <span aria-hidden className="h-px w-5 shrink-0 bg-brand-500/60" />
-        {images.length} frames — scroll sideways, or see them full size in the gallery below.
-      </p>
-    </div>
-  );
-}
-
-/**
  * A YouTube embed that only loads the iframe once you press play.
  *
  * The thumbnail is a plain image, so a post with several videos costs one
@@ -288,7 +222,7 @@ function Video({ url, caption }: { url: string; caption?: string }) {
   if (!embed) return null;
 
   return (
-    <figure className={MEDIA}>
+    <figure className="w-full">
       <div className="relative aspect-video w-full overflow-hidden rounded-2xl border border-white/10 bg-panel-2">
         {playing ? (
           <iframe
