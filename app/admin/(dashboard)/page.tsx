@@ -21,6 +21,8 @@ import { getThemeFresh } from "@/lib/content/theme";
 import { SectionManager } from "@/components/admin/section-manager";
 import { ThemeEditor } from "@/components/admin/theme-editor";
 import { Card, Eyebrow, Group } from "@/components/admin/admin-ui";
+import { BackupPanel } from "@/components/admin/backup-panel";
+import { BACKUP_DOCS } from "@/lib/content/backup";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -156,6 +158,16 @@ export default async function AdminDashboard() {
           <ThemeEditor initial={theme} />
           <SectionManager sections={sections} />
         </div>
+      </Group>
+
+      {/* ---------------- Safety ---------------- */}
+      <Group
+        eyebrow="Safety"
+        lead="A copy of"
+        accent="everything"
+        description="Deleting is not the only way to lose work — a bad bulk save loses just as much, and nothing here is versioned."
+      >
+        <BackupPanel documentCount={BACKUP_DOCS.length} />
       </Group>
 
       <Link
