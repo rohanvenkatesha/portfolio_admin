@@ -2,7 +2,7 @@
 
 import { revalidateTag, revalidatePath } from "next/cache";
 import { adminDb, getAdminUser } from "@/lib/firebase/admin";
-import { TRIPS_COLLECTION, TRIPS_DOC, TRIPS_TAG, getTripsFresh } from "@/lib/content/trips";
+import { TRIPS_COLLECTION, TRIPS_DOC, TRIPS_TAG, getAllTripsRaw } from "@/lib/content/trips";
 import { isValidMediaPath } from "@/lib/content/media";
 import { trips as staticTrips, type Trip } from "@/content/site";
 
@@ -85,7 +85,9 @@ export async function createTrip(): Promise<ActionResult> {
   if (!admin) return { ok: false, error: "Not authorised." };
 
   try {
-    const current = await getTripsFresh();
+    // The whole set, trash included: `write` replaces the document, so an
+    // action that read only the live trips would purge the trash on save.
+    const current = await getAllTripsRaw();
     const stamp = Date.now().toString(36);
 
     const trip: Trip = {
@@ -143,13 +145,16 @@ export async function saveTrip(formData: FormData): Promise<ActionResult> {
   }
 
   try {
-    const current = await getTripsFresh();
+    const current = await getAllTripsRaw();
 
-    if (current.some((t) => t.slug === slug && t.id !== id)) {
+    // Trashed trips are ignored: nothing serves them, so holding a URL hostage
+    // from the trash would be baffling. `restoreTrip` resolves the reverse case
+    // by suffixing on the way back out.
+    if (current.some((t) => t.slug === slug && t.id !== id && !t.deletedAt)) {
       return { ok: false, error: `Another trip already uses the slug "${slug}".` };
     }
 
-    const index = current.findIndex((t) => t.id === id);
+    const index = current.findIndex((t) => t.id === id && !t.deletedAt);
     if (index === -1) return { ok: false, error: "That trip no longer exists." };
 
     const coverUrl = safeCoverPath(formData.get("coverUrl"));
@@ -186,21 +191,92 @@ export async function saveTrip(formData: FormData): Promise<ActionResult> {
   }
 }
 
+/**
+ * Move a trip to the trash.
+ *
+ * Its posts are left alone. They vanish from the site with the trip — nothing
+ * links to a post whose trip is gone — and come back with it, so cascading the
+ * stamp down would only risk restoring the two halves out of step.
+ */
 export async function deleteTrip(id: string): Promise<ActionResult> {
   const admin = await requireAdmin();
   if (!admin) return { ok: false, error: "Not authorised." };
 
   try {
-    const current = await getTripsFresh();
-    const remaining = current.filter((t) => t.id !== id);
-    if (remaining.length === current.length) {
-      return { ok: false, error: "That trip no longer exists." };
-    }
+    const current = await getAllTripsRaw();
+    const index = current.findIndex((t) => t.id === id && !t.deletedAt);
+    if (index === -1) return { ok: false, error: "That trip no longer exists." };
 
-    await write(remaining, admin.email);
-    return { ok: true, message: "Trip deleted." };
+    const items = [...current];
+    items[index] = { ...items[index], deletedAt: new Date().toISOString() };
+
+    await write(items, admin.email);
+    return { ok: true, message: `Moved “${items[index].destination}” to the trash.` };
   } catch (error) {
     console.error("[deleteTrip]", error);
+    return { ok: false, error: "Could not delete." };
+  }
+}
+
+export async function restoreTrip(id: string): Promise<ActionResult> {
+  const admin = await requireAdmin();
+  if (!admin) return { ok: false, error: "Not authorised." };
+
+  try {
+    const current = await getAllTripsRaw();
+    const index = current.findIndex((t) => t.id === id && t.deletedAt);
+    if (index === -1) return { ok: false, error: "That trip isn't in the trash." };
+
+    const trip = current[index];
+
+    // A slug can be claimed while a trip sits in the trash. Suffixing beats
+    // refusing: the trip comes back either way, and a changed URL is easier to
+    // fix than a restore that won't run.
+    let slug = trip.slug;
+    const taken = (candidate: string) =>
+      current.some((t) => t.id !== id && !t.deletedAt && t.slug === candidate);
+    if (taken(slug)) {
+      let n = 2;
+      while (taken(`${trip.slug}-${n}`)) n += 1;
+      slug = `${trip.slug}-${n}`;
+    }
+
+    const items = [...current];
+    const revived = { ...trip, slug };
+    delete revived.deletedAt;
+    items[index] = revived;
+
+    await write(items, admin.email);
+    return {
+      ok: true,
+      message:
+        slug === trip.slug
+          ? `Restored “${trip.destination}”.`
+          : `Restored “${trip.destination}” — its slug was taken, so it's now “${slug}”.`,
+    };
+  } catch (error) {
+    console.error("[restoreTrip]", error);
+    return { ok: false, error: "Could not restore." };
+  }
+}
+
+/** Permanent. Only reachable from the trash. */
+export async function purgeTrip(id: string): Promise<ActionResult> {
+  const admin = await requireAdmin();
+  if (!admin) return { ok: false, error: "Not authorised." };
+
+  try {
+    const current = await getAllTripsRaw();
+    const trip = current.find((t) => t.id === id && t.deletedAt);
+    if (!trip) return { ok: false, error: "That trip isn't in the trash." };
+
+    await write(
+      current.filter((t) => t.id !== id),
+      admin.email
+    );
+    return { ok: true, message: `Deleted “${trip.destination}” for good.` };
+  } catch (error) {
+    console.error("[purgeTrip]", error);
     return { ok: false, error: "Could not delete." };
   }
 }
@@ -210,11 +286,19 @@ export async function moveTrip(id: string, direction: "up" | "down"): Promise<Ac
   if (!admin) return { ok: false, error: "Not authorised." };
 
   try {
-    const items = [...(await getTripsFresh())];
-    const index = items.findIndex((t) => t.id === id);
+    const items = [...(await getAllTripsRaw())];
+    const index = items.findIndex((t) => t.id === id && !t.deletedAt);
     if (index === -1) return { ok: false, error: "That trip no longer exists." };
 
-    const target = direction === "up" ? index - 1 : index + 1;
+    /**
+     * Order is array position, and trashed trips keep theirs so they land back
+     * where they were on restore. So the swap has to skip over them — a trashed
+     * trip between two live ones would otherwise absorb the move and look like
+     * the button did nothing.
+     */
+    const step = direction === "up" ? -1 : 1;
+    let target = index + step;
+    while (target >= 0 && target < items.length && items[target].deletedAt) target += step;
     if (target < 0 || target >= items.length) return { ok: true, message: "Already at the end." };
 
     [items[index], items[target]] = [items[target], items[index]];

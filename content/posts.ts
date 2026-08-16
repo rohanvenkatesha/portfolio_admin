@@ -77,6 +77,11 @@ export type TripPost = {
   riders: Rider[];
   /** Ids of other trips this post relates to. */
   relatedTripIds: string[];
+  /**
+   * ISO timestamp set when the post is moved to the trash. Distinct from
+   * `published` — a draft is unfinished, a trashed post is gone unless restored.
+   */
+  deletedAt?: string;
 };
 
 /* -------------------------------------------------------------------------- */
@@ -217,6 +222,7 @@ export function normalisePost(raw: unknown): TripPost {
       : [],
     riders: riders(p.riders),
     relatedTripIds: strList(p.relatedTripIds),
+    ...(str(p.deletedAt) ? { deletedAt: str(p.deletedAt) } : {}),
   };
 }
 

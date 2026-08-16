@@ -24,6 +24,7 @@ const LINKS = [
   { href: "/admin/headings", label: "Headings" },
   { href: "/admin/timeline", label: "Journey" },
   { href: "/admin/lists", label: "Services & skills" },
+  { href: "/admin/trash", label: "Trash" },
 ];
 
 export function AdminNav() {
@@ -42,8 +43,8 @@ export function AdminNav() {
   return (
     <nav
       aria-label="Admin sections"
-      // Scrolls sideways rather than wrapping: nine links wrap to two rows on a
-      // laptop and push the page content down on every screen.
+      // Scrolls sideways rather than wrapping: this many links wrap to two rows
+      // on a laptop and push the page content down on every screen.
       className="no-scrollbar mask-fade-x -mx-4 flex gap-1 overflow-x-auto px-4 sm:-mx-6 sm:px-6"
     >
       {LINKS.map((link) => {

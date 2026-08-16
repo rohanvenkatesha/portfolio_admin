@@ -8,15 +8,16 @@ import {
   MapPin,
   Milestone,
   NotebookPen,
+  Trash2,
   Type,
   UserRound,
 } from "lucide-react";
 import { getSectionsFresh } from "@/lib/content/sections";
 import { getProjectsFresh } from "@/lib/content/projects";
 import { getPhotosFresh } from "@/lib/content/photos";
-import { getTripsFresh } from "@/lib/content/trips";
+import { getTripsFresh, getTrashedTrips } from "@/lib/content/trips";
 import { getFilmsFresh } from "@/lib/content/films";
-import { getPostsFresh } from "@/lib/content/posts";
+import { getPostsFresh, getTrashedPosts } from "@/lib/content/posts";
 import { getThemeFresh } from "@/lib/content/theme";
 import { SectionManager } from "@/components/admin/section-manager";
 import { ThemeEditor } from "@/components/admin/theme-editor";
@@ -28,18 +29,22 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export default async function AdminDashboard() {
-  const [theme, sections, projects, photos, trips, films, posts] = await Promise.all([
-    getThemeFresh(),
-    getSectionsFresh(),
-    getProjectsFresh(),
-    getPhotosFresh(),
-    getTripsFresh(),
-    getFilmsFresh(),
-    getPostsFresh(),
-  ]);
+  const [theme, sections, projects, photos, trips, films, posts, binnedTrips, binnedPosts] =
+    await Promise.all([
+      getThemeFresh(),
+      getSectionsFresh(),
+      getProjectsFresh(),
+      getPhotosFresh(),
+      getTripsFresh(),
+      getFilmsFresh(),
+      getPostsFresh(),
+      getTrashedTrips(),
+      getTrashedPosts(),
+    ]);
 
   const published = posts.filter((post) => post.published).length;
   const drafts = posts.length - published;
+  const trashed = binnedTrips.length + binnedPosts.length;
 
   return (
     <div className="space-y-14 pb-8">
@@ -163,11 +168,20 @@ export default async function AdminDashboard() {
       {/* ---------------- Safety ---------------- */}
       <Group
         eyebrow="Safety"
-        lead="A copy of"
-        accent="everything"
+        lead="Nothing you write"
+        accent="is one click from gone"
         description="Deleting is not the only way to lose work — a bad bulk save loses just as much, and nothing here is versioned."
       >
-        <BackupPanel documentCount={BACKUP_DOCS.length} />
+        <div className="space-y-3">
+          <BackupPanel documentCount={BACKUP_DOCS.length} />
+          <Card
+            href="/admin/trash"
+            icon={Trash2}
+            title="Trash"
+            description="Deleted trips and posts, kept until you empty it. Restore brings a post back as a draft."
+            count={trashed}
+          />
+        </div>
       </Group>
 
       <Link

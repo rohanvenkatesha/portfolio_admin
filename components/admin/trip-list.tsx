@@ -28,7 +28,11 @@ export function TripList({ trips, seeded }: { trips: Trip[]; seeded: boolean }) 
   const [pending, startTransition] = useTransition();
   const [result, setResult] = useState<ActionResult | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
-  /** Two-step delete — a trip carries a lot of writing to lose by accident. */
+  /**
+   * Still two-step, even though delete now only moves the trip to the trash:
+   * it disappears from the live site the moment you click, and that alone is
+   * worth a beat of confirmation.
+   */
   const [confirmId, setConfirmId] = useState<string | null>(null);
 
   function run(action: () => Promise<ActionResult>, id?: string) {
