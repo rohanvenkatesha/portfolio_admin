@@ -62,7 +62,7 @@ export function CopyEditor({ initial }: { initial: Copy }) {
             <div className="mt-4 grid gap-3 sm:grid-cols-[1fr_1fr_1fr]">
               <label className="block">
                 <span className="mb-1.5 block text-[11px] font-medium text-zinc-400">
-                  Eyebrow
+                  Small label
                 </span>
                 <input
                   suppressHydrationWarning
@@ -131,7 +131,7 @@ export function CopyEditor({ initial }: { initial: Copy }) {
           className="ember-fill inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-[13px] font-semibold text-[var(--brand-ink)] hover:ember-fill-hot disabled:opacity-50"
         >
           {pending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
-          Save copy
+          Save headings
         </button>
 
         <button
@@ -152,7 +152,7 @@ export function CopyEditor({ initial }: { initial: Copy }) {
           className="inline-flex items-center gap-1.5 rounded-full border border-white/12 px-3.5 py-2 text-[12px] font-medium text-zinc-400 transition-colors hover:border-white/30 hover:text-white disabled:opacity-60"
         >
           <RotateCcw className="h-3.5 w-3.5" />
-          Reset to repo wording
+          Reset to the original wording
         </button>
 
         {result ? (

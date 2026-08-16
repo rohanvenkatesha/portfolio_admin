@@ -21,7 +21,7 @@ const LINKS = [
   { href: "/admin/films", label: "Films" },
   { href: "/admin/trips", label: "Trips" },
   { href: "/admin/profile", label: "Profile" },
-  { href: "/admin/copy", label: "Copy" },
+  { href: "/admin/headings", label: "Headings" },
   { href: "/admin/timeline", label: "Journey" },
   { href: "/admin/lists", label: "Services & skills" },
 ];

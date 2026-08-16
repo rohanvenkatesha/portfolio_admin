@@ -49,7 +49,7 @@ export async function saveCopy(formData: FormData): Promise<ActionResult> {
 
   try {
     await write(copy, admin.email);
-    return { ok: true, message: "Copy saved — the site has been updated." };
+    return { ok: true, message: "Saved — the headings are live." };
   } catch (error) {
     console.error("[saveCopy]", error);
     return { ok: false, error: "Could not save. Check the server logs." };
@@ -62,7 +62,7 @@ export async function resetCopy(): Promise<ActionResult> {
 
   try {
     await write(DEFAULT_COPY, admin.email);
-    return { ok: true, message: "Copy reset to the wording in the repo." };
+    return { ok: true, message: "Reset to the original wording." };
   } catch (error) {
     console.error("[resetCopy]", error);
     return { ok: false, error: "Could not reset." };

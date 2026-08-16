@@ -125,10 +125,10 @@ export default async function AdminDashboard() {
             description="Name, rotating roles, bio, contact details, portrait, tech strip and social links."
           />
           <Card
-            href="/admin/copy"
+            href="/admin/headings"
             icon={Type}
-            title="Section copy"
-            description="The eyebrow, headline and description above all nine sections."
+            title="Headings & intros"
+            description="The label, headline and paragraph that open each of the nine sections."
           />
           <Card
             href="/admin/timeline"

@@ -24,10 +24,13 @@ export default async function AdminListsPage() {
           Services, numbers, principles &amp; skills
         </h1>
         <p className="mt-2 max-w-2xl text-sm leading-relaxed text-zinc-500">
-          The four card lists behind the Services and About sections. Headings for those sections
-          live under{" "}
-          <Link href="/admin/copy" className="text-brand-400 transition-colors hover:text-brand-300">
-            Section copy
+          The four card lists behind the Services and About sections. The headings above those
+          sections live under{" "}
+          <Link
+            href="/admin/headings"
+            className="text-brand-400 transition-colors hover:text-brand-300"
+          >
+            Headings &amp; intros
           </Link>
           , and your bio is under{" "}
           <Link
