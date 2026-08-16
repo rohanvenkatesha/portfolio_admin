@@ -736,7 +736,14 @@ export type Trip = {
   distanceKm: number;
   budget: string;
   vibe: string;
+  /**
+   * Fallback treatment when there's no cover photo — a Tailwind gradient pair
+   * like "from-orange-500/40 to-orange-700/20". Still used behind the image as
+   * the loading colour, so it's never dropped.
+   */
   gradient: string;
+  /** Cover photo, committed under public/media/trips. Empty falls back to the gradient. */
+  coverUrl?: string;
   hook: string;
   reflection: string;
   itinerary: { day: string; title: string; detail: string }[];

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { ArrowUpRight, CalendarDays, MapPin, Route } from "lucide-react";
 import { DetailChrome } from "@/components/layout/detail-chrome";
@@ -68,12 +69,24 @@ export default async function TravelIndexPage() {
                   href={`/travel/${trip.slug}`}
                   className="group relative flex aspect-[4/3] flex-col justify-end overflow-hidden rounded-2xl border border-white/8 p-6"
                 >
+                  {/* Gradient stays underneath as the loading colour, so the
+                      card is never a blank rectangle while the photo decodes. */}
                   <div
                     className={cn(
                       "absolute inset-0 bg-gradient-to-br transition-transform duration-700 ease-out group-hover:scale-105",
                       trip.gradient
                     )}
-                  />
+                  >
+                    {trip.coverUrl ? (
+                      <Image
+                        src={trip.coverUrl}
+                        alt=""
+                        fill
+                        sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 33vw"
+                        className="object-cover"
+                      />
+                    ) : null}
+                  </div>
                   <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
 
                   <div className="relative">

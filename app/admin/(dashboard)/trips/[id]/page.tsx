@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, ExternalLink } from "lucide-react";
 import { getTripsFresh } from "@/lib/content/trips";
+import { listMedia } from "@/lib/content/media";
 import { TripForm } from "@/components/admin/trip-form";
 
 export const runtime = "nodejs";
@@ -9,7 +10,7 @@ export const dynamic = "force-dynamic";
 
 export default async function EditTripPage({ params }: PageProps<"/admin/trips/[id]">) {
   const { id } = await params;
-  const trips = await getTripsFresh();
+  const [trips, covers] = await Promise.all([getTripsFresh(), listMedia("trips")]);
   const trip = trips.find((t) => t.id === id);
 
   if (!trip) notFound();
@@ -42,7 +43,7 @@ export default async function EditTripPage({ params }: PageProps<"/admin/trips/[
         <p className="mt-2 font-mono text-[12px] text-zinc-600">{trip.id}</p>
       </div>
 
-      <TripForm trip={trip} />
+      <TripForm trip={trip} covers={covers} />
     </div>
   );
 }

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, ArrowRight, CalendarDays, MapPin, Route, Wallet } from "lucide-react";
@@ -82,6 +83,23 @@ export default async function TripPage({ params }: PageProps<"/travel/[slug]">) 
               trip.gradient
             )}
           >
+            {/* Cover fills the plate when there is one; the gradient stays as
+                the ground beneath it. The scrim is what keeps the title
+                readable over an arbitrary photo. */}
+            {trip.coverUrl ? (
+              <>
+                <Image
+                  src={trip.coverUrl}
+                  alt=""
+                  fill
+                  priority
+                  sizes="(max-width: 896px) 100vw, 896px"
+                  className="object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/55 to-black/30" />
+              </>
+            ) : null}
+
             <div className="relative">
               <div className="flex flex-wrap items-center gap-2.5">
                 <Badge accent="cyan">{trip.year}</Badge>

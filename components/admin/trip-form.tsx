@@ -4,6 +4,8 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { AlertCircle, CheckCircle2, Loader2, Save } from "lucide-react";
 import { saveTrip, type ActionResult } from "@/lib/actions/trips";
+import { ImagePicker } from "@/components/admin/image-picker";
+import type { MediaFile } from "@/lib/content/media";
 import type { Trip } from "@/content/site";
 import { cn } from "@/lib/utils";
 
@@ -30,7 +32,7 @@ function Field({
   );
 }
 
-export function TripForm({ trip }: { trip: Trip }) {
+export function TripForm({ trip, covers = [] }: { trip: Trip; covers?: MediaFile[] }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [result, setResult] = useState<ActionResult | null>(null);
@@ -54,6 +56,22 @@ export function TripForm({ trip }: { trip: Trip }) {
   return (
     <form onSubmit={onSubmit} className="space-y-5">
       <input suppressHydrationWarning type="hidden" name="id" value={trip.id} />
+
+      {/* Cover */}
+      <div className="rounded-2xl border border-white/8 bg-panel p-6">
+        <ImagePicker
+          name="coverUrl"
+          folder="trips"
+          files={covers}
+          initialSrc={trip.coverUrl ?? ""}
+          label="Cover photo"
+          hint="Committed under public/media/trips"
+        />
+        <p className="mt-3 text-[11px] leading-relaxed text-zinc-600">
+          Shown on the archive card, the hover preview and the top of the guide. Leave it empty and
+          all three fall back to this trip&apos;s gradient.
+        </p>
+      </div>
 
       {/* Identity */}
       <div className="space-y-5 rounded-2xl border border-white/8 bg-panel p-6">

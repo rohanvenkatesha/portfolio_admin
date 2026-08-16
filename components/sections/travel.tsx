@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { motion } from "motion/react";
@@ -237,6 +238,9 @@ export function Travel({
       <CursorPreview visible={hovered !== null} className="w-64">
         {hovered ? (
           <div className={cn("relative aspect-[4/3] bg-gradient-to-br", hovered.gradient)}>
+            {hovered.coverUrl ? (
+              <Image src={hovered.coverUrl} alt="" fill sizes="256px" className="object-cover" />
+            ) : null}
             <div className="absolute inset-0 bg-gradient-to-t from-black/85 to-transparent" />
             <div className="absolute inset-x-0 bottom-0 p-4">
               <p className="text-base font-semibold text-white">{hovered.destination}</p>
