@@ -79,12 +79,19 @@ function parseBlocks(form: FormData): PostBlock[] {
           ? [{ type: "image", src: body, ...(caption ? { caption } : {}) }]
           : [];
       case "gallery": {
-        // One path per line, so a gallery is a paste rather than a repeater.
+        /**
+         * One path per line, so a gallery is a paste rather than a repeater —
+         * and one description per line alongside it, aligned by index.
+         *
+         * Zipped before filtering, not after: dropping invalid paths first
+         * would shift every later description onto the wrong image.
+         */
+        const descriptions = caption.split("\n");
         const images = body
           .split("\n")
-          .map((line) => line.trim())
-          .filter((line) => line && isValidMediaPath(line))
-          .map((src) => ({ src }));
+          .map((line, i) => ({ src: line.trim(), caption: (descriptions[i] ?? "").trim() }))
+          .filter((image) => image.src && isValidMediaPath(image.src))
+          .map(({ src, caption: text }) => (text ? { src, caption: text } : { src }));
         return images.length ? [{ type: "gallery", images }] : [];
       }
       case "quote":
@@ -109,9 +116,32 @@ function parseRoute(form: FormData): Waypoint[] {
     const name = rawName.trim();
     if (!name) return [];
 
-    const lat = Number(lats[i]);
-    const lng = Number(lngs[i]);
-    if (!Number.isFinite(lat) || !Number.isFinite(lng)) return [];
+    /**
+     * Blank is not zero.
+     *
+     * `Number("")` is 0 and `Number.isFinite(0)` is true, so an empty
+     * coordinate box used to pass validation as a real position — every stop
+     * left unfilled became 0,0 and the map flew to null island in the Atlantic
+     * and zoomed to its maximum, which looks exactly like a broken map.
+     *
+     * Range is checked here too. Out-of-range values were being silently
+     * clamped on read, which put a pin at the edge of the world rather than
+     * telling anyone the number was wrong.
+     */
+    const rawLat = (lats[i] ?? "").trim();
+    const rawLng = (lngs[i] ?? "").trim();
+    if (rawLat === "" || rawLng === "") return [];
+
+    const lat = Number(rawLat);
+    const lng = Number(rawLng);
+    const inRange =
+      Number.isFinite(lat) &&
+      Number.isFinite(lng) &&
+      lat >= -90 &&
+      lat <= 90 &&
+      lng >= -180 &&
+      lng <= 180;
+    if (!inRange) return [];
 
     const note = (notes[i] ?? "").trim();
     return [{ name, lat, lng, ...(note ? { note } : {}) }];
@@ -237,9 +267,19 @@ export async function savePost(formData: FormData): Promise<ActionResult> {
     });
 
     await write(items, admin.email);
+
+    // A stop with a name but no usable coordinates cannot go on a map, so it is
+    // dropped — but saying so beats letting it quietly vanish.
+    const named = formData.getAll("wpName").map(String).filter((n) => n.trim()).length;
+    const dropped = named - items[index].route.length;
+    const saved = items[index].published ? `Published “${title}”.` : `Saved draft “${title}”.`;
+
     return {
       ok: true,
-      message: items[index].published ? `Published “${title}”.` : `Saved draft “${title}”.`,
+      message:
+        dropped > 0
+          ? `${saved} ${dropped} ${dropped === 1 ? "stop was" : "stops were"} left off the route — each one needs a latitude and a longitude.`
+          : saved,
     };
   } catch (error) {
     console.error("[savePost]", error);
