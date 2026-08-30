@@ -21,7 +21,12 @@ const eslintConfig = defineConfig([
    */
   {
     files: ["components/vendor/**"],
-    rules: { "@typescript-eslint/no-explicit-any": "off" },
+    rules: {
+      "@typescript-eslint/no-explicit-any": "off",
+      // Their markup, their `<img>`. Swapping in next/image would mean editing
+      // a file we deliberately keep byte-for-byte.
+      "@next/next/no-img-element": "off",
+    },
   },
 ]);
 

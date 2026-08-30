@@ -23,16 +23,19 @@ import { cn } from "@/lib/utils";
 /**
  * Text carries a reading measure; media takes the whole column.
  *
- * That difference is the layout. The article column is deliberately far wider
- * than a comfortable line of prose, so capping the text leaves images, video
- * and pull quotes visibly breaking out past where the reading stops. Uncapped
- * it ran 105 characters a line, well past the 60–75 the eye tracks easily.
+ * That difference is the layout: media breaks out past where the reading
+ * stops. The two widths have to stay close, though. This was a 36rem measure
+ * inside a 1064px column, which left 488px of dead space beside every
+ * paragraph, heading and quote — on a desktop the right-hand half of the page
+ * simply read as empty. The column is now 776px against this 40rem measure, so
+ * the breakout is around 130px: visibly wider, not abandoned. Uncapped the text
+ * ran 105 characters a line, well past the 60-75 the eye tracks easily.
  *
  * Not `ch`: that unit measures the "0" glyph, which in this typeface is 12.4px
  * against an average prose character of about 7.6px, so the `68ch` first tried
  * here resolved to 846px and never applied at all.
  */
-const MEASURE = "max-w-[36rem]";
+const MEASURE = "max-w-[40rem]";
 
 const EASE = "ease-[cubic-bezier(0.16,1,0.3,1)]";
 

@@ -1,29 +1,25 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import dynamic from "next/dynamic";
 import { notFound } from "next/navigation";
 import { ArrowLeft, ArrowRight, ArrowUpRight } from "lucide-react";
 import { DetailChrome } from "@/components/layout/detail-chrome";
 import { Footer } from "@/components/layout/footer";
 import { PostBlocks } from "@/components/travel/post-blocks";
-import { PostGalleryReel } from "@/components/travel/post-gallery-reel";
+import { PostFrames } from "@/components/travel/post-frames";
+import { PostRoute } from "@/components/travel/post-route";
 import { HeroTitle, StatValue } from "@/components/travel/post-hero-fx";
 import { RelatedJourneys } from "@/components/travel/related-journeys";
 import { RiderLinks } from "@/components/travel/rider-links";
 import { ReadingProgress } from "@/components/travel/reading-progress";
+import { PostPager } from "@/components/travel/post-pager";
 import { EmberBackdrop } from "@/components/fx/ember-backdrop";
 import { Reveal, RevealGroup, RevealItem } from "@/components/fx/reveal";
 import { getProfile } from "@/lib/content/profile";
 import { getTrips } from "@/lib/content/trips";
 import { getPost, getPosts } from "@/lib/content/posts";
-import { collectImages } from "@/content/posts";
+import { collectImages, paginateBlocks } from "@/content/posts";
 import { cn } from "@/lib/utils";
-
-/** Leaflet touches window on import, so the map is client-only. */
-const RouteMap = dynamic(() =>
-  import("@/components/travel/route-map").then((m) => m.RouteMap)
-);
 
 const EASE = "ease-[cubic-bezier(0.16,1,0.3,1)]";
 
@@ -52,7 +48,7 @@ const GUTTER = "px-5 sm:px-8 lg:px-14";
  * label sits inline above the text — a 100px margin on a phone is a wasted
  * fifth of the screen.
  */
-const SPREAD = "mx-auto grid w-full max-w-[78rem] gap-y-5 lg:grid-cols-[9rem_minmax(0,1fr)] lg:gap-x-10";
+const SPREAD = "mx-auto grid w-full max-w-[60rem] gap-y-5 lg:grid-cols-[9rem_minmax(0,1fr)] lg:gap-x-10";
 
 export async function generateStaticParams() {
   const [trips, posts] = await Promise.all([getTrips(), getPosts()]);
@@ -139,8 +135,29 @@ export default async function TripPostPage({ params }: PageProps<"/travel/[slug]
     .map((id) => trips.find((t) => t.id === id))
     .filter((t): t is (typeof trips)[number] => Boolean(t) && t!.id !== trip.id);
 
+  /**
+   * The body, split into pages.
+   *
+   * Only the body. The route, the frames and the company are sections of this
+   * page and stay where they are — paging those too turned reading a post into
+   * clicking through a slideshow of its furniture.
+   */
+  const bodyPages = paginateBlocks(post.blocks);
+
+  /**
+   * Chapter labels for the pager, in page order.
+   *
+   * A page led by a heading takes that heading, so the pager reads as the
+   * post's own contents rather than "Part 1, Part 2".
+   */
+  const pageLabels = bodyPages.map((blocks, i) => {
+    const first = blocks[0];
+    return first?.type === "heading" ? first.text : `Part ${i + 1}`;
+  });
+
   // Sections are numbered in the margin, so they have to be counted in the
-  // order they actually render rather than hardcoded.
+  // order they actually render rather than hardcoded. The body is one section
+  // however many pages it runs to.
   const order: string[] = [
     "story",
     ...(post.route.length ? ["route"] : []),
@@ -149,12 +166,16 @@ export default async function TripPostPage({ params }: PageProps<"/travel/[slug]
   ];
   const numberOf = (key: string) => String(order.indexOf(key) + 1).padStart(2, "0");
 
+
   return (
     <>
       <ReadingProgress />
       <DetailChrome backHref={`/travel/${trip.slug}`} backLabel={trip.destination} />
 
-      <main className="relative flex-1">
+      {/* Bottom padding lives here, not on the last section. Which section is
+          last depends on the post — with no related trips and no sibling posts
+          it was Company, which then sat flush against the footer. */}
+      <main className="relative flex-1 pb-28 sm:pb-36">
         {/* ================= Hero ==============================================
             Full bleed, anchored bottom-left. Centred titles read as posters;
             an article should start where the reading starts.
@@ -177,7 +198,7 @@ export default async function TripPostPage({ params }: PageProps<"/travel/[slug]
           <div className="absolute inset-x-0 bottom-0 z-[2] h-40 bg-gradient-to-t from-void to-transparent" />
 
           <div className={cn("relative z-10 w-full pb-16 pt-32 sm:pb-20", GUTTER)}>
-            <div className="mx-auto w-full max-w-[78rem]">
+            <div className="mx-auto w-full max-w-[60rem]">
               {/* Metadata strip: everything you'd want before committing to
                   read, in one monospace line. */}
               <Reveal direction="up">
@@ -231,7 +252,7 @@ export default async function TripPostPage({ params }: PageProps<"/travel/[slug]
         {post.stats.length ? (
           <section className={cn("w-full border-y border-white/10", GUTTER)}>
             <RevealGroup
-              className="mx-auto grid w-full max-w-[78rem] grid-cols-2 lg:grid-cols-4"
+              className="mx-auto grid w-full max-w-[60rem] grid-cols-2 lg:grid-cols-4"
               stagger={0.07}
             >
               {post.stats.map((stat, i) => (
@@ -259,64 +280,46 @@ export default async function TripPostPage({ params }: PageProps<"/travel/[slug]
           </section>
         ) : null}
 
-        {/* ================= The writing ======================================== */}
+        {/* ================= The writing, page by page ==========================
+            Only the body is paged. Everything below it — the route, the frames,
+            the company — stays on the page as ordinary sections.
+            ===================================================================== */}
         <section className={cn("w-full pt-20 sm:pt-28", GUTTER)}>
-          <div className={SPREAD}>
-            <Margin number={numberOf("story")} label="The Story" />
-            <div className="min-w-0">
-              <PostBlocks blocks={post.blocks} />
-            </div>
-          </div>
+          <PostPager labels={pageLabels}>
+            {bodyPages.map((blocks, i) => (
+              <div key={`story-${i}`} className={SPREAD}>
+                <Margin
+                  number={numberOf("story")}
+                  label="The Story"
+                  note={bodyPages.length > 1 ? `Part ${i + 1} of ${bodyPages.length}` : undefined}
+                />
+                <div className="min-w-0">
+                  <PostBlocks blocks={blocks} />
+                </div>
+              </div>
+            ))}
+          </PostPager>
         </section>
 
-        {/* ================= Route ==============================================
-            Map full bleed, stops beneath it in a numbered list that stays
-            legible whether there are three or fifteen.
-            ===================================================================== */}
+        {/* ---- Route: the map, and a list of stops that drives it ---- */}
         {post.route.length ? (
-          <section className={cn("w-full pt-24 sm:pt-32", GUTTER)}>
+          <section className={cn("w-full pt-20 sm:pt-28", GUTTER)}>
             <div className={SPREAD}>
-              <Margin number={numberOf("route")} label="The Route" />
-
+              <Margin
+                number={numberOf("route")}
+                label="The Route"
+                note={`${post.route.length} ${post.route.length === 1 ? "stop" : "stops"}`}
+              />
               <div className="min-w-0">
-                <Reveal direction="up">
-                  <RouteMap waypoints={post.route} className="h-[26rem] sm:h-[34rem]" />
-                </Reveal>
-
-                <RevealGroup
-                  className="mt-10 grid gap-x-10 gap-y-0 sm:grid-cols-2"
-                  stagger={0.04}
-                >
-                  {post.route.map((stop, i) => (
-                    <RevealItem
-                      key={`${stop.name}-${i}`}
-                      className="flex gap-5 border-t border-white/10 py-5"
-                    >
-                      <span className="font-mono text-[11px] leading-6 text-brand-500">
-                        {String(i + 1).padStart(2, "0")}
-                      </span>
-                      <div className="min-w-0">
-                        <h3 className="text-[15.5px] font-semibold text-white">{stop.name}</h3>
-                        {stop.note ? (
-                          <p className="mt-1.5 text-[13.5px] leading-relaxed text-zinc-500">
-                            {stop.note}
-                          </p>
-                        ) : null}
-                        <p className="mt-2 font-mono text-[10.5px] tracking-wider text-zinc-700">
-                          {stop.lat.toFixed(3)}, {stop.lng.toFixed(3)}
-                        </p>
-                      </div>
-                    </RevealItem>
-                  ))}
-                </RevealGroup>
+                <PostRoute waypoints={post.route} />
               </div>
             </div>
           </section>
         ) : null}
 
-        {/* ================= Frames ============================================= */}
+        {/* ---- Frames ---- */}
         {images.length ? (
-          <section className={cn("w-full pt-24 sm:pt-32", GUTTER)}>
+          <section className={cn("w-full pt-20 sm:pt-28", GUTTER)}>
             <div className={SPREAD}>
               <Margin
                 number={numberOf("frames")}
@@ -324,15 +327,15 @@ export default async function TripPostPage({ params }: PageProps<"/travel/[slug]
                 note={`${images.length} ${images.length === 1 ? "photograph" : "photographs"}`}
               />
               <div className="min-w-0">
-                <PostGalleryReel images={images} />
+                <PostFrames images={images} />
               </div>
             </div>
           </section>
         ) : null}
 
-        {/* ================= Company ============================================ */}
+        {/* ---- Company ---- */}
         {post.riders.length ? (
-          <section className={cn("w-full pt-24 sm:pt-32", GUTTER)}>
+          <section className={cn("w-full pt-20 sm:pt-28", GUTTER)}>
             <div className={SPREAD}>
               <Margin number={numberOf("company")} label="Company" />
               <div className="min-w-0">
@@ -350,7 +353,7 @@ export default async function TripPostPage({ params }: PageProps<"/travel/[slug]
             ===================================================================== */}
         {related.length ? (
           <section className={cn("w-full pt-28 sm:pt-36", GUTTER)}>
-            <div className="mx-auto w-full max-w-[78rem]">
+            <div className="mx-auto w-full max-w-[60rem]">
               <Reveal direction="up">
                 <p className="font-mono text-[10.5px] uppercase tracking-[0.2em] text-zinc-500">
                   Elsewhere
@@ -372,8 +375,8 @@ export default async function TripPostPage({ params }: PageProps<"/travel/[slug]
 
         {/* ================= Prev / next ======================================== */}
         {previous || next ? (
-          <section className={cn("w-full pb-24 pt-28 sm:pt-36", GUTTER)}>
-            <div className="mx-auto grid w-full max-w-[78rem] gap-px overflow-hidden border-y border-white/10 sm:grid-cols-2">
+          <section className={cn("w-full pt-28 sm:pt-36", GUTTER)}>
+            <div className="mx-auto grid w-full max-w-[60rem] gap-px overflow-hidden border-y border-white/10 sm:grid-cols-2">
               {previous ? (
                 <Adjacent
                   href={`/travel/${trip.slug}/${previous.slug}`}
