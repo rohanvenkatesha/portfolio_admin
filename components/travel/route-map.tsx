@@ -31,11 +31,20 @@ import { cn } from "@/lib/utils";
 export function RouteMap({
   waypoints,
   className,
+  focusIndex = null,
 }: {
   waypoints: Waypoint[];
   className?: string;
+  /** Stop to fly to and open, driven by the list beside the map. */
+  focusIndex?: number | null;
 }) {
   const holder = useRef<HTMLDivElement>(null);
+  /**
+   * The map and its markers, kept in refs so the focus effect below can reach
+   * them without re-running the whole initialisation.
+   */
+  const mapRef = useRef<import("leaflet").Map | null>(null);
+  const markersRef = useRef<import("leaflet").Marker[]>([]);
   /** Mirrors the cursor position into the HUD readout. */
   const [cursor, setCursor] = useState<{ lat: number; lng: number } | null>(null);
 
@@ -86,16 +95,31 @@ export function RouteMap({
         labelPane.style.pointerEvents = "none";
       }
 
-      L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png", {
-        maxZoom: 19,
+      /**
+       * Esri's Dark Gray Canvas, in two layers.
+       *
+       * This was CARTO's dark basemap, which used to be free and keyless and is
+       * not any more: their tiles now come back stamped "API KEY REQUIRED"
+       * across the image. They still render, so nothing errored and nothing
+       * 404'd — the map simply looked broken.
+       *
+       * Esri publishes this style without a key, and usefully splits the base
+       * from its labels exactly the way the pane setup above wants. It tops out
+       * at zoom 16 rather than 19, which is far closer in than any route map
+       * needs.
+       */
+      const esri = "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas";
+
+      L.tileLayer(`${esri}/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}`, {
+        maxZoom: 16,
         attribution:
-          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+          'Tiles &copy; <a href="https://www.esri.com/">Esri</a> &mdash; Esri, HERE, Garmin, &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
       }).addTo(map);
 
-      L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png", {
-        maxZoom: 19,
+      L.tileLayer(`${esri}/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}`, {
+        maxZoom: 16,
         pane: "labels",
-        opacity: 0.6,
+        opacity: 0.85,
       }).addTo(map);
 
       const points: [number, number][] = waypoints.map((w) => [w.lat, w.lng]);
@@ -140,26 +164,61 @@ export function RouteMap({
           iconAnchor: [14, 14],
         });
 
-        L.marker([waypoint.lat, waypoint.lng], { icon, title: waypoint.name })
+        const marker = L.marker([waypoint.lat, waypoint.lng], { icon, title: waypoint.name })
           .addTo(map!)
           .bindPopup(
             `<strong>${escapeHtml(waypoint.name)}</strong>` +
               (waypoint.note ? `<br>${escapeHtml(waypoint.note)}` : "")
           );
+
+        markersRef.current[index] = marker;
       });
 
+      mapRef.current = map;
+
+      /**
+       * `maxZoom` matters more than it looks.
+       *
+       * Every stop sharing a position — one stop, or several that were saved
+       * before coordinates were validated — collapses the bounds to a point,
+       * and `fitBounds` answers that by going to the layer's maximum zoom. At
+       * z19 you are looking at a few hundred metres of blank tile, which reads
+       * as a map that failed to load rather than one that is merely very close.
+       */
       if (points.length === 1) {
         map.setView(points[0], 9);
       } else {
-        map.fitBounds(L.latLngBounds(points), { padding: [48, 48] });
+        map.fitBounds(L.latLngBounds(points), { padding: [48, 48], maxZoom: 12 });
       }
     })();
 
     return () => {
       cancelled = true;
       map?.remove();
+      mapRef.current = null;
+      markersRef.current = [];
     };
   }, [waypoints]);
+
+  /**
+   * Fly to the stop the list is pointing at.
+   *
+   * Separate from initialisation so hovering a stop pans the existing map
+   * rather than tearing it down and rebuilding it. Zoom is left alone — the
+   * reader chose the current one, and yanking it in as well loses the sense of
+   * where the stop sits on the whole route.
+   */
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || focusIndex === null) return;
+
+    const waypoint = waypoints[focusIndex];
+    const marker = markersRef.current[focusIndex];
+    if (!waypoint) return;
+
+    map.flyTo([waypoint.lat, waypoint.lng], Math.max(map.getZoom(), 8), { duration: 0.7 });
+    marker?.openPopup();
+  }, [focusIndex, waypoints]);
 
   if (waypoints.length === 0) return null;
 
@@ -182,18 +241,14 @@ export function RouteMap({
         <Corner className="bottom-3 left-3 border-b border-l" />
         <Corner className="bottom-3 right-3 border-b border-r" />
 
-        <div className="absolute left-5 top-5 font-mono text-[10px] uppercase tracking-[0.18em] text-white/45">
-          <span className="text-brand-500">◆</span> {waypoints.length} stops
-        </div>
-
-        {/* Only rendered once the cursor is actually over the map, so the
-            readout is never showing a stale position. */}
+        {/* Right-hand side, because the stop list now overlays the left. The
+            zoom control sits bottom-right, so this stays at the top. */}
         {cursor ? (
-          <div className="absolute bottom-5 left-5 font-mono text-[10px] tabular-nums tracking-wider text-white/45">
+          <div className="absolute right-5 top-5 font-mono text-[10px] tabular-nums tracking-wider text-white/45">
             {cursor.lat.toFixed(4)}, {cursor.lng.toFixed(4)}
           </div>
         ) : (
-          <div className="absolute bottom-5 left-5 font-mono text-[10px] uppercase tracking-[0.18em] text-white/30">
+          <div className="absolute right-5 top-5 font-mono text-[10px] uppercase tracking-[0.18em] text-white/30">
             Click to zoom
           </div>
         )}
