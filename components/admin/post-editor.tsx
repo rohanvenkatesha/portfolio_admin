@@ -30,6 +30,7 @@ import { savePost, type ActionResult } from "@/lib/actions/posts";
 import { BLOCK_TYPES, type BlockType, type PostBlock, type Rider, type TripPost } from "@/content/posts";
 import { SOCIAL_ICONS } from "@/content/profile";
 import type { MediaFile } from "@/lib/content/media";
+import { tripMediaFolder } from "@/content/media-path";
 import type { Trip } from "@/content/site";
 import { cn } from "@/lib/utils";
 
@@ -199,61 +200,95 @@ function IconButton({
 /** Compact media grid. Single-select for an image, multi for a gallery. */
 function MediaGrid({
   files,
+  folder,
   value,
   onChange,
   multiple,
 }: {
   files: MediaFile[];
+  /** Which folder these came from, so the UI can name it exactly. */
+  folder: string;
   value: string;
   onChange: (next: string) => void;
   multiple?: boolean;
 }) {
-  const selected = multiple ? value.split("\n").map((s) => s.trim()).filter(Boolean) : [value];
+  const selected = (multiple ? value.split("\n") : [value])
+    .map((s) => s.trim())
+    .filter(Boolean);
+
+  /**
+   * Images already assigned that this folder does not contain.
+   *
+   * Older posts point at photos filed before trips had their own folders. They
+   * still render and are still submitted untouched, but they cannot appear in a
+   * grid of a different folder — so they are counted rather than left to look
+   * like the selection was lost.
+   */
+  const outside = selected.filter((src) => !files.some((file) => file.src === src));
 
   if (files.length === 0) {
     return (
-      <p className="rounded-xl border border-dashed border-white/15 bg-panel-2 px-4 py-6 text-center text-[11px] leading-relaxed text-zinc-600">
-        Nothing in <code className="font-mono text-zinc-500">public/media/trips</code> yet. Drop
-        images there and commit them.
-      </p>
+      <div className="rounded-xl border border-dashed border-white/15 bg-panel-2 px-4 py-6 text-center">
+        <p className="text-[11px] leading-relaxed text-zinc-600">
+          No images for this trip yet. Add them to{" "}
+          <code className="font-mono text-zinc-400">public/media/{folder}</code> and commit.
+        </p>
+        {outside.length > 0 ? (
+          <p className="mt-2 text-[11px] text-zinc-600">
+            {outside.length} already assigned from elsewhere; kept as {outside.length === 1 ? "it is" : "they are"}.
+          </p>
+        ) : null}
+      </div>
     );
   }
 
   return (
-    <div className="grid max-h-56 grid-cols-4 gap-2 overflow-y-auto rounded-xl border border-white/10 bg-panel-2 p-2 sm:grid-cols-6">
-      {files.map((file) => {
-        const on = selected.includes(file.src);
-        return (
-          <button
-            key={file.src}
-            type="button"
-            title={file.name}
-            aria-pressed={on}
-            onClick={() => {
-              if (!multiple) {
-                onChange(on ? "" : file.src);
-                return;
-              }
-              // Toggling keeps click order, so a gallery is arranged by the
-              // order you pick rather than by folder order.
-              const next = on ? selected.filter((s) => s !== file.src) : [...selected, file.src];
-              onChange(next.join("\n"));
-            }}
-            className={cn(
-              "relative aspect-square overflow-hidden rounded-lg border transition-all",
-              on ? "border-brand-500 ring-2 ring-brand-500/30" : "border-white/10 hover:border-white/30"
-            )}
-          >
-            <Image src={file.src} alt={file.name} fill sizes="90px" className="object-cover" />
-            {on && multiple ? (
-              <span className="absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-brand-500 font-mono text-[9px] font-bold text-white">
-                {selected.indexOf(file.src) + 1}
-              </span>
-            ) : null}
-          </button>
-        );
-      })}
-    </div>
+    <>
+      <div className="grid max-h-56 grid-cols-4 gap-2 overflow-y-auto rounded-xl border border-white/10 bg-panel-2 p-2 sm:grid-cols-6">
+        {files.map((file) => {
+          const on = selected.includes(file.src);
+          return (
+            <button
+              key={file.src}
+              type="button"
+              title={file.name}
+              aria-pressed={on}
+              onClick={() => {
+                if (!multiple) {
+                  onChange(on ? "" : file.src);
+                  return;
+                }
+                // Toggling keeps click order, so a gallery is arranged by the
+                // order you pick rather than by folder order.
+                const next = on ? selected.filter((s) => s !== file.src) : [...selected, file.src];
+                onChange(next.join("\n"));
+              }}
+              className={cn(
+                "relative aspect-square overflow-hidden rounded-lg border transition-all",
+                on ? "border-brand-500 ring-2 ring-brand-500/30" : "border-white/10 hover:border-white/30"
+              )}
+            >
+              <Image src={file.src} alt={file.name} fill sizes="90px" className="object-cover" />
+              {on && multiple ? (
+                <span className="absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-brand-500 font-mono text-[9px] font-bold text-white">
+                  {selected.indexOf(file.src) + 1}
+                </span>
+              ) : null}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Always says where these came from — the folder is per trip now, and
+          the answer to "where do I put the photos" should not require an empty
+          folder to discover. */}
+      <p className="mt-2 text-[11px] leading-relaxed text-zinc-600">
+        From <code className="font-mono text-zinc-500">public/media/{folder}</code>
+        {outside.length > 0
+          ? ` · ${outside.length} assigned from elsewhere, kept as ${outside.length === 1 ? "it is" : "they are"}`
+          : null}
+      </p>
+    </>
   );
 }
 
@@ -392,7 +427,7 @@ export function PostEditor({
       {/* ---------------- Cover ---------------- */}
       <Section title="Cover photo">
         <input type="hidden" name="coverUrl" value={cover} />
-        <MediaGrid files={media} value={cover} onChange={setCover} />
+        <MediaGrid files={media} folder={tripMediaFolder(trip.slug)} value={cover} onChange={setCover} />
         {cover ? (
           <p className="mt-2 font-mono text-[11px] text-zinc-500">{cover}</p>
         ) : (
@@ -515,6 +550,7 @@ export function PostEditor({
                           <input type="hidden" name="blockBody" value={block.body} />
                           <MediaGrid
                             files={media}
+                            folder={tripMediaFolder(trip.slug)}
                             value={block.body}
                             multiple={block.type === "gallery"}
                             onChange={(next) =>

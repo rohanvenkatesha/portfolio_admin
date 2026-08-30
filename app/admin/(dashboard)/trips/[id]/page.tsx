@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, ExternalLink } from "lucide-react";
 import { getTripsFresh } from "@/lib/content/trips";
-import { listMedia } from "@/lib/content/media";
+import { listMedia, tripMediaFolder } from "@/lib/content/media";
 import { TripForm } from "@/components/admin/trip-form";
 import { PostList } from "@/components/admin/post-list";
 import { getPostsFresh } from "@/lib/content/posts";
@@ -12,15 +12,14 @@ export const dynamic = "force-dynamic";
 
 export default async function EditTripPage({ params }: PageProps<"/admin/trips/[id]">) {
   const { id } = await params;
-  const [trips, covers, allPosts] = await Promise.all([
-    getTripsFresh(),
-    listMedia("trips"),
-    getPostsFresh(),
-  ]);
+  const [trips, allPosts] = await Promise.all([getTripsFresh(), getPostsFresh()]);
   const trip = trips.find((t) => t.id === id);
   const posts = allPosts.filter((p) => p.tripId === id);
 
   if (!trip) notFound();
+
+  // Listed after the trip resolves, because the folder is named for its slug.
+  const covers = await listMedia(tripMediaFolder(trip.slug));
 
   return (
     <div className="space-y-6">

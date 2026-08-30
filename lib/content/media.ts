@@ -26,12 +26,19 @@ export type MediaFile = {
 };
 
 /**
- * List images in public/media/<folder>.
+ * List images in public/media/<folder>. Folders may be nested, as trip
+ * imagery is.
  *
  * Returns an empty array when the folder doesn't exist yet — a missing folder
  * is the normal state before the first commit, not an error worth crashing on.
+ * That matters more now than it did: a trip has no folder at all until one is
+ * added for it, so "empty" is what a new trip looks like.
  */
 export async function listMedia(folder: string): Promise<MediaFile[]> {
+  // Belt and braces alongside tripMediaFolder: nothing reaches readdir that
+  // could escape public/media, whoever built the string.
+  if (folder.includes("..")) return [];
+
   const dir = path.join(process.cwd(), "public", MEDIA_ROOT, folder);
 
   try {
@@ -55,4 +62,4 @@ export async function listMedia(folder: string): Promise<MediaFile[]> {
  * normalisers share one definition. It lives there rather than here because
  * the normalisers are client-importable and this module is `server-only`.
  */
-export { isValidMediaPath } from "@/content/media-path";
+export { isValidMediaPath, tripMediaFolder, TRIP_MEDIA_ROOT } from "@/content/media-path";
