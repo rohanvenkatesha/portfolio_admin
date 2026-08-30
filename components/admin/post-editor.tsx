@@ -8,15 +8,25 @@ import {
   ArrowDown,
   ArrowUp,
   CheckCircle2,
+  ChevronDown,
+  ChevronRight,
+  Copy,
   Eye,
   EyeOff,
+  Heading2,
+  Image as ImageIcon,
+  Images,
   Loader2,
+  Pilcrow,
   Plus,
+  Quote,
   Save,
   Trash2,
+  Video,
+  type LucideIcon,
 } from "lucide-react";
 import { savePost, type ActionResult } from "@/lib/actions/posts";
-import { BLOCK_TYPES, type BlockType, type PostBlock, type Rider, type TripPost, type Waypoint } from "@/content/posts";
+import { BLOCK_TYPES, type BlockType, type PostBlock, type Rider, type TripPost } from "@/content/posts";
 import { SOCIAL_ICONS } from "@/content/profile";
 import type { MediaFile } from "@/lib/content/media";
 import type { Trip } from "@/content/site";
@@ -25,46 +35,106 @@ import { cn } from "@/lib/utils";
 const inputClass =
   "w-full rounded-xl border border-white/10 bg-panel-2 px-3.5 py-2.5 text-sm text-white outline-none transition-colors placeholder:text-zinc-600 focus:border-brand-500/60 focus:ring-2 focus:ring-brand-500/20";
 
-/** What each block type calls its main field, and whether it has a caption. */
-const BLOCK_META: Record<BlockType, { label: string; body: string; caption?: string; textarea?: boolean }> = {
-  text: { label: "Paragraph", body: "Text — blank lines separate paragraphs", textarea: true },
-  heading: { label: "Heading", body: "Heading" },
-  image: { label: "Image", body: "Image", caption: "Caption (optional)" },
-  // Renders nothing where it sits — it's the bulk way to push frames into the
-  // gallery section. The label has to say so or it looks broken after saving.
-  gallery: { label: "Add to gallery", body: "Images", caption: "Descriptions" },
-  quote: { label: "Pull quote", body: "Quote", caption: "Attribution (optional)", textarea: true },
-  video: { label: "Video", body: "YouTube URL", caption: "Caption (optional)" },
+/**
+ * What each block type is called, what it does, and what its fields want.
+ *
+ * `hint` earns its place: several of these have consequences you cannot see
+ * from the editor — a heading decides where the reader's pages break, and a
+ * gallery renders nothing where it sits.
+ */
+const BLOCK_META: Record<
+  BlockType,
+  { label: string; hint: string; icon: LucideIcon; body: string; caption?: string; textarea?: boolean }
+> = {
+  text: {
+    label: "Paragraph",
+    hint: "Body copy. Blank lines inside it separate paragraphs.",
+    icon: Pilcrow,
+    body: "Text — blank lines separate paragraphs",
+    textarea: true,
+  },
+  heading: {
+    label: "Heading",
+    hint: "Also starts a new page for the reader, and names it in the pager.",
+    icon: Heading2,
+    body: "Heading",
+  },
+  image: {
+    label: "Image",
+    hint: "One photo, full width of the column.",
+    icon: ImageIcon,
+    body: "Image",
+    caption: "Caption (optional)",
+  },
+  gallery: {
+    label: "Add to gallery",
+    hint: "Several photos at once. They appear in Frames, not here.",
+    icon: Images,
+    body: "Images",
+    caption: "Descriptions",
+  },
+  quote: {
+    label: "Pull quote",
+    hint: "Set large, as a break in the writing.",
+    icon: Quote,
+    body: "Quote",
+    caption: "Attribution (optional)",
+    textarea: true,
+  },
+  video: {
+    label: "Video",
+    hint: "A YouTube link. Only the thumbnail loads until it is played.",
+    icon: Video,
+    body: "YouTube URL",
+    caption: "Caption (optional)",
+  },
 };
 
-/** Editor rows carry both fields regardless of type; the action ignores what doesn't apply. */
-type BlockRow = { type: BlockType; body: string; caption: string };
+/**
+ * Editor rows carry both fields regardless of type; the action ignores what
+ * doesn't apply.
+ *
+ * `id` is client-only and never submitted. It exists so React can key rows by
+ * identity rather than position — with an index key, inserting a block above
+ * another made React reuse the wrong DOM node, moving the caret and any
+ * expanded state onto a different block.
+ */
+/** A stop being edited. Coordinates stay blank until typed. */
+type RouteRow = { name: string; lat: number | ""; lng: number | ""; note?: string };
+
+type BlockRow = { id: string; type: BlockType; body: string; caption: string };
+
+/** Only ever called from event handlers, so it cannot desync a render. */
+const newId = () => `b-${Math.random().toString(36).slice(2, 9)}`;
 
 function toRows(blocks: PostBlock[]): BlockRow[] {
-  return blocks.map((block): BlockRow => {
+  return blocks.map((block, index): BlockRow => {
     switch (block.type) {
       case "text":
-        return { type: "text", body: block.body, caption: "" };
+        return { id: `b-${index}`, type: "text", body: block.body, caption: "" };
       case "heading":
-        return { type: "heading", body: block.text, caption: "" };
+        return { id: `b-${index}`, type: "heading", body: block.text, caption: "" };
       case "image":
-        return { type: "image", body: block.src, caption: block.caption ?? "" };
+        return { id: `b-${index}`, type: "image", body: block.src, caption: block.caption ?? "" };
       case "gallery":
-        return { type: "gallery", body: block.images.map((i) => i.src).join("\n"), caption: "" };
+        return { id: `b-${index}`, type: "gallery", body: block.images.map((i) => i.src).join("\n"), caption: "" };
       case "quote":
-        return { type: "quote", body: block.text, caption: block.attribution ?? "" };
+        return { id: `b-${index}`, type: "quote", body: block.text, caption: block.attribution ?? "" };
       case "video":
-        return { type: "video", body: block.url, caption: block.caption ?? "" };
+        return { id: `b-${index}`, type: "video", body: block.url, caption: block.caption ?? "" };
     }
   });
 }
 
 function Section({
   title,
+  description,
   action,
   children,
 }: {
   title: string;
+  /** One line under the title, for behaviour the controls cannot show. */
+  description?: string;
   action?: React.ReactNode;
   children: React.ReactNode;
 }) {
@@ -74,6 +144,9 @@ function Section({
         <h2 className="text-sm font-semibold text-white">{title}</h2>
         {action}
       </div>
+      {description ? (
+        <p className="mt-1.5 max-w-2xl text-[12px] leading-relaxed text-zinc-500">{description}</p>
+      ) : null}
       <div className="mt-5">{children}</div>
     </section>
   );
@@ -207,12 +280,46 @@ export function PostEditor({
   const [result, setResult] = useState<ActionResult | null>(null);
 
   const [blocks, setBlocks] = useState<BlockRow[]>(toRows(post.blocks));
-  const [route, setRoute] = useState<Waypoint[]>(post.route);
+  /**
+   * Stops, with coordinates that may be blank while being typed.
+   *
+   * A new stop used to start at 0,0. Those are real, finite numbers, so they
+   * pass every check and put a pin in the Atlantic — the exact failure the save
+   * path now rejects blanks to prevent. Starting empty means an unfilled stop
+   * is reported rather than plotted.
+   */
+  const [route, setRoute] = useState<RouteRow[]>(post.route);
   const [riders, setRiders] = useState<Rider[]>(post.riders);
   const [stats, setStats] = useState(post.stats);
   const [related, setRelated] = useState<string[]>(post.relatedTripIds);
   const [published, setPublished] = useState(post.published);
   const [cover, setCover] = useState(post.coverUrl ?? "");
+
+  /**
+   * Collapsed block ids.
+   *
+   * By id, not index, because inserting or moving a block would otherwise fold
+   * a different one. An array rather than a Set so the value stays plainly
+   * comparable and cheap to copy at these sizes.
+   */
+  const [collapsed, setCollapsed] = useState<string[]>([]);
+
+  const toggleBlock = (id: string) =>
+    setCollapsed((ids) => (ids.includes(id) ? ids.filter((x) => x !== id) : [...ids, id]));
+
+  /**
+   * Add a block at a position rather than at the end.
+   *
+   * Appending was the whole problem with this editor: writing a paragraph
+   * between the second and third blocks of a long post meant adding at the
+   * bottom and then clicking Move up until it arrived.
+   */
+  const insertAt = (index: number, type: BlockType) =>
+    setBlocks((b) => [
+      ...b.slice(0, index),
+      { id: newId(), type, body: "", caption: "" },
+      ...b.slice(index),
+    ]);
 
   function move<T>(list: T[], from: number, delta: number): T[] {
     const to = from + delta;
@@ -286,118 +393,178 @@ export function PostEditor({
       {/* ---------------- Body ---------------- */}
       <Section
         title="Body"
-        action={
-          <div className="flex flex-wrap gap-1.5">
-            {BLOCK_TYPES.map((type) => (
-              <AddButton
-                key={type}
-                label={BLOCK_META[type].label}
-                onClick={() => setBlocks((b) => [...b, { type, body: "", caption: "" }])}
-              />
-            ))}
-          </div>
-        }
+        description="Blocks render top to bottom. Use the + between them to add one where you want it, instead of adding at the end and walking it up."
       >
         {blocks.length === 0 ? (
-          <p className="rounded-xl border border-dashed border-white/15 bg-panel-2 px-4 py-8 text-center text-[12px] text-zinc-600">
-            No blocks yet. Add a paragraph, image, gallery, quote or video above.
-          </p>
+          <div className="rounded-xl border border-dashed border-white/15 bg-panel-2 px-4 py-8 text-center">
+            <p className="text-[12.5px] text-zinc-500">Nothing written yet.</p>
+            <div className="mt-4 flex flex-wrap justify-center gap-1.5">
+              {BLOCK_TYPES.map((type) => (
+                <TypeButton key={type} type={type} onClick={() => insertAt(0, type)} />
+              ))}
+            </div>
+          </div>
         ) : (
-          <div className="space-y-3">
+          <div>
+            <InsertBar onInsert={(type) => insertAt(0, type)} />
+
             {blocks.map((block, index) => {
               const meta = BLOCK_META[block.type];
+              const Icon = meta.icon;
+              const open = !collapsed.includes(block.id);
+
               return (
-                <div key={index} className="rounded-xl border border-white/8 bg-panel-2 p-4">
-                  <div className="flex items-center justify-between gap-3">
-                    <span className="inline-flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.18em] text-brand-400">
-                      {index + 1}. {meta.label}
-                    </span>
-                    <div className="flex gap-1.5">
-                      <IconButton label="Move up" disabled={index === 0} onClick={() => setBlocks((b) => move(b, index, -1))}>
-                        <ArrowUp className="h-3.5 w-3.5" />
-                      </IconButton>
-                      <IconButton label="Move down" disabled={index === blocks.length - 1} onClick={() => setBlocks((b) => move(b, index, 1))}>
-                        <ArrowDown className="h-3.5 w-3.5" />
-                      </IconButton>
-                      <IconButton label="Remove block" danger onClick={() => setBlocks((b) => b.filter((_, i) => i !== index))}>
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </IconButton>
+                <div key={block.id}>
+                  <div className="rounded-xl border border-white/8 bg-panel-2">
+                    <div className="flex items-center gap-2 px-3 py-2.5">
+                      {/* The whole strip toggles, so a long post folds down to
+                          a readable outline. */}
+                      <button
+                        type="button"
+                        onClick={() => toggleBlock(block.id)}
+                        aria-expanded={open}
+                        className="flex min-w-0 flex-1 items-center gap-2 text-left"
+                      >
+                        {open ? (
+                          <ChevronDown className="h-3.5 w-3.5 shrink-0 text-zinc-600" />
+                        ) : (
+                          <ChevronRight className="h-3.5 w-3.5 shrink-0 text-zinc-600" />
+                        )}
+                        <Icon className="h-3.5 w-3.5 shrink-0 text-brand-400" />
+                        <span className="shrink-0 font-mono text-[10px] uppercase tracking-[0.18em] text-brand-400">
+                          {meta.label}
+                        </span>
+                        {!open ? (
+                          <span className="truncate text-[12px] text-zinc-500">{previewOf(block)}</span>
+                        ) : null}
+                      </button>
+
+                      <div className="flex shrink-0 gap-1.5">
+                        <IconButton
+                          label="Move up"
+                          disabled={index === 0}
+                          onClick={() => setBlocks((b) => move(b, index, -1))}
+                        >
+                          <ArrowUp className="h-3.5 w-3.5" />
+                        </IconButton>
+                        <IconButton
+                          label="Move down"
+                          disabled={index === blocks.length - 1}
+                          onClick={() => setBlocks((b) => move(b, index, 1))}
+                        >
+                          <ArrowDown className="h-3.5 w-3.5" />
+                        </IconButton>
+                        <IconButton
+                          label="Duplicate block"
+                          onClick={() =>
+                            setBlocks((b) => [
+                              ...b.slice(0, index + 1),
+                              { ...b[index], id: newId() },
+                              ...b.slice(index + 1),
+                            ])
+                          }
+                        >
+                          <Copy className="h-3.5 w-3.5" />
+                        </IconButton>
+                        <IconButton
+                          label="Remove block"
+                          danger
+                          onClick={() => setBlocks((b) => b.filter((_, i) => i !== index))}
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </IconButton>
+                      </div>
                     </div>
-                  </div>
 
-                  <input type="hidden" name="blockType" value={block.type} />
+                    <input type="hidden" name="blockType" value={block.type} />
 
-                  <div className="mt-3 space-y-2">
-                    {block.type === "image" || block.type === "gallery" ? (
+                    {open ? (
+                      <div className="space-y-2 border-t border-white/8 p-3">
+                        <p className="text-[11px] leading-relaxed text-zinc-600">{meta.hint}</p>
+
+                        {block.type === "image" || block.type === "gallery" ? (
+                          <>
+                            <input type="hidden" name="blockBody" value={block.body} />
+                            <MediaGrid
+                              files={media}
+                              value={block.body}
+                              multiple={block.type === "gallery"}
+                              onChange={(next) =>
+                                setBlocks((b) =>
+                                  b.map((row, i) => (i === index ? { ...row, body: next } : row))
+                                )
+                              }
+                            />
+                          </>
+                        ) : meta.textarea ? (
+                          <textarea
+                            suppressHydrationWarning
+                            name="blockBody"
+                            rows={block.type === "text" ? 6 : 3}
+                            placeholder={meta.body}
+                            value={block.body}
+                            onChange={(e) =>
+                              setBlocks((b) =>
+                                b.map((row, i) => (i === index ? { ...row, body: e.target.value } : row))
+                              )
+                            }
+                            className={cn(inputClass, "resize-y leading-relaxed")}
+                          />
+                        ) : (
+                          <input
+                            suppressHydrationWarning
+                            name="blockBody"
+                            placeholder={meta.body}
+                            value={block.body}
+                            onChange={(e) =>
+                              setBlocks((b) =>
+                                b.map((row, i) => (i === index ? { ...row, body: e.target.value } : row))
+                              )
+                            }
+                            className={inputClass}
+                          />
+                        )}
+
+                        {/* Every row submits a caption so the arrays stay
+                            aligned, even where the type has no use for one. */}
+                        {block.type === "gallery" ? (
+                          <GalleryCaptions
+                            paths={block.body}
+                            value={block.caption}
+                            onChange={(next) =>
+                              setBlocks((b) =>
+                                b.map((row, i) => (i === index ? { ...row, caption: next } : row))
+                              )
+                            }
+                          />
+                        ) : meta.caption ? (
+                          <input
+                            suppressHydrationWarning
+                            name="blockCaption"
+                            placeholder={meta.caption}
+                            value={block.caption}
+                            onChange={(e) =>
+                              setBlocks((b) =>
+                                b.map((row, i) => (i === index ? { ...row, caption: e.target.value } : row))
+                              )
+                            }
+                            className={inputClass}
+                          />
+                        ) : (
+                          <input type="hidden" name="blockCaption" value="" />
+                        )}
+                      </div>
+                    ) : (
+                      /* Collapsed rows still submit, or every array after this
+                         one shifts by a block. */
                       <>
                         <input type="hidden" name="blockBody" value={block.body} />
-                        {block.type === "gallery" ? (
-                          <p className="rounded-lg border border-white/8 bg-panel px-3 py-2 text-[11px] leading-relaxed text-zinc-500">
-                            These don&apos;t appear here in the post — they go into the gallery
-                            section at the bottom, alongside every other image.
-                          </p>
-                        ) : null}
-                        <MediaGrid
-                          files={media}
-                          value={block.body}
-                          multiple={block.type === "gallery"}
-                          onChange={(next) =>
-                            setBlocks((b) => b.map((row, i) => (i === index ? { ...row, body: next } : row)))
-                          }
-                        />
+                        <input type="hidden" name="blockCaption" value={block.caption} />
                       </>
-                    ) : meta.textarea ? (
-                      <textarea
-                        suppressHydrationWarning
-                        name="blockBody"
-                        rows={block.type === "text" ? 6 : 3}
-                        placeholder={meta.body}
-                        value={block.body}
-                        onChange={(e) =>
-                          setBlocks((b) => b.map((row, i) => (i === index ? { ...row, body: e.target.value } : row)))
-                        }
-                        className={cn(inputClass, "resize-y leading-relaxed")}
-                      />
-                    ) : (
-                      <input
-                        suppressHydrationWarning
-                        name="blockBody"
-                        placeholder={meta.body}
-                        value={block.body}
-                        onChange={(e) =>
-                          setBlocks((b) => b.map((row, i) => (i === index ? { ...row, body: e.target.value } : row)))
-                        }
-                        className={inputClass}
-                      />
-                    )}
-
-                    {/* Every row submits a caption so the arrays stay aligned,
-                        even where the type has no use for one. */}
-                    {block.type === "gallery" ? (
-                      <GalleryCaptions
-                        paths={block.body}
-                        value={block.caption}
-                        onChange={(next) =>
-                          setBlocks((b) =>
-                            b.map((row, i) => (i === index ? { ...row, caption: next } : row))
-                          )
-                        }
-                      />
-                    ) : meta.caption ? (
-                      <input
-                        suppressHydrationWarning
-                        name="blockCaption"
-                        placeholder={meta.caption}
-                        value={block.caption}
-                        onChange={(e) =>
-                          setBlocks((b) => b.map((row, i) => (i === index ? { ...row, caption: e.target.value } : row)))
-                        }
-                        className={inputClass}
-                      />
-                    ) : (
-                      <input type="hidden" name="blockCaption" value="" />
                     )}
                   </div>
+
+                  <InsertBar onInsert={(type) => insertAt(index + 1, type)} />
                 </div>
               );
             })}
@@ -408,7 +575,7 @@ export function PostEditor({
       {/* ---------------- Route ---------------- */}
       <Section
         title="Route"
-        action={<AddButton label="Add stop" onClick={() => setRoute((r) => [...r, { name: "", lat: 0, lng: 0 }])} />}
+        action={<AddButton label="Add stop" onClick={() => setRoute((r) => [...r, { name: "", lat: "", lng: "" }])} />}
       >
         {route.length === 0 ? (
           <p className="rounded-xl border border-dashed border-white/15 bg-panel-2 px-4 py-8 text-center text-[12px] text-zinc-600">
@@ -641,4 +808,94 @@ function GalleryCaptions({
       ))}
     </div>
   );
+}
+
+/**
+ * A block type, offered as a labelled button.
+ *
+ * The icon matters more than it looks: the six types are told apart at a
+ * glance while scanning a long body, where six similar words are not.
+ */
+function TypeButton({ type, onClick }: { type: BlockType; onClick: () => void }) {
+  const meta = BLOCK_META[type];
+  const Icon = meta.icon;
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      title={meta.hint}
+      className="inline-flex items-center gap-1.5 rounded-full border border-white/12 px-3 py-1.5 text-[12px] font-medium text-zinc-400 transition-colors hover:border-brand-500/50 hover:text-brand-300"
+    >
+      <Icon className="h-3.5 w-3.5" />
+      {meta.label}
+    </button>
+  );
+}
+
+/**
+ * The gap between two blocks, and the way to add one there.
+ *
+ * Click to open rather than reveal on hover: the admin is used on a phone,
+ * where there is no hover, and a control you cannot reach on touch is not a
+ * control. Closed it is a hairline with a small +, so a body of twenty blocks
+ * does not become a body of forty rows.
+ */
+function InsertBar({ onInsert }: { onInsert: (type: BlockType) => void }) {
+  const [open, setOpen] = useState(false);
+
+  if (!open) {
+    return (
+      <div className="group flex items-center gap-2 py-1.5">
+        <span className="h-px flex-1 bg-white/8 transition-colors group-hover:bg-brand-500/30" />
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          aria-label="Add a block here"
+          className="flex h-6 w-6 items-center justify-center rounded-full border border-white/12 text-zinc-600 transition-colors hover:border-brand-500/60 hover:text-brand-400"
+        >
+          <Plus className="h-3 w-3" />
+        </button>
+        <span className="h-px flex-1 bg-white/8 transition-colors group-hover:bg-brand-500/30" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="my-1.5 rounded-xl border border-brand-500/25 bg-brand-500/[0.04] p-2.5">
+      <div className="flex flex-wrap items-center gap-1.5">
+        {BLOCK_TYPES.map((type) => (
+          <TypeButton
+            key={type}
+            type={type}
+            onClick={() => {
+              onInsert(type);
+              setOpen(false);
+            }}
+          />
+        ))}
+        <button
+          type="button"
+          onClick={() => setOpen(false)}
+          className="ml-auto rounded-full px-2.5 py-1.5 text-[12px] text-zinc-500 transition-colors hover:text-zinc-200"
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/** One line describing a folded block, so the outline is readable. */
+function previewOf(block: BlockRow): string {
+  if (block.type === "gallery" || block.type === "image") {
+    const files = block.body.split("\n").map((l) => l.trim()).filter(Boolean);
+    if (files.length === 0) return "No image chosen";
+    if (block.type === "image") return files[0].split("/").pop() ?? "";
+    return `${files.length} image${files.length === 1 ? "" : "s"}`;
+  }
+
+  const text = block.body.trim().replace(/\s+/g, " ");
+  if (!text) return "Empty";
+  return text.length > 80 ? `${text.slice(0, 80)}…` : text;
 }
