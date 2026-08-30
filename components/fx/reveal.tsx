@@ -22,7 +22,7 @@ export function Reveal({
   delay = 0,
   duration = 0.7,
   once = true,
-  amount = 0.25,
+  amount = "some",
 }: {
   children: ReactNode;
   className?: string;
@@ -30,7 +30,7 @@ export function Reveal({
   delay?: number;
   duration?: number;
   once?: boolean;
-  amount?: number;
+  amount?: number | "some" | "all";
 }) {
   const reduceMotion = useReducedMotion();
   const offset = offsets[direction];
@@ -42,7 +42,20 @@ export function Reveal({
       className={className}
       initial={{ opacity: 0, x: offset.x, y: offset.y, filter: "blur(6px)" }}
       whileInView={{ opacity: 1, x: 0, y: 0, filter: "blur(0px)" }}
-      viewport={{ once, amount }}
+      /**
+       * `amount: "some"` with a shrunken root, not a fraction.
+       *
+       * This was `amount: 0.25`, which asks for a quarter of the element to be
+       * on screen — impossible for anything taller than four viewports, so it
+       * never fired and the element stayed at opacity 0 permanently. A single
+       * 5,300-character paragraph measured 4,793px and was invisible on a phone
+       * for exactly this reason.
+       *
+       * "some" triggers on any intersection at all, and the inset margin holds
+       * back the start until the element is properly into the viewport, which
+       * is what the fraction was really for.
+       */
+      viewport={{ once, amount, margin: "-12% 0px -12% 0px" }}
       transition={{ duration, delay, ease: [0.16, 1, 0.3, 1] }}
     >
       {children}
@@ -72,7 +85,9 @@ export function RevealGroup({
       className={className}
       initial="hidden"
       whileInView="show"
-      viewport={{ once, amount: 0.15 }}
+      // Same reasoning as Reveal above: a fraction can exceed the viewport on
+      // a tall group and then never fires.
+      viewport={{ once, amount: "some", margin: "-10% 0px -10% 0px" }}
       variants={{
         hidden: {},
         show: { transition: { staggerChildren: stagger, delayChildren: delay } },

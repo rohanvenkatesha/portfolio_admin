@@ -287,3 +287,124 @@ export function youtubeThumbnail(url: string): string | null {
   const id = youtubeId(url);
   return id ? `https://i.ytimg.com/vi/${id}/hqdefault.jpg` : null;
 }
+/* -------------------------------------------------------------------------- */
+/* Paginating the body                                                         */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Roughly how much one page of the body should hold.
+ *
+ * A budget rather than a block count, because blocks are nothing like equal:
+ * one pasted essay measured 11,088px as a single text block, so counting
+ * blocks would have put twelve screens of reading on one "page".
+ *
+ * Set high on purpose. A page should be a decent sitting of reading — at a
+ * budget of 10 a long post came out as nine pages, which is a pager you click
+ * through rather than an article you read. This lands the same post at three
+ * or four.
+ */
+export const PAGE_BUDGET = 26;
+
+/** What each kind of block costs against that budget. */
+function weigh(block: PostBlock): number {
+  switch (block.type) {
+    case "image":
+    case "video":
+    case "quote":
+      return 3;
+    default:
+      return 1;
+  }
+}
+
+/**
+ * Break the body into paragraph-sized units.
+ *
+ * Writers paste whole sections into one text block, so a text block is not a
+ * paragraph — it can be the entire post. Splitting on blank lines (falling back
+ * to single newlines) gives units small enough to page sensibly. Gallery blocks
+ * are dropped: they render nothing inline, their images go to the gallery reel
+ * instead, so leaving them in would let a page fill up with nothing visible.
+ */
+function toUnits(blocks: PostBlock[]): PostBlock[] {
+  return blocks.flatMap((block): PostBlock[] => {
+    if (block.type === "gallery") return [];
+    if (block.type !== "text") return [block];
+
+    const byBlankLine = block.body.split(/\n{2,}/);
+    const parts = (byBlankLine.length > 1 ? byBlankLine : block.body.split(/\n+/))
+      .map((part) => part.trim())
+      .filter(Boolean);
+
+    return parts.length > 0 ? parts.map((body) => ({ type: "text", body })) : [];
+  });
+}
+
+/**
+ * Put split paragraphs back together within a page.
+ *
+ * Rendering each paragraph as its own block would put the full inter-block gap
+ * between every one of them. Rejoining with a blank line reproduces exactly
+ * what the writer typed, since the body renders with `whitespace-pre-line`.
+ */
+function mergeText(units: PostBlock[]): PostBlock[] {
+  const out: PostBlock[] = [];
+  let run: string[] = [];
+
+  const flushRun = () => {
+    if (run.length > 0) {
+      out.push({ type: "text", body: run.join("\n\n") });
+      run = [];
+    }
+  };
+
+  for (const unit of units) {
+    if (unit.type === "text") {
+      run.push(unit.body);
+      continue;
+    }
+    flushRun();
+    out.push(unit);
+  }
+  flushRun();
+
+  return out;
+}
+
+/**
+ * Split a post body into pages.
+ *
+ * Headings force a break, so a writer controls where pages divide by writing
+ * one — the pager then reads as the post's own contents. Everything else is
+ * filled to `budget`, which also keeps a runaway chapter from becoming a page
+ * you have to scroll for a minute.
+ *
+ * Only the body is paged. The route, the frames and the rest are sections of
+ * the page itself and stay put.
+ */
+export function paginateBlocks(blocks: PostBlock[], budget: number = PAGE_BUDGET): PostBlock[][] {
+  const units = toUnits(blocks);
+  if (units.length === 0) return [];
+
+  const pages: PostBlock[][] = [];
+  let current: PostBlock[] = [];
+  let weight = 0;
+
+  for (const unit of units) {
+    const cost = weigh(unit);
+    // A heading opens a page; anything else starts one only once the current
+    // page is full. Either way an empty page is never flushed.
+    const breaks = unit.type === "heading" || weight + cost > budget;
+    if (current.length > 0 && breaks) {
+      pages.push(current);
+      current = [];
+      weight = 0;
+    }
+
+    current.push(unit);
+    weight += cost;
+  }
+  if (current.length > 0) pages.push(current);
+
+  return pages.map(mergeText);
+}

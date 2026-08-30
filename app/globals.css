@@ -397,9 +397,11 @@
   border-radius: 2px;
 }
 
-/* Pushes the basemap down so the accent is the brightest thing in frame. */
+/* Pushes the basemap down so the accent is the brightest thing in frame.
+   Lighter than it was: Esri's Dark Gray Canvas arrives muted already, and the
+   old CARTO-era grayscale flattened its landmasses into the sea. */
 .route-canvas .leaflet-tile-pane {
-  filter: grayscale(0.55) contrast(1.15) brightness(0.72);
+  filter: contrast(1.06) brightness(0.88);
 }
 
 .route-glow {

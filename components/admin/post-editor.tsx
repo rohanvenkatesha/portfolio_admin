@@ -32,7 +32,7 @@ const BLOCK_META: Record<BlockType, { label: string; body: string; caption?: str
   image: { label: "Image", body: "Image", caption: "Caption (optional)" },
   // Renders nothing where it sits — it's the bulk way to push frames into the
   // gallery section. The label has to say so or it looks broken after saving.
-  gallery: { label: "Add to gallery", body: "Images", caption: "" },
+  gallery: { label: "Add to gallery", body: "Images", caption: "Descriptions" },
   quote: { label: "Pull quote", body: "Quote", caption: "Attribution (optional)", textarea: true },
   video: { label: "Video", body: "YouTube URL", caption: "Caption (optional)" },
 };
@@ -373,7 +373,17 @@ export function PostEditor({
 
                     {/* Every row submits a caption so the arrays stay aligned,
                         even where the type has no use for one. */}
-                    {meta.caption ? (
+                    {block.type === "gallery" ? (
+                      <GalleryCaptions
+                        paths={block.body}
+                        value={block.caption}
+                        onChange={(next) =>
+                          setBlocks((b) =>
+                            b.map((row, i) => (i === index ? { ...row, caption: next } : row))
+                          )
+                        }
+                      />
+                    ) : meta.caption ? (
                       <input
                         suppressHydrationWarning
                         name="blockCaption"
@@ -567,5 +577,68 @@ export function PostEditor({
         ) : null}
       </div>
     </form>
+  );
+}
+
+
+/**
+ * Per-image descriptions for a gallery block.
+ *
+ * A gallery's paths come from the media picker, so they can't carry a caption
+ * inline the way a single image's field does. The captions ride in the block's
+ * one caption field instead, newline-joined and aligned to the paths by index —
+ * the same shape the action already expects, so nothing new had to be threaded
+ * through the form.
+ *
+ * Descriptions are what the gallery shows as each frame's label, so without
+ * this every bulk-added image was stuck reading "Frame 04".
+ */
+function GalleryCaptions({
+  paths,
+  value,
+  onChange,
+}: {
+  paths: string;
+  value: string;
+  onChange: (next: string) => void;
+}) {
+  const list = paths
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean);
+
+  const captions = value.split("\n");
+
+  if (list.length === 0) {
+    // Nothing picked yet — still submit the field so the arrays stay aligned.
+    return <input type="hidden" name="blockCaption" value={value} />;
+  }
+
+  const setAt = (index: number, next: string) => {
+    // Padded to the path count so a caption typed against the last image can't
+    // land on an earlier one once the value is split again.
+    const filled = Array.from({ length: list.length }, (_, i) => captions[i] ?? "");
+    filled[index] = next.replace(/\n/g, " ");
+    onChange(filled.join("\n"));
+  };
+
+  return (
+    <div className="space-y-2">
+      <input type="hidden" name="blockCaption" value={value} />
+      {list.map((path, i) => (
+        <label key={path + i} className="flex items-center gap-2.5">
+          <span className="w-28 shrink-0 truncate font-mono text-[10.5px] text-zinc-600">
+            {path.split("/").pop()}
+          </span>
+          <input
+            suppressHydrationWarning
+            placeholder="Description (optional)"
+            value={captions[i] ?? ""}
+            onChange={(e) => setAt(i, e.target.value)}
+            className={inputClass}
+          />
+        </label>
+      ))}
+    </div>
   );
 }
