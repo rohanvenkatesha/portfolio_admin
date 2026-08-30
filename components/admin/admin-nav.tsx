@@ -43,9 +43,22 @@ export function AdminNav() {
   return (
     <nav
       aria-label="Admin sections"
-      // Scrolls sideways rather than wrapping: this many links wrap to two rows
-      // on a laptop and push the page content down on every screen.
-      className="no-scrollbar mask-fade-x -mx-4 flex gap-1 overflow-x-auto px-4 sm:-mx-6 sm:px-6"
+      /**
+       * Scrolls sideways rather than wrapping: this many links wrap to two rows
+       * on a laptop and push the page content down on every screen.
+       *
+       * The vertical padding is load-bearing. `overflow-x: auto` computes
+       * `overflow-y` to auto as well, so this clips top and bottom too — and
+       * the active pill's ring is drawn *outside* its border box, landing
+       * exactly on that edge and coming out shaved. The negative margin puts
+       * the layout back where it was.
+       *
+       * No edge fade here either. It faded the outer 6% of the nav, which on a
+       * wide screen is wider than the padding, so the first and last pills were
+       * half transparent at rest — and Overview, the one selected by default,
+       * is the first.
+       */
+      className="no-scrollbar -mx-4 -my-1 flex gap-1 overflow-x-auto px-4 py-1 sm:-mx-6 sm:px-6"
     >
       {LINKS.map((link) => {
         const isActive = active === link.href;
