@@ -7,6 +7,7 @@ import {
   AlertCircle,
   ArrowDown,
   ArrowUp,
+  ArrowUpToLine,
   CheckCircle2,
   ChevronDown,
   ChevronRight,
@@ -304,6 +305,15 @@ export function PostEditor({
    */
   const [collapsed, setCollapsed] = useState<string[]>([]);
 
+  /**
+   * Whether the palette above the first block is showing.
+   *
+   * Every other position is reachable from the Add block below of the block
+   * before it. Position zero is the exception, so it is offered from the first
+   * block's own header instead of a permanent bar above the list.
+   */
+  const [topOpen, setTopOpen] = useState(false);
+
   const toggleBlock = (id: string) =>
     setCollapsed((ids) => (ids.includes(id) ? ids.filter((x) => x !== id) : [...ids, id]));
 
@@ -393,7 +403,7 @@ export function PostEditor({
       {/* ---------------- Body ---------------- */}
       <Section
         title="Body"
-        description="Blocks render top to bottom. Use the + between them to add one where you want it, instead of adding at the end and walking it up."
+        description="Blocks render top to bottom. Every block has an Add block below it, so a new one lands where you are working rather than at the end."
       >
         {blocks.length === 0 ? (
           <div className="rounded-xl border border-dashed border-white/15 bg-panel-2 px-4 py-8 text-center">
@@ -405,8 +415,20 @@ export function PostEditor({
             </div>
           </div>
         ) : (
-          <div>
-            <InsertBar onInsert={(type) => insertAt(0, type)} />
+          <div className="space-y-2">
+            {/* Only appears when asked for, from the first block's own control —
+                there is no permanent bar at the top of the list. */}
+            {topOpen ? (
+              <div className="rounded-xl border border-brand-500/25 bg-brand-500/[0.04] p-2.5">
+                <BlockPalette
+                  onPick={(type) => {
+                    insertAt(0, type);
+                    setTopOpen(false);
+                  }}
+                  onCancel={() => setTopOpen(false)}
+                />
+              </div>
+            ) : null}
 
             {blocks.map((block, index) => {
               const meta = BLOCK_META[block.type];
@@ -414,157 +436,164 @@ export function PostEditor({
               const open = !collapsed.includes(block.id);
 
               return (
-                <div key={block.id}>
-                  <div className="rounded-xl border border-white/8 bg-panel-2">
-                    <div className="flex items-center gap-2 px-3 py-2.5">
-                      {/* The whole strip toggles, so a long post folds down to
-                          a readable outline. */}
-                      <button
-                        type="button"
-                        onClick={() => toggleBlock(block.id)}
-                        aria-expanded={open}
-                        className="flex min-w-0 flex-1 items-center gap-2 text-left"
+                <div key={block.id} className="rounded-xl border border-white/8 bg-panel-2">
+                  <div className="flex items-center gap-2 px-3 py-2.5">
+                    {/* The whole strip toggles, so a long post folds down to
+                        a readable outline. */}
+                    <button
+                      type="button"
+                      onClick={() => toggleBlock(block.id)}
+                      aria-expanded={open}
+                      className="flex min-w-0 flex-1 items-center gap-2 text-left"
+                    >
+                      {open ? (
+                        <ChevronDown className="h-3.5 w-3.5 shrink-0 text-zinc-600" />
+                      ) : (
+                        <ChevronRight className="h-3.5 w-3.5 shrink-0 text-zinc-600" />
+                      )}
+                      <Icon className="h-3.5 w-3.5 shrink-0 text-brand-400" />
+                      <span className="shrink-0 font-mono text-[10px] uppercase tracking-[0.18em] text-brand-400">
+                        {meta.label}
+                      </span>
+                      {!open ? (
+                        <span className="truncate text-[12px] text-zinc-500">{previewOf(block)}</span>
+                      ) : null}
+                    </button>
+
+                    <div className="flex shrink-0 gap-1.5">
+                      {/* Every other position is reachable from the block above
+                          it; this is the one that is not. */}
+                      {index === 0 ? (
+                        <IconButton label="Insert block above" onClick={() => setTopOpen(true)}>
+                          <ArrowUpToLine className="h-3.5 w-3.5" />
+                        </IconButton>
+                      ) : null}
+                      <IconButton
+                        label="Move up"
+                        disabled={index === 0}
+                        onClick={() => setBlocks((b) => move(b, index, -1))}
                       >
-                        {open ? (
-                          <ChevronDown className="h-3.5 w-3.5 shrink-0 text-zinc-600" />
-                        ) : (
-                          <ChevronRight className="h-3.5 w-3.5 shrink-0 text-zinc-600" />
-                        )}
-                        <Icon className="h-3.5 w-3.5 shrink-0 text-brand-400" />
-                        <span className="shrink-0 font-mono text-[10px] uppercase tracking-[0.18em] text-brand-400">
-                          {meta.label}
-                        </span>
-                        {!open ? (
-                          <span className="truncate text-[12px] text-zinc-500">{previewOf(block)}</span>
-                        ) : null}
-                      </button>
-
-                      <div className="flex shrink-0 gap-1.5">
-                        <IconButton
-                          label="Move up"
-                          disabled={index === 0}
-                          onClick={() => setBlocks((b) => move(b, index, -1))}
-                        >
-                          <ArrowUp className="h-3.5 w-3.5" />
-                        </IconButton>
-                        <IconButton
-                          label="Move down"
-                          disabled={index === blocks.length - 1}
-                          onClick={() => setBlocks((b) => move(b, index, 1))}
-                        >
-                          <ArrowDown className="h-3.5 w-3.5" />
-                        </IconButton>
-                        <IconButton
-                          label="Duplicate block"
-                          onClick={() =>
-                            setBlocks((b) => [
-                              ...b.slice(0, index + 1),
-                              { ...b[index], id: newId() },
-                              ...b.slice(index + 1),
-                            ])
-                          }
-                        >
-                          <Copy className="h-3.5 w-3.5" />
-                        </IconButton>
-                        <IconButton
-                          label="Remove block"
-                          danger
-                          onClick={() => setBlocks((b) => b.filter((_, i) => i !== index))}
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </IconButton>
-                      </div>
+                        <ArrowUp className="h-3.5 w-3.5" />
+                      </IconButton>
+                      <IconButton
+                        label="Move down"
+                        disabled={index === blocks.length - 1}
+                        onClick={() => setBlocks((b) => move(b, index, 1))}
+                      >
+                        <ArrowDown className="h-3.5 w-3.5" />
+                      </IconButton>
+                      <IconButton
+                        label="Duplicate block"
+                        onClick={() =>
+                          setBlocks((b) => [
+                            ...b.slice(0, index + 1),
+                            { ...b[index], id: newId() },
+                            ...b.slice(index + 1),
+                          ])
+                        }
+                      >
+                        <Copy className="h-3.5 w-3.5" />
+                      </IconButton>
+                      <IconButton
+                        label="Remove block"
+                        danger
+                        onClick={() => setBlocks((b) => b.filter((_, i) => i !== index))}
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </IconButton>
                     </div>
-
-                    <input type="hidden" name="blockType" value={block.type} />
-
-                    {open ? (
-                      <div className="space-y-2 border-t border-white/8 p-3">
-                        <p className="text-[11px] leading-relaxed text-zinc-600">{meta.hint}</p>
-
-                        {block.type === "image" || block.type === "gallery" ? (
-                          <>
-                            <input type="hidden" name="blockBody" value={block.body} />
-                            <MediaGrid
-                              files={media}
-                              value={block.body}
-                              multiple={block.type === "gallery"}
-                              onChange={(next) =>
-                                setBlocks((b) =>
-                                  b.map((row, i) => (i === index ? { ...row, body: next } : row))
-                                )
-                              }
-                            />
-                          </>
-                        ) : meta.textarea ? (
-                          <textarea
-                            suppressHydrationWarning
-                            name="blockBody"
-                            rows={block.type === "text" ? 6 : 3}
-                            placeholder={meta.body}
-                            value={block.body}
-                            onChange={(e) =>
-                              setBlocks((b) =>
-                                b.map((row, i) => (i === index ? { ...row, body: e.target.value } : row))
-                              )
-                            }
-                            className={cn(inputClass, "resize-y leading-relaxed")}
-                          />
-                        ) : (
-                          <input
-                            suppressHydrationWarning
-                            name="blockBody"
-                            placeholder={meta.body}
-                            value={block.body}
-                            onChange={(e) =>
-                              setBlocks((b) =>
-                                b.map((row, i) => (i === index ? { ...row, body: e.target.value } : row))
-                              )
-                            }
-                            className={inputClass}
-                          />
-                        )}
-
-                        {/* Every row submits a caption so the arrays stay
-                            aligned, even where the type has no use for one. */}
-                        {block.type === "gallery" ? (
-                          <GalleryCaptions
-                            paths={block.body}
-                            value={block.caption}
-                            onChange={(next) =>
-                              setBlocks((b) =>
-                                b.map((row, i) => (i === index ? { ...row, caption: next } : row))
-                              )
-                            }
-                          />
-                        ) : meta.caption ? (
-                          <input
-                            suppressHydrationWarning
-                            name="blockCaption"
-                            placeholder={meta.caption}
-                            value={block.caption}
-                            onChange={(e) =>
-                              setBlocks((b) =>
-                                b.map((row, i) => (i === index ? { ...row, caption: e.target.value } : row))
-                              )
-                            }
-                            className={inputClass}
-                          />
-                        ) : (
-                          <input type="hidden" name="blockCaption" value="" />
-                        )}
-                      </div>
-                    ) : (
-                      /* Collapsed rows still submit, or every array after this
-                         one shifts by a block. */
-                      <>
-                        <input type="hidden" name="blockBody" value={block.body} />
-                        <input type="hidden" name="blockCaption" value={block.caption} />
-                      </>
-                    )}
                   </div>
 
-                  <InsertBar onInsert={(type) => insertAt(index + 1, type)} />
+                  <input type="hidden" name="blockType" value={block.type} />
+
+                  {open ? (
+                    <div className="space-y-2 border-t border-white/8 p-3">
+                      <p className="text-[11px] leading-relaxed text-zinc-600">{meta.hint}</p>
+
+                      {block.type === "image" || block.type === "gallery" ? (
+                        <>
+                          <input type="hidden" name="blockBody" value={block.body} />
+                          <MediaGrid
+                            files={media}
+                            value={block.body}
+                            multiple={block.type === "gallery"}
+                            onChange={(next) =>
+                              setBlocks((b) =>
+                                b.map((row, i) => (i === index ? { ...row, body: next } : row))
+                              )
+                            }
+                          />
+                        </>
+                      ) : meta.textarea ? (
+                        <textarea
+                          suppressHydrationWarning
+                          name="blockBody"
+                          rows={block.type === "text" ? 6 : 3}
+                          placeholder={meta.body}
+                          value={block.body}
+                          onChange={(e) =>
+                            setBlocks((b) =>
+                              b.map((row, i) => (i === index ? { ...row, body: e.target.value } : row))
+                            )
+                          }
+                          className={cn(inputClass, "resize-y leading-relaxed")}
+                        />
+                      ) : (
+                        <input
+                          suppressHydrationWarning
+                          name="blockBody"
+                          placeholder={meta.body}
+                          value={block.body}
+                          onChange={(e) =>
+                            setBlocks((b) =>
+                              b.map((row, i) => (i === index ? { ...row, body: e.target.value } : row))
+                            )
+                          }
+                          className={inputClass}
+                        />
+                      )}
+
+                      {/* Every row submits a caption so the arrays stay
+                          aligned, even where the type has no use for one. */}
+                      {block.type === "gallery" ? (
+                        <GalleryCaptions
+                          paths={block.body}
+                          value={block.caption}
+                          onChange={(next) =>
+                            setBlocks((b) =>
+                              b.map((row, i) => (i === index ? { ...row, caption: next } : row))
+                            )
+                          }
+                        />
+                      ) : meta.caption ? (
+                        <input
+                          suppressHydrationWarning
+                          name="blockCaption"
+                          placeholder={meta.caption}
+                          value={block.caption}
+                          onChange={(e) =>
+                            setBlocks((b) =>
+                              b.map((row, i) => (i === index ? { ...row, caption: e.target.value } : row))
+                            )
+                          }
+                          className={inputClass}
+                        />
+                      ) : (
+                        <input type="hidden" name="blockCaption" value="" />
+                      )}
+                    </div>
+                  ) : (
+                    /* Collapsed rows still submit, or every array after this
+                       one shifts by a block. */
+                    <>
+                      <input type="hidden" name="blockBody" value={block.body} />
+                      <input type="hidden" name="blockCaption" value={block.caption} />
+                    </>
+                  )}
+
+                  {/* Inside the card, on its bottom edge: the new block belongs
+                      to the one you are working in, and reads as "after this". */}
+                  <InsertFooter onInsert={(type) => insertAt(index + 1, type)} />
                 </div>
               );
             })}
@@ -833,55 +862,68 @@ function TypeButton({ type, onClick }: { type: BlockType; onClick: () => void })
   );
 }
 
+/** The row of block types, shown once something has asked to insert. */
+function BlockPalette({
+  onPick,
+  onCancel,
+}: {
+  onPick: (type: BlockType) => void;
+  onCancel: () => void;
+}) {
+  return (
+    <div className="flex flex-wrap items-center gap-1.5">
+      {BLOCK_TYPES.map((type) => (
+        <TypeButton key={type} type={type} onClick={() => onPick(type)} />
+      ))}
+      <button
+        type="button"
+        onClick={onCancel}
+        className="ml-auto rounded-full px-2.5 py-1.5 text-[12px] text-zinc-500 transition-colors hover:text-zinc-200"
+      >
+        Cancel
+      </button>
+    </div>
+  );
+}
+
 /**
- * The gap between two blocks, and the way to add one there.
+ * Add a block directly after this one, from inside its own card.
  *
- * Click to open rather than reveal on hover: the admin is used on a phone,
- * where there is no hover, and a control you cannot reach on touch is not a
- * control. Closed it is a hairline with a small +, so a body of twenty blocks
- * does not become a body of forty rows.
+ * This was a divider floating between cards, which belonged to neither and put
+ * the only obvious way in at the top of the list — so adding anything meant
+ * scrolling back up. On the block's bottom edge it reads as "after this one",
+ * which is both where you are looking and the position you want.
+ *
+ * Click to open rather than reveal on hover: the admin gets used on a phone,
+ * and a control you cannot reach on touch is not a control.
  */
-function InsertBar({ onInsert }: { onInsert: (type: BlockType) => void }) {
+function InsertFooter({ onInsert }: { onInsert: (type: BlockType) => void }) {
   const [open, setOpen] = useState(false);
 
   if (!open) {
     return (
-      <div className="group flex items-center gap-2 py-1.5">
-        <span className="h-px flex-1 bg-white/8 transition-colors group-hover:bg-brand-500/30" />
+      <div className="border-t border-white/8 px-3 py-2">
         <button
           type="button"
           onClick={() => setOpen(true)}
-          aria-label="Add a block here"
-          className="flex h-6 w-6 items-center justify-center rounded-full border border-white/12 text-zinc-600 transition-colors hover:border-brand-500/60 hover:text-brand-400"
+          className="inline-flex items-center gap-1.5 rounded-full px-2 py-1 text-[11.5px] font-medium text-zinc-600 transition-colors hover:text-brand-400"
         >
-          <Plus className="h-3 w-3" />
+          <Plus className="h-3.5 w-3.5" />
+          Add block below
         </button>
-        <span className="h-px flex-1 bg-white/8 transition-colors group-hover:bg-brand-500/30" />
       </div>
     );
   }
 
   return (
-    <div className="my-1.5 rounded-xl border border-brand-500/25 bg-brand-500/[0.04] p-2.5">
-      <div className="flex flex-wrap items-center gap-1.5">
-        {BLOCK_TYPES.map((type) => (
-          <TypeButton
-            key={type}
-            type={type}
-            onClick={() => {
-              onInsert(type);
-              setOpen(false);
-            }}
-          />
-        ))}
-        <button
-          type="button"
-          onClick={() => setOpen(false)}
-          className="ml-auto rounded-full px-2.5 py-1.5 text-[12px] text-zinc-500 transition-colors hover:text-zinc-200"
-        >
-          Cancel
-        </button>
-      </div>
+    <div className="border-t border-brand-500/25 bg-brand-500/[0.04] p-2.5">
+      <BlockPalette
+        onPick={(type) => {
+          onInsert(type);
+          setOpen(false);
+        }}
+        onCancel={() => setOpen(false)}
+      />
     </div>
   );
 }
