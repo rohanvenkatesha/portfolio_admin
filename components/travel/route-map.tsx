@@ -25,8 +25,8 @@ import { cn } from "@/lib/utils";
  * - Markers pulse, and the frame carries a HUD: corner ticks and a live
  *   coordinate readout that follows the cursor.
  *
- * Tiles are still CARTO over OpenStreetMap data: free, no API key, no billing
- * account.
+ * Tiles are Esri's Dark Gray Canvas: free, no API key, no billing account. See
+ * the note at the layer itself for why they are not CARTO's any more.
  */
 export function RouteMap({
   waypoints,

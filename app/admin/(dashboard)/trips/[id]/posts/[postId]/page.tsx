@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, ExternalLink } from "lucide-react";
 import { getTripsFresh } from "@/lib/content/trips";
 import { getPostsFresh } from "@/lib/content/posts";
-import { listMedia } from "@/lib/content/media";
+import { listMedia, tripMediaFolder } from "@/lib/content/media";
 import { PostEditor } from "@/components/admin/post-editor";
 
 export const runtime = "nodejs";
@@ -14,17 +14,24 @@ export default async function EditPostPage({
 }: PageProps<"/admin/trips/[id]/posts/[postId]">) {
   const { id, postId } = await params;
 
-  const [trips, posts, media] = await Promise.all([
-    getTripsFresh(),
-    getPostsFresh(),
-    // Trip covers and post imagery share a folder — one place to drop photos
-    // for a journey rather than two.
-    listMedia("trips"),
-  ]);
+  const [trips, posts] = await Promise.all([getTripsFresh(), getPostsFresh()]);
 
   const trip = trips.find((t) => t.id === id);
   const post = posts.find((p) => p.id === postId);
   if (!trip || !post) notFound();
+
+  /**
+   * Only this trip's images.
+   *
+   * Trip covers and post imagery still share a folder — one place to drop
+   * photos for a journey rather than two — but that folder is now per trip,
+   * named for its slug. Listing every trip's photos at once meant scrolling
+   * past unrelated journeys to find the one you were writing about, and got
+   * worse with each trip added.
+   *
+   * Listed after the trip resolves, since the folder is named for its slug.
+   */
+  const media = await listMedia(tripMediaFolder(trip.slug));
 
   return (
     <div className="space-y-6">

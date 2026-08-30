@@ -6,6 +6,7 @@ import { AlertCircle, CheckCircle2, Loader2, Save } from "lucide-react";
 import { saveTrip, type ActionResult } from "@/lib/actions/trips";
 import { ImagePicker } from "@/components/admin/image-picker";
 import type { MediaFile } from "@/lib/content/media";
+import { tripMediaFolder } from "@/content/media-path";
 import type { Trip } from "@/content/site";
 import { cn } from "@/lib/utils";
 
@@ -61,11 +62,11 @@ export function TripForm({ trip, covers = [] }: { trip: Trip; covers?: MediaFile
       <div className="rounded-2xl border border-white/8 bg-panel p-6">
         <ImagePicker
           name="coverUrl"
-          folder="trips"
+          folder={tripMediaFolder(trip.slug)}
           files={covers}
           initialSrc={trip.coverUrl ?? ""}
           label="Cover photo"
-          hint="Committed under public/media/trips"
+          hint={`Committed under public/media/${tripMediaFolder(trip.slug)}`}
         />
         <p className="mt-3 text-[11px] leading-relaxed text-zinc-600">
           Shown on the archive card, the hover preview and the top of the guide. Leave it empty and
